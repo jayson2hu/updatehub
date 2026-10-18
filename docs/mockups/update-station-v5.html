@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计稿 v5 · 含完整后台</title>
+<style>
+:root{
+  --bg:#F4F6FB;--card:#fff;--ink:#141F33;--ink2:#5F6B80;--ink3:#8A95A8;--line:#E4E9F2;
+  --brand:#2457E6;--brand2:#5B8CFF;--brand-soft:#EBF1FF;
+  --ok:#147A4A;--ok-soft:#E5F6ED;--warn:#985000;--warn-soft:#FFF1DC;--bad:#B42318;--bad-soft:#FDECEA;
+  --gold:#F5B93B;--r:16px;--sh:0 1px 2px rgba(20,31,51,.04),0 4px 14px rgba(20,31,51,.05);
+}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#DDE3EE}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--brand);text-decoration:none;cursor:pointer}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,"SF Mono",Consolas,monospace}
+:focus-visible{outline:3px solid #8EAEFF;outline-offset:2px}
+[hidden]{display:none!important}
+.muted{color:var(--ink2)}.faint{color:var(--ink3)}.small{font-size:13px}.xs{font-size:12px}
+.row{display:flex;align-items:center;gap:8px}.grow{flex:1;min-width:0}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== 控制栏 ===== */
+.ctl{position:sticky;top:0;z-index:100;background:#141F33;color:#fff;padding:9px 20px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:13px}
+.ctl .g{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.ctl b{margin-right:2px;color:#9fb0cf;font-weight:600}
+.ctl button{border:1px solid #34445f;border-radius:999px;padding:3px 11px;color:#d5deee}
+.ctl button[aria-pressed=true]{background:#fff;color:#141F33;border-color:#fff;font-weight:700}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 20px 40px}
+.cap{font-size:17px;margin:14px 0 2px}.cap+p{font-size:13px;color:var(--ink2);margin-bottom:12px}
+
+/* ===== 外框 ===== */
+.browser{border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 18px 50px rgba(20,30,60,.2);border:1px solid #c6cfde}
+.chrome{height:40px;background:#E8ECF2;display:flex;align-items:center;gap:7px;padding:0 14px}
+.chrome i{width:11px;height:11px;border-radius:50%;background:#F87171}.chrome i:nth-child(2){background:#FBBF24}.chrome i:nth-child(3){background:#34D399}
+.chrome span{flex:1;margin-left:12px;height:26px;border-radius:8px;background:#fff;font-size:12px;color:#555;display:flex;align-items:center;padding:0 12px;gap:6px}
+.dwrap{position:relative}
+.dframe{height:820px;overflow-y:auto;background:var(--bg)}
+.phones{display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:26px}
+.pw h4{font-size:14px;margin-bottom:6px;text-align:center}
+.phone{width:375px;height:780px;margin:0 auto;border:10px solid #141B28;border-radius:40px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 18px 44px rgba(20,30,60,.25)}
+.phone .scroll{flex:1;overflow-y:auto;position:relative;scrollbar-width:none}
+.sbar{height:28px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:12px;font-weight:700;background:#fff}
+@media(max-width:430px){.phone{width:100%;border-width:6px}}
+
+/* ===== 基础组件 ===== */
+.ico{flex:none;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:19px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08)}
+.ico.sm{width:36px;height:36px;font-size:15px;border-radius:10px}
+.ico.lg{width:64px;height:64px;font-size:27px;border-radius:17px}
+.ico.xl{width:80px;height:80px;font-size:33px;border-radius:21px}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:filter .15s}
+.btn:hover{filter:brightness(.97)}
+.btn.p{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(36,87,230,.25)}
+.btn.s{background:var(--brand-soft);color:var(--brand)}
+.btn.g{border:1px solid var(--line);background:#fff}
+.btn.d{background:var(--bad-soft);color:var(--bad)}
+.btn.sm{min-height:32px;padding:0 11px;font-size:13px;border-radius:9px}
+.btn.lg{min-height:52px;font-size:16px;border-radius:14px}
+.btn.block{width:100%}
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;border-radius:6px;padding:0 7px;line-height:21px;white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.b{background:var(--brand-soft);color:var(--brand)}.tag.gray,.tag.opt{background:#EEF1F6;color:var(--ink2)}.tag.gold{background:#FFF4D6;color:#8A5A00}
+.mini{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px;color:var(--ink2);background:#fff;line-height:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.sec{margin:14px 14px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh h3{font-size:16px}
+.sh a,.sh button{font-size:13px;color:var(--ink2)}
+h3{font-size:15px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chip{flex:none;min-height:34px;padding:0 13px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.hs{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 14px 4px;margin:0 -14px;scroll-snap-type:x mandatory}
+.hs>*{scroll-snap-align:start;flex:none}
+.dot{width:8px;height:8px;border-radius:50%;background:#EF4444;display:inline-block;vertical-align:middle;margin-left:4px}
+.badge{min-width:18px;height:18px;border-radius:9px;background:#EF4444;color:#fff;font-size:11px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px}
+.logo{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:grid;place-items:center;font-size:15px;font-weight:900;flex:none;box-shadow:0 3px 8px rgba(36,87,230,.3)}
+.brand{font-weight:900;font-size:18px;letter-spacing:.3px}
+.empty{text-align:center;color:var(--ink2);padding:26px 10px;font-size:14px}
+.empty .e{font-size:34px;display:block;margin-bottom:4px}
+.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:#141F33;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast.on{opacity:1;transform:translateX(-50%)}
+
+/* ===== 顶栏 / 底栏 ===== */
+.mtop{flex:none;height:52px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line)}
+.mtop .ib{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.mtop .ib.back{font-size:26px;margin-left:-6px}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:#fff;padding-bottom:6px}
+.tabs button{min-height:54px;font-size:11px;color:var(--ink3);line-height:1.3;position:relative}
+.tabs button span{font-size:20px;display:block;filter:grayscale(1);opacity:.7}
+.tabs button.on{color:var(--brand);font-weight:700}
+.tabs button.on span{filter:none;opacity:1}
+.tabs .badge{position:absolute;top:5px;left:calc(50% + 6px)}
+.dnav{background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.dnav .in{max-width:1120px;margin:0 auto;height:64px;display:flex;align-items:center;gap:20px;padding:0 28px}
+.dnav nav{display:flex;gap:2px}
+.dnav nav button{padding:8px 13px;border-radius:10px;font-size:15px;color:var(--ink2);position:relative}
+.dnav nav button.on{color:var(--brand);background:var(--brand-soft);font-weight:700}
+.dnav .search{flex:1;max-width:300px;margin-left:auto}
+.search{display:flex;align-items:center;gap:8px;background:#F1F4F9;border:1px solid transparent;border-radius:12px;padding:0 12px;min-height:42px}
+.search input{flex:1;border:0;outline:0;background:none;min-width:0}
+.search:focus-within{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+.dbody{max-width:1120px;margin:0 auto;padding:24px 28px 30px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:24px;align-items:start}
+.aside{position:sticky;top:84px;display:flex;flex-direction:column;gap:16px}
+.dfoot{border-top:1px solid var(--line);background:#fff;margin-top:20px}
+.dfoot .in{max-width:1120px;margin:0 auto;padding:22px 28px;display:flex;justify-content:space-between;gap:20px;font-size:13px;color:var(--ink2)}
+.dfoot a{color:var(--ink2);margin-right:16px}
+
+/* ===== 首页 ===== */
+.hero{background:radial-gradient(120% 140% at 100% 0,#7FA6FF 0,transparent 55%),linear-gradient(135deg,#1F4FD8,#3A6CF0 60%,#5B8CFF);color:#fff;border-radius:20px;padding:18px 18px 16px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero .t{font-size:13px;opacity:.85}
+.hero .n{font-size:24px;font-weight:800;line-height:1.3;margin:2px 0 8px}
+.hero .stats{display:flex;gap:8px;flex-wrap:wrap}
+.hero .stats span{background:rgba(255,255,255,.16);border-radius:8px;padding:2px 9px;font-size:12px}
+.hero .hsearch{margin-top:14px;display:flex;align-items:center;gap:8px;width:100%;background:#fff;color:var(--ink3);border-radius:12px;min-height:44px;padding:0 14px;font-size:14px;text-align:left;position:relative;z-index:1}
+.d .hero{border-radius:24px;padding:34px 36px;display:grid;grid-template-columns:1fr 360px;gap:30px;align-items:center}
+.d .hero .n{font-size:34px}
+.d .hero .hsearch{min-height:52px;font-size:15px}
+.hero-side{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px;position:relative;z-index:1}
+.hero-side .it{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.14);color:#fff;width:100%;text-align:left}
+.hero-side .it:first-of-type{border-top:0}
+.annc{width:270px;border-radius:14px;padding:12px 14px;text-align:left;border:1px solid var(--line);background:#fff;box-shadow:var(--sh)}
+.annc.pin{background:linear-gradient(180deg,#FFF8E8,#fff);border-color:#F2DDAE}
+.annc b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45;margin:4px 0 2px;font-size:14px}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:12.5px}
+.cat span{font-size:22px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center}
+.d .cats{grid-template-columns:repeat(8,1fr)}
+.favc{width:150px;border-radius:14px;background:#fff;border:1px solid #CFDCFB;padding:12px;text-align:left;position:relative}
+.favc .dot{position:absolute;top:12px;right:12px;margin:0}
+.rc{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh);transition:border-color .15s,transform .15s}
+.rc:hover{border-color:#BFD0F5}
+.rc .ver{font-size:13px;color:var(--ink2)}
+.rc .ver b{color:var(--ink)}
+.rc p{font-size:14px;color:var(--ink2);margin:8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc .ft{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:12px;color:var(--ink3)}
+.rc.fav{border-color:#AFC4F6;background:linear-gradient(180deg,#F6F9FF,#fff)}
+.day{font-size:12px;font-weight:700;color:var(--ink3);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.day:after{content:"";flex:1;height:1px;background:var(--line)}
+.rank{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.rank:first-of-type{border-top:0}
+.rank i{font-style:normal;width:20px;text-align:center;font-weight:800;color:var(--ink3)}
+.rank:nth-of-type(1) i{color:#E5484D}.rank:nth-of-type(2) i{color:#F97316}.rank:nth-of-type(3) i{color:#F5B93B}
+
+/* ===== 软件库 ===== */
+.lib{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.d .lib{grid-template-columns:repeat(3,1fr);gap:14px}
+.lc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh);cursor:pointer;position:relative;display:flex;flex-direction:column;gap:6px}
+.lc:hover{border-color:#BFD0F5}
+.lc .star{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;font-size:17px;color:var(--ink3)}
+.lc .star[aria-pressed=true]{color:#F5A623}
+.lc .desc{font-size:12.5px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px}
+.devi{display:flex;gap:3px;font-size:13px}
+
+/* ===== 详情 ===== */
+.dhead{display:flex;gap:14px;align-items:flex-start}
+.dhead h1{font-size:21px;line-height:1.25}
+.d .dhead h1{font-size:30px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.kpis div{text-align:center;padding:10px 4px;border-left:1px solid var(--line)}
+.kpis div:first-child{border-left:0}
+.kpis b{display:block;font-size:16px}
+.kpis span{font-size:11.5px;color:var(--ink3)}
+.verdict{border-radius:14px;padding:13px 14px;display:flex;gap:12px;margin-top:12px;align-items:flex-start}
+.verdict.ok{background:var(--ok-soft);color:#0D5233}.verdict.warn{background:var(--warn-soft);color:#5E3200}.verdict.bad{background:var(--bad-soft);color:#7A1810}.verdict.opt{background:#EEF1F6;color:var(--ink)}
+.verdict .vi{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:800;background:rgba(255,255,255,.7)}
+.verdict b{display:block;font-size:16px}
+.devpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dev{min-height:58px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:12.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25;position:relative}
+.dev span{font-size:19px}
+.dev[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.dev[disabled]{opacity:.35;cursor:not-allowed}
+.dev em{position:absolute;top:-8px;right:-4px;font-style:normal;font-size:10px;background:var(--brand);color:#fff;border-radius:6px;padding:0 5px;line-height:16px}
+.vsel{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px 0}
+.vsel button{flex:none;border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:12.5px;background:#fff;text-align:left;line-height:1.35}
+.vsel button b{display:block;font-size:14px}
+.vsel button[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.oldnote{background:#F1F4F9;border-radius:10px;padding:8px 12px;font-size:13px;color:var(--ink2);margin-bottom:10px}
+.alert{background:var(--bad-soft);color:#7A1810;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:10px}
+.meta2{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:9px}
+.backup{display:flex;align-items:center;gap:8px;border:1.5px dashed #C9D3E4;border-radius:12px;padding:10px 12px;margin-top:10px;background:#FAFBFD}
+.backup .t{flex:1;min-width:0;font-size:13px}
+.code{font-family:ui-monospace,Consolas,monospace;font-weight:800;color:var(--ink);letter-spacing:1px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.qr{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.qr svg{flex:none;width:92px;height:92px;border:6px solid #fff;outline:1px solid var(--line);border-radius:6px;background:#fff}
+.dtabs{position:sticky;top:0;z-index:3;background:var(--bg);display:flex;gap:2px;padding:8px 14px;margin:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.d .dtabs{top:64px;padding:8px 0;margin-bottom:4px}
+.dtabs button{flex:none;padding:7px 12px;border-radius:10px;font-size:14px;color:var(--ink2)}
+.dtabs button[aria-selected=true]{background:#fff;color:var(--ink);font-weight:700;box-shadow:var(--sh)}
+.diff{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px}
+.diff .mono{background:#F1F4F9;border-radius:6px;padding:1px 7px}
+.diff .mono.new{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.nl{list-style:none;padding:0}
+.nl li{display:flex;gap:8px;padding:6px 0;font-size:14.5px;align-items:flex-start}
+.nl .k{flex:none;font-size:11px;font-weight:700;border-radius:5px;padding:0 6px;line-height:20px;margin-top:1px}
+.k.add{background:#E5F6ED;color:var(--ok)}.k.fix{background:#EBF1FF;color:var(--brand)}.k.opt{background:#F3EEFF;color:#6D28D9}.k.known{background:var(--bad-soft);color:var(--bad)}
+.shots{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-top:12px}
+.shot{flex:none;width:110px;height:196px;border-radius:12px;display:flex;align-items:flex-end;padding:8px;color:#fff;font-size:11px;font-weight:600}
+.d .shot{width:130px;height:232px}
+.steps{list-style:none;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps li:before{content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center}
+.steps .ill{margin-top:8px;height:84px;border-radius:10px;background:repeating-linear-gradient(135deg,#F1F4F9 0 10px,#E9EEF6 10px 20px);display:grid;place-items:center;font-size:12px;color:var(--ink3)}
+.tip{background:#FFF8E8;border:1px solid #F2DDAE;border-radius:12px;padding:10px 12px;font-size:13px;color:#6E4A00;margin-top:10px}
+details{border-top:1px solid var(--line)}
+details:first-of-type{border-top:0}
+summary{min-height:46px;display:flex;align-items:center;cursor:pointer;font-weight:600;list-style:none;justify-content:space-between;gap:10px;font-size:14.5px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--ink3);font-size:20px;font-weight:400}
+details[open] summary:after{content:"−"}
+details p{font-size:14px;color:var(--ink2);padding-bottom:12px}
+.tl{position:relative;padding-left:20px}
+.tl:before{content:"";position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.tl .n{position:relative;padding:8px 0 12px}
+.tl .n:before{content:"";position:absolute;left:-19px;top:15px;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid var(--ink3)}
+.tl .n.cur:before{border-color:var(--brand);background:var(--brand)}
+.tl .n.bad:before{border-color:var(--bad)}
+.info{width:100%;border-collapse:collapse;font-size:14px}
+.info td{padding:9px 0;border-top:1px solid var(--line);vertical-align:top}
+.info tr:first-child td{border-top:0}
+.info td:first-child{color:var(--ink2);width:92px}
+.fb{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fb button{min-height:48px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:14px}
+.fb button[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.bar{height:8px;border-radius:4px;background:#F9D6D2;overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#34B37A,#1F9A62);border-radius:4px}
+.inapp{flex:none;background:#FFF1DC;color:#5E3200;font-size:13px;padding:9px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #F4D9AE}
+.sticky{flex:none;background:#fff;border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:center}
+.sticky .btn.p{flex:1}
+.sim{width:130px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.foot{text-align:center;font-size:12px;color:var(--ink3);padding:20px 16px 24px;line-height:1.7}
+
+/* ===== 公告 ===== */
+.ac{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 14px 18px;margin-bottom:10px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.ac:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--brand)}
+.ac.imp:before{background:#E5484D}.ac.tip:before{background:var(--gold)}.ac.ended{opacity:.65}.ac.ended:before{background:var(--ink3)}
+.ac b{display:block;font-size:15.5px;line-height:1.45;margin:5px 0 3px}
+.ac p{font-size:13.5px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.article h1{font-size:22px;line-height:1.4;margin:8px 0}
+.d .article h1{font-size:30px}
+.article .body p{margin:12px 0;font-size:16px;line-height:1.8}
+.article .body ul{padding-left:20px;font-size:15.5px;line-height:1.8}
+
+/* ===== 我的 ===== */
+.me-head{background:linear-gradient(135deg,#1F4FD8,#5B8CFF);color:#fff;padding:20px 16px 18px;position:relative}
+.me-head .av{width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:26px;border:2px solid rgba(255,255,255,.5)}
+.me-stats{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;margin:-1px 14px 0;border-radius:0 0 16px 16px;box-shadow:var(--sh);position:relative}
+.me-stats button{padding:12px 0;text-align:center}
+.me-stats b{display:block;font-size:19px}
+.me-stats span{font-size:12px;color:var(--ink2)}
+.lr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.lr:first-child{border-top:0}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:14.5px;width:100%;text-align:left}
+.setrow:first-child{border-top:0}
+.setrow .arr{color:var(--ink3)}
+.sw{width:42px;height:24px;border-radius:12px;background:#D5DCE7;position:relative;flex:none}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.sw[aria-checked=true]{background:#2BB673}.sw[aria-checked=true]:after{left:21px}
+.sw.dis{opacity:.45}
+
+/* ===== 搜索 ===== */
+.res mark{background:#FFF0B3;color:inherit;border-radius:3px;padding:0 1px}
+
+/* ===== 广告 ===== */
+.ad{position:relative;border:1px solid var(--line);border-radius:var(--r);background:#fff;overflow:hidden}
+.ad .lbl{position:absolute;top:8px;left:8px;font-size:11px;background:rgba(0,0,0,.5);color:#fff;border-radius:4px;padding:0 6px;z-index:1;line-height:18px}
+.ad .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.38);color:#fff;font-size:12px;z-index:1}
+.ad .img{background:linear-gradient(135deg,#FFE7B3,#FFC9C9 60%,#E9D5FF);display:grid;place-items:center;color:#7a3b00;font-weight:800;font-size:14px;text-align:center;line-height:1.4}
+.ad .img small{display:block;font-weight:500;font-size:11px;opacity:.75}
+.ad .txt{padding:9px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ad.feed{display:flex;margin-bottom:10px}
+.ad.feed .img{width:116px;flex:none}
+.ad.feed .txt{flex:1;flex-direction:column;align-items:flex-start;padding:12px 36px 12px 12px}
+.ad.wide .img{height:112px}
+.ad.side .img{height:260px}
+
+/* ===== 弹层 ===== */
+.ov{position:absolute;inset:0;background:rgba(15,22,38,.55);z-index:20;display:flex;align-items:flex-end;animation:fade .2s}
+.d-ov{align-items:center;justify-content:center}
+@keyframes fade{from{opacity:0}}
+.sheet{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:8px 18px 22px;max-height:88%;overflow-y:auto;animation:up .25s}
+.d-ov .sheet{width:480px;border-radius:20px;padding:22px 26px}
+@keyframes up{from{transform:translateY(40px)}}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:#D5DCE7;margin:4px auto 12px}
+.d-ov .sheet .grab{display:none}
+.sheet h2{font-size:18px;margin-bottom:4px}
+.field{margin-top:12px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;outline:0}
+.field input:focus,.field textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.bigcode{font-family:ui-monospace,Consolas,monospace;font-size:34px;font-weight:800;letter-spacing:6px;text-align:center;background:#F1F4F9;border-radius:14px;padding:16px 0;margin:14px 0 8px}
+.seg{display:flex;background:#EEF1F6;border-radius:12px;padding:4px;margin:12px 0}
+.seg button{flex:1;min-height:38px;border-radius:9px;font-size:14px}
+.seg button[aria-selected=true]{background:#fff;font-weight:700;box-shadow:var(--sh)}
+.poster{border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-top:12px}
+.poster .top{background:linear-gradient(135deg,#1F4FD8,#5B8CFF);color:#fff;padding:16px}
+.poster .bot{display:flex;gap:12px;align-items:center;padding:12px 16px}
+.poster svg{width:70px;height:70px}
+.gstep{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.gstep:first-of-type{border-top:0}
+.gstep i{font-style:normal;flex:none;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.gstep .fake{margin-left:auto;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:3px 8px;background:#F7F8FA}
+
+/* ===== 后台 ===== */
+.adm{display:grid;grid-template-columns:220px 1fr;min-height:820px}
+.adm-side{background:#141F33;color:#C8D2E5;padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+.adm-side .brandrow{display:flex;align-items:center;gap:8px;color:#fff;padding:0 8px 18px}
+.adm-side button{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;text-align:left;font-size:14px;color:#C8D2E5}
+.adm-side button.on{background:rgba(255,255,255,.1);color:#fff;font-weight:700}
+.adm-side button .badge{margin-left:auto}
+.adm-side .grp{font-size:11px;color:#6F7E99;padding:14px 12px 4px;letter-spacing:1px}
+.adm-main{padding:24px 28px;background:var(--bg)}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.kpi .card{padding:14px 16px}
+.kpi b{font-size:26px;display:block;line-height:1.2}
+.kpi .spark{display:flex;align-items:flex-end;gap:3px;height:28px;margin-top:8px}
+.kpi .spark i{flex:1;background:var(--brand-soft);border-radius:2px}
+.kpi .spark i:last-child{background:var(--brand)}
+.up{color:var(--ok);font-size:12px;font-weight:600}.down{color:var(--bad);font-size:12px;font-weight:600}
+.agrid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.todo{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:flex-start}
+.todo:first-of-type{border-top:0}
+.todo .ti{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--ink2);font-size:12px;padding:8px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.slot{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-of-type{border-top:0}
+.notice{background:#F7F8FA;border:1px solid var(--line);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13px}
+
+/* ===== 后台 v5：页面 ===== */
+.adm{align-items:start}
+.adm-side{position:sticky;top:0;height:820px;overflow-y:auto;scrollbar-width:none}
+.adm-side button:hover{background:rgba(255,255,255,.06)}
+.adm-side .pub{background:var(--brand);color:#fff;font-weight:700;margin:2px 0 4px;justify-content:center}
+.adm-side .pub:hover{background:#3466EE}
+.adm-side .pub.on{box-shadow:0 0 0 2px #8EAEFF inset}
+.adm-main{min-width:0;min-height:820px}
+.ahead{display:flex;align-items:flex-end;gap:8px;margin-bottom:16px}
+.ahead h1{font-size:24px;line-height:1.3}
+.crumb{font-size:12px;color:var(--ink3)}.crumb a{color:var(--ink3)}.crumb a:hover{color:var(--brand)}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .search{background:#fff;border-color:var(--line);min-height:36px;width:230px}
+.toolbar .chips{flex-wrap:wrap}
+.toolbar .chip{min-height:30px;padding:0 11px;font-size:12.5px}
+.sel{border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 8px;min-height:32px;font-size:13px}
+.tcard{padding:6px 14px 4px}
+.tbl tbody tr:hover td{background:#FAFBFD}
+.tbl td .btn.sm,.acts .btn.sm{min-height:28px;padding:0 9px;font-size:12.5px;border-radius:8px}
+.tbl tr.grp td{background:#F6F8FC;font-size:12.5px;padding:7px 6px;border-bottom:1px solid var(--line)}
+.tbl tr.sel-on td{background:#F3F7FF}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
+.lv{display:block;width:4px;height:38px;border-radius:2px;background:var(--brand)}
+.lv.l-tip{background:var(--gold)}.lv.l-imp{background:#E5484D}.lv.l-off{background:#C7CEDB}
+.mbar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:#F2B8B1;width:64px}
+.mbar i{display:block;background:#34B37A}
+.ck{width:16px;height:16px;accent-color:var(--brand);cursor:pointer;vertical-align:middle}
+.batch{background:var(--ink);color:#fff;border-radius:12px;padding:7px 8px 7px 14px;display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+.batch .btn{min-height:30px;font-size:12.5px;background:rgba(255,255,255,.12);color:#fff}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.sside{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+.fc{margin-bottom:14px}
+.fc>h3{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.fc>h3 small{font-weight:400;color:var(--ink3);font-size:12px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.field .hint{font-size:12px;color:var(--ink3);margin-top:4px;font-weight:400}
+.field .err{font-size:12px;color:var(--bad);margin-top:4px}
+.field input[disabled],.field select[disabled]{background:#F4F6FA;color:var(--ink2);cursor:not-allowed}
+.field input[type=checkbox],.field input[type=radio]{width:auto}
+.field input[type=color]{width:44px;height:34px;padding:2px;border-radius:8px}
+.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.field.bad select{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)}
+.lock{font-size:11.5px;color:var(--ink3);font-weight:400;margin-left:4px}
+.lrow{display:flex;gap:6px;align-items:center;margin-top:6px}
+.lrow input,.lrow textarea{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;outline:0}
+.lrow input:focus,.lrow textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.lrow .k{flex:none;font-size:11px;font-weight:700;border-radius:5px;padding:0 6px;line-height:20px}
+.lrow .no{flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.xbtn{width:30px;height:30px;border-radius:8px;color:var(--ink3);flex:none;font-size:13px}
+.xbtn:hover{background:var(--bad-soft);color:var(--bad)}
+.addrow{margin-top:8px;font-size:13px;color:var(--brand);font-weight:600;padding:4px 2px}
+.ngrp{margin-top:12px}
+.ngrp>.row{font-size:13px;font-weight:600}
+.advpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.advpick button{border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;background:#fff;font-size:12px;line-height:1.35;color:var(--ink2)}
+.advpick button b{display:block;font-size:14px;color:var(--ink)}
+.advpick button[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft)}
+.advpick button.ok[aria-pressed=true]{border-color:#3CB27A;background:var(--ok-soft)}.advpick button.ok[aria-pressed=true] b{color:var(--ok)}
+.advpick button.warn[aria-pressed=true]{border-color:#E0A043;background:var(--warn-soft)}.advpick button.warn[aria-pressed=true] b{color:var(--warn)}
+.advpick button.bad[aria-pressed=true]{border-color:#E5484D;background:var(--bad-soft)}.advpick button.bad[aria-pressed=true] b{color:var(--bad)}
+.advpick button.opt[aria-pressed=true]{border-color:#9AA6BA;background:#EEF1F6}
+.lnk{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;background:#FBFCFE}
+.lnk.main{border-color:#AFC4F6;background:#F6F9FF}
+.lnk.dead{border-color:#F2B8B1;background:#FFF8F7}
+.lnk .g4{display:grid;grid-template-columns:108px 84px 1fr 92px;gap:6px}
+.lnk input,.lnk select,.lnk textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;outline:0;font-size:13px}
+.lnk input:focus,.lnk textarea:focus{border-color:var(--brand)}
+.lnk input[type=radio]{width:auto;accent-color:var(--brand)}
+.adm-main .card>h3{margin-bottom:2px}
+.lnk .ft{display:flex;align-items:center;gap:14px;margin-top:8px;font-size:12.5px;color:var(--ink2)}
+.lnk .ft label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.formbar{position:sticky;bottom:0;z-index:4;margin:6px -28px -24px;padding:12px 28px;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.sw{cursor:pointer}
+.ptitle{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.5px;margin-bottom:8px}
+.chk{list-style:none;padding:0;font-size:13px}
+.chk li{padding:2px 0}.chk li.no{color:var(--bad)}.chk li.yes{color:var(--ok)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.thumb{width:66px;height:118px;border-radius:10px;position:relative;display:flex;align-items:flex-end;padding:6px;color:#fff;font-size:10.5px;font-weight:600}
+.thumb .xbtn{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;font-size:10px}
+.thumb.add{border:1.5px dashed #C9D3E4;background:#FAFBFD;color:var(--ink3);display:grid;place-items:center;text-align:center;font-weight:500;font-size:12px}
+.swatches{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.swatch{width:26px;height:26px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--ink)}
+.upl{border:1.5px dashed #C9D3E4;border-radius:12px;background:#FAFBFD;padding:12px;font-size:13px;color:var(--ink2);display:flex;gap:12px;align-items:center}
+.dev.sm{min-height:50px}
+.tagin{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff}
+.tagin .tag button{font-size:11px;color:inherit;opacity:.6;padding:0 0 0 2px}
+.tagin input{border:0!important;box-shadow:none!important;flex:1;min-width:90px;padding:3px 4px!important;width:auto!important}
+.mini-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.mini-kpi .card{padding:12px 16px}
+.mini-kpi b{font-size:22px;display:block;line-height:1.25}
+.vrank{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.vrank:first-of-type{border-top:0}
+.vrank .mbar{width:100%;height:8px;border-radius:4px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.slotc.off{opacity:.6}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;text-align:center}
+.stat3 div{background:#F6F8FC;border-radius:10px;padding:6px 0}
+.stat3 b{display:block;font-size:16px}
+.stat3 span{font-size:11.5px;color:var(--ink3)}
+.mchart{display:block;width:100%;height:54px;margin-top:10px}
+.cover{width:64px;height:36px;border-radius:7px;display:grid;place-items:center;font-size:10px;color:#7a3b00;font-weight:700}
+.master{display:flex;align-items:center;gap:14px;padding:14px 18px;margin-bottom:16px}
+.setgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--ink2)}
+.sitepv{display:flex;align-items:center;gap:8px;background:#F6F8FC;border-radius:12px;padding:10px 12px;margin-top:10px}
+/* 抽屉 */
+.d-ov.drw{justify-content:flex-end;align-items:stretch}
+.d-ov.drw .sheet{width:560px;max-height:none;height:100%;border-radius:20px 0 0 20px;padding:22px 26px 0;animation:slide .25s}
+@keyframes slide{from{transform:translateX(70px);opacity:.5}}
+.ov.still,.ov.still .sheet{animation:none}
+.sfoot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 0 18px;margin-top:18px;display:flex;gap:8px;z-index:2}
+.d-ov .sheet.wide{width:560px}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:28px}
+.legend .card h3{margin-bottom:6px}
+.legend li{font-size:13px;color:var(--ink2);margin:3px 0}
+.legend ul{padding-left:18px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="ctl">
+  <div class="g"><b>站名</b><span id="names" class="g"></span></div>
+  <div class="g"><b>跳转</b><span id="jumps" class="g"></span><select id="ajump" aria-label="后台页面" style="border:1px solid #34445f;border-radius:999px;padding:3px 10px;background:#141F33;color:#d5deee;font-size:13px"></select></div>
+  <div class="g"><b>显示</b><button data-view="all" aria-pressed="true">全部</button><button data-view="d" aria-pressed="false">电脑</button><button data-view="m" aria-pressed="false">手机</button></div>
+  <div class="g"><b>广告</b><button id="adBtn" aria-pressed="true">开</button></div>
+  <div class="g"><b>手机</b><button id="inappBtn" aria-pressed="false">模拟小红书内打开</button></div>
+</div>
+
+<div class="wrap">
+  <section id="secD">
+    <h2 class="cap">电脑端</h2>
+    <p>用顶部的“跳转”可以同时切换电脑和左侧手机的页面，每个画面里也都能点击操作。“后台”页面只在电脑端提供，可用“跳转”里的“后台页面”下拉直接打开某个后台页面，后台里的修改会同步到前台画面。</p>
+    <div class="browser"><div class="chrome"><i></i><i></i><i></i><span>🔒 <b id="durl" style="font-weight:400">ding.example</b></span></div>
+      <div class="dwrap"><div class="dframe d" id="desk"></div><div id="desk-ov"></div></div></div>
+  </section>
+  <section id="secM">
+    <h2 class="cap">手机端</h2>
+    <p>三台手机可以分别操作。收藏、反馈、常用设备、浏览记录在所有画面之间同步。</p>
+    <div class="phones">
+      <div class="pw"><h4>跟随“跳转”</h4><div class="phone" id="m1"></div></div>
+      <div class="pw"><h4>“先别更新”的版本</h4><div class="phone" id="m2"></div></div>
+      <div class="pw"><h4>我的 · 收藏与同步码</h4><div class="phone" id="m3"></div></div>
+    </div>
+  </section>
+
+  <section class="legend">
+    <div class="card"><h3>页面清单 · 前台</h3><ul><li>首页：本周概览、公告、收藏动态、分类、最新更新、热门</li><li>软件库：分类、排序、收藏</li><li>软件详情：结论、设备、版本选择、下载，以及更新内容、安装教程、常见问题、版本记录、软件信息五个标签页，还有反馈和同类推荐</li><li>公告：列表、筛选、详情、关联软件</li><li>搜索：热门、历史、结果高亮、找不到时提交想要的软件</li><li>我的：收藏、最近看过、同步码、常用设备、提醒、反馈记录</li></ul></div>
+    <div class="card"><h3>页面清单 · 后台（电脑）</h3><ul><li>工作台：今日数据、需要你处理、想要的软件、最近发布、广告位</li><li>软件管理：列表、搜索、分类/状态筛选、上下架</li><li>软件编辑：基本信息、slug 锁定、设备、图标主色、分设备安装教程、常见问题、截图</li><li>版本管理：按软件 + 设备分组的版本列表、筛选</li><li>版本编辑：更新建议四档、先别更新必选稳定版、分类更新内容、获取入口、实时群通知与卡片预览</li><li>公告管理、用户反馈、想要的软件、广告管理、站点设置</li></ul></div>
+    <div class="card"><h3>弹层</h3><ul><li>小红书内打开：图示引导，并提供复制链接</li><li>分享：复制链接、群通知文案、分享海报</li><li>反馈问题：选问题类型、补充说明</li><li>同步码：生成，或在新设备上输入恢复</li><li>想要的软件：用户提交</li><li>后台抽屉：公告编辑、推广素材编辑</li><li>后台弹窗：版本预览、把版本标为先别更新、收录想要的软件、修改密码</li></ul></div>
+    <div class="card"><h3>用户与收藏</h3><ul><li>看和下载：永远不用登录</li><li>收藏：点一下即可，保存在本机</li><li>换手机：用同步码恢复收藏，不需要账号</li><li>新版本提醒：需要登录，规划中</li></ul></div>
+    <div class="card"><h3>广告位</h3><ul><li>首页列表第 3 条之后（手机和电脑）</li><li>详情页下载区下方（手机）</li><li>右侧栏 300×250（电脑首页和详情页）</li><li>都标注“广告”；不放在下载按钮旁边；后台有总开关和每个位置的开关，可查看曝光和点击，推广素材可指定投放位置和起止时间</li></ul></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ================= 数据 ================= */
+const NAMES=[['版本喵','喵'],['叮！新版','叮'],['软件上新了','新'],['叮咚上新','叮'],['今日上新','今'],['升升','升']];
+const DEVN={android:{n:'安卓手机',s:'安卓',i:'📱'},ios:{n:'苹果手机',s:'苹果',i:'🍎'},tv:{n:'电视盒子',s:'电视',i:'📺'},pc:{n:'电脑',s:'电脑',i:'💻'}};
+const ADV={ok:{t:'建议更新',i:'✓'},warn:{t:'可以等等',i:'!'},bad:{t:'先别更新',i:'✕'},opt:{t:'可选更新',i:'○'}};
+const CATS=[['all','全部','🧩','#EEF1F6'],['video','影视','🎬','#FDECEC'],['cloud','网盘','☁️','#EAF2FF'],['tool','工具','🧰','#FFF4E0'],['music','音乐','🎵','#FCE8F3'],['note','笔记','📝','#E7F7EE'],['read','阅读','📚','#F1ECFF'],['browser','浏览器','🌐','#E6F6FB']];
+const REQ={android:'安卓 7.0 及以上',ios:'iOS 14 及以上',tv:'安卓电视 5.0 及以上',pc:'Windows 10 / 11'};
+const SOFT={
+ guangmu:{name:'光幕影视',g:'光',c:'linear-gradient(135deg,#F43F5E,#E11D48)',cat:'video',desc:'看电视剧、电影的播放器，手机、电视、电脑都能用',views:12400,favs:3210,fb:[128,6],devr:'光幕工作室',site:'guangmu.example',tags:['免广告','投屏','倍速'],
+  dev:{
+   android:{v:'3.2.1',p:'3.2.0',d:'10-16',a:'ok',sum:'修复播放卡顿，新增 0.5x–2x 倍速播放',tip:'修复了播放卡顿，旧版也还能用，不着急。',size:'38.2 MB',n:{add:['新增 0.5x–2x 倍速播放','新增“继续观看”列表'],fix:['修复部分机型播放卡顿','修复横屏时字幕错位'],opt:['启动速度提升约 30%']},known:[],h:[['3.2.0','09-30','ok','新增线路切换'],['3.1.4','09-12','opt','修复小问题'],['3.1.0','08-20','warn','界面改版，部分机型闪退']]},
+   tv:{v:'3.2.1',p:'3.2.0',d:'10-16',a:'ok',sum:'修复播放卡顿，遥控器更好用',tip:'电视版建议更新，“遥控器选不中”的问题修好了。',size:'26.5 MB',n:{add:['新增儿童模式'],fix:['修复播放卡顿','修复遥控器焦点丢失'],opt:['首页加载更快']},known:[],h:[['3.2.0','09-30','ok','新增线路切换']]},
+   ios:{v:'2.9.0',p:'2.8.3',d:'10-10',a:'ok',sum:'适配新系统，修复投屏失败',tip:'直接在 App Store 更新即可。',size:'App Store',n:{add:[],fix:['修复投屏失败'],opt:['适配 iOS 新系统']},known:[],h:[['2.8.3','09-02','ok','修复闪退']]},
+   pc:{v:'1.14.2',p:'1.14.1',d:'10-12',a:'opt',sum:'修复杀毒软件误报',tip:'被杀毒软件拦截的话再更新，其他情况可以不更新。',size:'64.0 MB',n:{add:[],fix:['修复部分杀毒软件误报'],opt:[]},known:[],h:[['1.14.1','09-20','ok','新增快捷键']]}}},
+ cloud:{name:'云盘助手',g:'云',c:'linear-gradient(135deg,#3B82F6,#2563EB)',cat:'cloud',desc:'网盘批量下载、转存与整理',views:8600,favs:1880,fb:[21,47],devr:'云起软件',site:'cloud.example',tags:['批量下载','转存'],
+  dev:{
+   pc:{v:'4.1.0',p:'4.0.6',d:'10-14',a:'bad',sum:'登录异常，官方正在修复',tip:'4.1.0 有登录问题。还没更新的先别更新；已经更新的先用网页版，或者装回 4.0.6。',size:'52.3 MB',stable:'4.0.6',n:{add:['新增转存队列','新增夜间模式'],fix:[],opt:['下载速度显示更准确']},known:['部分账号无法登录（官方已确认，修复中）'],h:[['4.0.6','09-20','ok','稳定版本，推荐'],['4.0.5','09-01','ok','修复崩溃']]},
+   android:{v:'3.3.2',p:'3.3.1',d:'10-08',a:'ok',sum:'适配新系统，修复后台下载中断',tip:'可以更新。',size:'30.1 MB',n:{add:[],fix:['修复后台下载中断'],opt:['适配新系统']},known:[],h:[['3.3.1','09-01','ok','修复闪退']]}}},
+ xinghe:{name:'星河TV',g:'星',c:'linear-gradient(135deg,#8B5CF6,#6D28D9)',cat:'video',desc:'电视直播与回看，支持节目单',views:7300,favs:1420,fb:[88,4],devr:'星河团队',site:'xinghe.example',tags:['直播','回看'],
+  dev:{tv:{v:'5.0.3',p:'5.0.2',d:'10-15',a:'ok',sum:'新增节目预约，修复换台黑屏',tip:'建议更新，换台更快。',size:'18.7 MB',n:{add:['新增节目预约'],fix:['修复换台黑屏'],opt:['换台速度提升']},known:[],h:[['5.0.2','09-25','ok','修复回看']]},
+       android:{v:'5.0.3',p:'5.0.2',d:'10-15',a:'ok',sum:'新增节目预约',tip:'可以更新。',size:'21.0 MB',n:{add:['新增节目预约'],fix:[],opt:[]},known:[],h:[]}}},
+ note:{name:'墨记笔记',g:'墨',c:'linear-gradient(135deg,#22C55E,#15803D)',cat:'note',desc:'多设备同步的 Markdown 笔记',views:4300,favs:960,fb:[64,9],devr:'墨记科技',site:'note.example',tags:['同步','Markdown'],
+  dev:{ios:{v:'6.0.0',p:'5.9.3',d:'10-13',a:'ok',sum:'大版本：新增知识图谱，编辑器重做',tip:'建议更新，更新前先导出一份备份。',size:'App Store',n:{add:['新增知识图谱','新增双链笔记'],fix:[],opt:['编辑器重做，更流畅']},known:[],h:[['5.9.3','10-01','ok','修复同步']]},
+       pc:{v:'5.9.3',p:'5.9.2',d:'10-01',a:'warn',sum:'同步偶尔冲突',tip:'偶尔出现同步冲突，不急的话等下个版本。',size:'88.4 MB',n:{add:[],fix:['修复图片显示'],opt:[]},known:['多设备同时编辑时偶尔冲突'],h:[['5.9.2','09-15','ok','稳定']]},
+       android:{v:'6.0.0',p:'5.9.3',d:'10-13',a:'ok',sum:'新增知识图谱',tip:'建议更新，更新前先备份。',size:'41.2 MB',n:{add:['新增知识图谱'],fix:[],opt:[]},known:[],h:[]}}},
+ clean:{name:'快清',g:'清',c:'linear-gradient(135deg,#F59E0B,#D97706)',cat:'tool',desc:'手机清理与省电',views:3900,favs:610,fb:[33,2],devr:'快清团队',site:'clean.example',tags:['清理','省电'],
+  dev:{android:{v:'2.2.0',p:'2.1.5',d:'10-09',a:'ok',sum:'新增省电模式',tip:'可以更新。',size:'12.4 MB',n:{add:['新增省电模式'],fix:[],opt:['清理更彻底']},known:[],h:[]}}},
+ player:{name:'听海音乐',g:'听',c:'linear-gradient(135deg,#EC4899,#BE185D)',cat:'music',desc:'无损音乐播放器，支持歌词',views:5100,favs:1130,fb:[52,3],devr:'听海音乐',site:'player.example',tags:['无损','歌词'],
+  dev:{android:{v:'7.1.1',p:'7.1.0',d:'10-05',a:'ok',sum:'修复蓝牙耳机断连',tip:'用蓝牙耳机的建议更新。',size:'45.6 MB',n:{add:[],fix:['修复蓝牙耳机断连'],opt:[]},known:[],h:[]},
+       ios:{v:'7.1.0',p:'7.0.2',d:'10-03',a:'opt',sum:'修复歌词错位',tip:'可以更新。',size:'App Store',n:{add:[],fix:['修复歌词错位'],opt:[]},known:[],h:[]}}},
+ tool:{name:'截图大师',g:'截',c:'linear-gradient(135deg,#14B8A6,#0F766E)',cat:'tool',desc:'滚动截图、标注与贴图',views:2200,favs:380,fb:[18,1],devr:'截图大师',site:'tool.example',tags:['截图'],
+  dev:{pc:{v:'3.0.4',p:'3.0.3',d:'09-25',a:'opt',sum:'修复多屏截图错位',tip:'用多块屏幕的建议更新。',size:'9.2 MB',n:{add:[],fix:['修复多屏错位'],opt:[]},known:[],h:[]}}},
+ unzip:{name:'解压专家',g:'解',c:'linear-gradient(135deg,#64748B,#334155)',cat:'tool',desc:'支持各种压缩格式，无广告',views:2900,favs:420,fb:[40,2],devr:'解压专家',site:'unzip.example',tags:['解压'],
+  dev:{pc:{v:'2.5.0',p:'2.4.8',d:'10-11',a:'ok',sum:'支持 7z 分卷解压',tip:'可以更新。',size:'6.8 MB',n:{add:['支持 7z 分卷'],fix:[],opt:[]},known:[],h:[]},android:{v:'2.5.0',p:'2.4.8',d:'10-11',a:'ok',sum:'支持 7z 分卷解压',tip:'可以更新。',size:'8.1 MB',n:{add:['支持 7z 分卷'],fix:[],opt:[]},known:[],h:[]}}},
+ browser:{name:'极速浏览器',g:'速',c:'linear-gradient(135deg,#0EA5E9,#0369A1)',cat:'browser',desc:'轻量浏览器，可以直接下载安装包',views:3300,favs:540,fb:[29,5],devr:'极速科技',site:'browser.example',tags:['下载','轻量'],
+  dev:{android:{v:'9.8.0',p:'9.7.2',d:'10-07',a:'ok',sum:'下载管理重做',tip:'可以更新。',size:'15.3 MB',n:{add:['下载管理重做'],fix:[],opt:[]},known:[],h:[]}}},
+ reader:{name:'书虫阅读',g:'书',c:'linear-gradient(135deg,#A855F7,#7E22CE)',cat:'read',desc:'本地小说阅读，支持听书',views:2600,favs:470,fb:[36,3],devr:'书虫',site:'reader.example',tags:['小说','听书'],
+  dev:{android:{v:'4.3.1',p:'4.3.0',d:'09-28',a:'opt',sum:'修复听书断续',tip:'可以更新。',size:'22.9 MB',n:{add:[],fix:['修复听书断续'],opt:[]},known:[],h:[]},ios:{v:'4.3.0',p:'4.2.6',d:'09-20',a:'ok',sum:'新增夜间护眼',tip:'可以更新。',size:'App Store',n:{add:['新增夜间护眼'],fix:[],opt:[]},known:[],h:[]}}}
+};
+const TUT={
+ android:{s:[['点「官方下载」，下载完成后点通知栏打开','下载完成通知'],['提示“禁止安装未知应用”时，点「设置」→ 允许此来源','系统设置开关'],['回到安装界面点「安装」，完成后点「打开」','安装完成界面']],tip:'不要在小红书里下载，请先在浏览器打开，否则可能下载失败。',q:[['提示“解析包出错”','安装包没下完整。删除后用浏览器重新下载。'],['提示“风险应用”','这是系统的通用提示，安装包来自官网的话可以选择“继续安装”。'],['安装后闪退','先卸载旧版再安装；仍然闪退的话，在反馈里选“闪退”并写上手机型号。']]},
+ ios:{s:[['点按钮跳转到 App Store','App Store 页面'],['点「获取」或「更新」，按提示验证','获取按钮'],['打开后按提示允许网络权限','权限弹窗']],tip:'苹果手机只能从 App Store 安装，本站不提供其他安装方式。',q:[['App Store 搜不到','可能是地区原因，直接用上面的按钮打开。'],['要不要先删除旧版','不需要，直接更新，记录会保留。']]},
+ tv:{s:[['在手机或电脑上下载电视版安装包','下载电视版'],['用「当贝助手」或 U 盘把安装包传到电视','传输到电视'],['在电视的文件管理里找到安装包，点击安装','电视安装界面']],tip:'电视第一次装软件时，需要在「设置 → 安全」里打开“允许安装未知来源”。',q:[['电视提示“禁止安装”','在电视「设置 → 安全」里打开“允许安装未知来源”。'],['U 盘插上没反应','把 U 盘格式化成 FAT32 再试。'],['遥控器选不中按钮','升级到最新版可以解决。']]},
+ pc:{s:[['点「官方下载」，保存安装包','保存文件'],['双击安装包，按提示点“下一步”','安装向导'],['被杀毒软件拦截时，选择“允许”或“信任”','杀毒软件提示']],tip:'安装路径尽量不要有中文。',q:[['杀毒软件报毒','来自官网的安装包可以信任；不放心的话在群里问一下。'],['打开提示缺少 dll','安装微软常用运行库后重试。']]}
+};
+const ANN=[
+ {id:'a1',type:'维护通知',cls:'imp',imp:'重要',t:'云盘助手 4.1.0 登录异常，先别升级',b:['官方已确认：Windows 版 4.1.0 部分账号无法登录。','还没更新的，先停留在 4.0.6；已经更新的，请先用网页版，或从软件页“版本记录”下载 4.0.6 装回去。','官方预计本周内发布修复版本，修复后群里和本站会第一时间通知。'],d:'10-14',pin:true,until:'10-21',soft:['cloud'],views:2310},
+ {id:'a2',type:'群公告',cls:'',imp:'普通',t:'本周更新汇总：光幕影视、星河TV 都可以升级',b:['光幕影视 安卓 / 电视 3.2.1：修复卡顿，建议更新。','星河TV 5.0.3：换台更快，建议更新。','墨记笔记 6.0.0：大版本，更新前先备份。'],d:'10-16',soft:['guangmu','xinghe','note'],views:1820},
+ {id:'a3',type:'使用提醒',cls:'tip',imp:'普通',t:'安卓安装时提示“风险应用”怎么办？',b:['这是安卓系统对所有非应用商店软件的通用提示。','确认安装包来自本站的官方链接后，点“继续安装”即可。'],d:'10-10',soft:[],views:960},
+ {id:'a4',type:'群公告',cls:'',imp:'普通',t:'国庆期间更新暂停通知',b:['国庆期间暂停更新整理，节后恢复。'],d:'09-29',ended:true,soft:[],views:540},
+ {id:'a5',type:'维护通知',cls:'imp',imp:'重要',t:'周末服务器维护通知',b:['本周六 22:00–24:00 维护，期间网站可能打不开。','维护期间群里的下载链接也会暂时失效，结束后自动恢复。'],d:'10-18',until:'10-19',draft:true,soft:[],views:0}
+];
+const HOT=['光幕影视','电视直播','网盘','解压','听书'];
+const SHOTC=['linear-gradient(160deg,#1E293B,#475569)','linear-gradient(160deg,#7F1D1D,#E11D48)','linear-gradient(160deg,#1E3A8A,#3B82F6)','linear-gradient(160deg,#14532D,#22C55E)'];
+
+/* ================= 状态 ================= */
+const G={name:NAMES[0][0],glyph:NAMES[0][1],intro:'群友整理的软件更新',footer:'只整理官方信息，不存放安装包',icp:'',tail:'（小红书里打不开就点右上角···，选“在浏览器打开”）',xhs:true,slots:{feed:true,detail:true,side:true},ads:true,inapp:false,fav:new Set(['guangmu','cloud','xinghe']),seen:new Set(['xinghe']),fb:{},myDev:null,recent:['note','clean'],reqs:[['某某浏览器','已收录'],['XX 输入法','处理中']],sync:null,remind:false};
+const F={
+ desk:{d:true,r:'detail',id:'guangmu',ap:'dash',fsel:new Set(),scat:'all',sst:'all',sq:'',rsoft:'all',rdev:'all',radv:'all',rst:'all',ast:'全部',fst:'all',ftype:'all',fsoft:'all',wst:'all'},
+ m1:{r:'home'},
+ m2:{r:'detail',id:'cloud'},
+ m3:{r:'me'}
+};
+for(const k in F)Object.assign(F[k],{q:'',fdev:'all',cat:'all',sort:'new',tab:'notes',rel:0,dev:null,atype:'全部',sheet:null,sm:{}},{...F[k]});
+
+/* ================= 工具 ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const day=d=>{const[m,dd]=d.split('-');return `${+m}月${+dd}日`};
+const num=n=>n>=10000?(n/10000).toFixed(1)+'万':n.toLocaleString();
+const ico=(s,c='')=>`<div class="ico ${c}" style="background:${s.c}">${s.g}</div>`;
+const vtag=a=>`<span class="tag ${a}">${ADV[a].i} ${ADV[a].t}</span>`;
+const pct=s=>{let[o,b]=s.fb;return Math.round(o/(o+b)*100)};
+const latest=s=>Object.entries(s.dev).sort((a,b)=>b[1].d.localeCompare(a[1].d))[0];
+const live=s=>s.st==='on'&&Object.keys(s.dev).length>0;
+const vis=()=>Object.entries(SOFT).filter(([id,s])=>live(s));
+const pubAnn=()=>ANN.filter(a=>!a.draft);
+const hasNew=id=>G.fav.has(id)&&!G.seen.has(id);
+const newCount=()=>[...G.fav].filter(hasNew).length;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1900)}
+function copy(t,ok){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(ok),()=>toast('复制失败，请长按文字手动复制'))}
+function qr(seed){
+  let h=7;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const rnd=()=>(h=(h*1103515245+12345)>>>0)/4294967296;
+  let r='';for(let y=0;y<21;y++)for(let x=0;x<21;x++){if((x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12))continue;if(rnd()>.52)r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+  const f=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3"/>`;
+  return`<svg viewBox="0 0 21 21" fill="#141F33" shape-rendering="crispEdges" aria-label="二维码">${r}${f(0,0)}${f(14,0)}${f(0,14)}</svg>`;
+}
+function feed(){
+  const m=new Map();
+  for(const[id,s]of vis())for(const[dk,r]of Object.entries(s.dev)){const k=id+r.d+r.v;if(!m.has(k))m.set(k,{id,s,r,devs:[]});m.get(k).devs.push(dk)}
+  return[...m.values()].sort((a,b)=>b.r.d.localeCompare(a.r.d));
+}
+function pickDev(f,s){
+  if(f.dev&&s.dev[f.dev])return f.dev;
+  if(G.myDev&&s.dev[G.myDev])return G.myDev;
+  const det=f.d?'pc':'android';return s.dev[det]?det:Object.keys(s.dev)[0];
+}
+function link(id){return`https://ding.example/s/${id}`}
+
+/* ================= 组件 ================= */
+function ad(kind,f){
+  const slot={feed:'feed',wide:'detail',side:'side'}[kind];
+  if(!G.ads||!G.slots[slot])return'';
+  const m=ADM.find(x=>x.st==='投放中'&&x.pos.includes(slot)),mt=m?esc(m.t):'这里是推广标题，最多一行',ms=m?esc(m.sub):'推广说明文字';
+  const x=f.d?'':`<button class="x" data-act="closead" aria-label="关闭广告">✕</button>`;
+  if(kind==='feed')return`<div class="ad feed"><span class="lbl">广告</span>${x}<div class="img">推广图<small>16:9</small></div><div class="txt"><b>${mt}</b><span class="muted xs">${ms} · 了解详情 ›</span></div></div>`;
+  if(kind==='wide')return`<div class="ad wide"><span class="lbl">广告</span>${x}<div class="img">横幅推广位<small>建议 750×220</small></div><div class="txt"><span>${m?mt:'推广标题'}</span><span class="muted">了解 ›</span></div></div>`;
+  return`<div class="ad side"><span class="lbl">广告</span><div class="img">侧栏推广位<small>300×250</small></div><div class="txt"><span>${m?mt:'推广标题'}</span><span class="muted">了解 ›</span></div></div>`;
+}
+const favBtn=(id,cls='btn sm')=>{const on=G.fav.has(id);return`<button class="${cls} ${on?'s':'g'}" data-act="fav" data-id="${id}" aria-pressed="${on}">${on?'★ 已收藏':'☆ 收藏'}</button>`};
+function rc(x){
+  const fav=hasNew(x.id);
+  return`<button class="rc ${fav?'fav':''}" data-act="open" data-id="${x.id}" data-dev="${x.devs[0]}">
+   <div class="row">${ico(x.s)}<div class="grow"><div class="row"><b class="ell">${x.s.name}</b>${fav?'<span class="dot"></span>':''}<span style="margin-left:auto">${vtag(x.r.a)}</span></div>
+   <div class="ver mono"><span class="faint">${x.r.p}</span> → <b>${x.r.v}</b></div></div></div>
+   <p>${x.r.sum}</p>
+   <div class="ft">${x.devs.map(d=>`<span class="mini">${DEVN[d].i} ${DEVN[d].s}</span>`).join('')}<span style="margin-left:auto">👍 ${pct(x.s)}% 能用 · ${num(x.s.views)} 人看过</span></div></button>`;
+}
+function annCard(a,full){
+  return`<button class="${full?'ac':'annc'} ${full?a.cls:''} ${a.pin&&!full?'pin':''} ${a.ended?'ended':''}" data-act="ann" data-id="${a.id}">
+   <div class="row xs">${a.pin?'<span class="tag gold">📌 置顶</span>':''}<span class="tag ${a.cls==='imp'?'bad':a.cls==='tip'?'gold':'b'}">${a.type}</span>${a.ended?'<span class="tag gray">已结束</span>':''}<span class="faint" style="margin-left:auto">${day(a.d)}</span></div>
+   <b>${esc(a.t)}</b>${full?`<p>${esc(a.sum||a.b[0])}</p><div class="row xs faint" style="margin-top:8px">${a.soft.map(id=>`<span class="mini">${SOFT[id].name}</span>`).join('')}<span style="margin-left:auto">${num(a.views)} 人看过</span></div>`:`<span class="xs muted ell" style="display:block">${esc(a.sum||a.b[0])}</span>`}</button>`;
+}
+function libCard(id,s){
+  const[dk,r]=latest(s);
+  return`<div class="lc" data-act="open" data-id="${id}" tabindex="0" role="button">
+   <button class="star" data-act="fav" data-id="${id}" aria-pressed="${G.fav.has(id)}" aria-label="收藏">${G.fav.has(id)?'★':'☆'}</button>
+   ${ico(s)}<b>${s.name}</b><div class="desc">${s.desc}</div>
+   <div class="devi">${Object.keys(s.dev).map(d=>`<span title="${DEVN[d].n}">${DEVN[d].i}</span>`).join('')}</div>
+   <div class="row xs"><span class="mono muted">${r.v}</span>${vtag(r.a)}</div></div>`;
+}
+
+/* ================= 页面：首页 ================= */
+function homeList(f){
+  let rows=feed().filter(x=>f.fdev==='all'||x.devs.includes(f.fdev));
+  rows.sort((a,b)=>hasNew(b.id)-hasNew(a.id));
+  let h='',last='',i=0,shown=false;
+  for(const x of rows){
+    if(hasNew(x.id)){if(!shown){h+=`<div class="day" style="color:var(--brand)">★ 你收藏的软件有新版本</div>`;shown=true}}
+    else{const dd=day(x.r.d);if(dd!==last){last=dd;h+=`<div class="day">${dd}${dd==='10月16日'?' · 今天':''}</div>`}}
+    h+=rc(x);if(++i===3)h+=ad('feed',f);
+  }
+  return h||`<div class="empty"><span class="e">📭</span>这个设备暂时没有更新</div>`;
+}
+function devFilter(f){return`<div class="chips" role="group" aria-label="按设备筛选">${[['all','全部设备'],...Object.entries(DEVN).map(([k,v])=>[k,v.i+' '+v.s])].map(([k,n])=>`<button class="chip" data-act="fdev" data-v="${k}" aria-pressed="${f.fdev===k}">${n}</button>`).join('')}</div>`}
+function rankList(){
+  return vis().sort((a,b)=>b[1].views-a[1].views).slice(0,5).map(([id,s],i)=>`<button class="rank" data-act="open" data-id="${id}"><i>${i+1}</i>${ico(s,'sm')}<div class="grow"><b class="small">${s.name}</b><div class="xs faint">${num(s.views)} 人看过</div></div>${vtag(latest(s)[1].a)}</button>`).join('');
+}
+function favStrip(){
+  const ids=[...G.fav].filter(hasNew);if(!ids.length)return'';
+  return`<div class="sec"><div class="sh"><h3>收藏的软件有更新 <span class="badge">${ids.length}</span></h3><button data-act="seenall">全部已读</button></div><div class="hs">${ids.map(id=>{const s=SOFT[id],[dk,r]=latest(s);return`<button class="favc" data-act="open" data-id="${id}"><span class="dot"></span>${ico(s,'sm')}<b class="small" style="display:block;margin-top:6px">${s.name}</b><span class="mono xs muted">${r.p} → ${r.v}</span><div style="margin-top:6px">${vtag(r.a)}</div></button>`}).join('')}</div></div>`;
+}
+function homeView(f){
+  const fd=feed().filter(x=>x.r.d>='10-10');
+  const okN=fd.filter(x=>x.r.a==='ok').length,badN=fd.filter(x=>x.r.a==='bad').length;
+  const heroL=`<div><div class="t">${G.name} · 10月第3周</div><div class="n">本周 ${fd.length} 个软件更新</div><div class="stats"><span>✓ ${okN} 个建议更新</span><span>✕ ${badN} 个先别更新</span><span>📢 1 条重要公告</span></div>
+    <button class="hsearch" data-act="go" data-r="search">🔍 搜软件名或用途，例如“看电视”</button></div>`;
+  const cats=`<div class="cats">${CATS.slice(1).map(c=>`<button class="cat" data-act="cat" data-v="${c[0]}"><span style="background:${c[3]}">${c[2]}</span>${c[1]}</button>`).join('')}<button class="cat" data-act="cat" data-v="all"><span style="background:#EEF1F6">🧩</span>全部</button></div>`;
+  if(!f.d){
+    return`<div class="sec">${`<div class="hero">${heroL}</div>`}</div>
+     <div class="sec"><div class="sh"><h3>群公告</h3><button data-act="go" data-r="ann">全部 ›</button></div><div class="hs">${pubAnn().filter(a=>!a.ended).sort((a,b)=>!!b.pin-!!a.pin).map(a=>annCard(a)).join('')}</div></div>
+     ${favStrip()}
+     <div class="sec">${cats}</div>
+     <div class="sec"><div class="sh"><h3>最新更新</h3><button data-act="go" data-r="lib">软件库 ›</button></div>${devFilter(f)}<div style="margin-top:6px">${homeList(f)}</div></div>
+     <div class="sec card"><div class="sh"><h3>🔥 本周热门</h3></div>${rankList()}</div>
+     ${foot()}`;
+  }
+  return`<div class="dbody"><div class="hero">${heroL}<div class="hero-side"><b class="small" style="opacity:.85">📌 置顶公告</b>${pubAnn().filter(a=>!a.ended).sort((a,b)=>!!b.pin-!!a.pin).slice(0,3).map(a=>`<button class="it" data-act="ann" data-id="${a.id}"><span class="grow ell small">${a.t}</span><span class="xs" style="opacity:.7">${day(a.d)}</span></button>`).join('')}</div></div>
+   <div style="margin:20px 0">${cats}</div>
+   <div class="two"><div><div class="sh"><h3 style="font-size:20px">最新更新</h3><span class="small muted">共 ${feed().length} 条</span></div>${devFilter(f)}<div style="margin-top:8px">${homeList(f)}</div></div>
+   <aside class="aside">
+    <div class="card"><div class="sh"><h3>⭐ 我的收藏 ${newCount()?`<span class="badge">${newCount()}</span>`:''}</h3><button data-act="go" data-r="me">管理 ›</button></div>${favList(4)}</div>
+    <div class="card"><div class="sh"><h3>🔥 本周热门</h3></div>${rankList()}</div>
+    ${ad('side',f)}
+   </aside></div></div>${dfoot()}`;
+}
+
+/* ================= 页面：软件库 ================= */
+function libView(f){
+  let list=vis().filter(([id,s])=>f.cat==='all'||s.cat===f.cat);
+  list.sort((a,b)=>f.sort==='hot'?b[1].views-a[1].views:latest(b[1])[1].d.localeCompare(latest(a[1])[1].d));
+  const head=`<div class="chips" role="group" aria-label="分类">${CATS.map(c=>`<button class="chip" data-act="cat" data-v="${c[0]}" aria-pressed="${f.cat===c[0]}">${c[2]} ${c[1]}</button>`).join('')}</div>
+   <div class="row small" style="margin:12px 0 10px"><span class="muted">${list.length} 款软件</span><span class="grow"></span>排序：<button class="tag ${f.sort==='new'?'b':'gray'}" data-act="sort" data-v="new">最近更新</button><button class="tag ${f.sort==='hot'?'b':'gray'}" data-act="sort" data-v="hot">最多人看</button></div>`;
+  const grid=`<div class="lib">${list.map(([id,s])=>libCard(id,s)).join('')}</div>`;
+  if(f.d)return`<div class="dbody"><h1 style="font-size:28px">软件库</h1><p class="muted" style="margin-bottom:14px">群里整理过的全部软件，点击查看下载和教程。</p>${head}${grid}</div>${dfoot()}`;
+  return`<div class="sec">${head}${grid}</div>${foot()}`;
+}
+
+/* ================= 页面：详情 ================= */
+function relOf(r,idx){if(!idx)return r;const h=r.h[idx-1];return{v:h[0],d:h[1],a:h[2],sum:h[3],old:true,size:r.size,stable:null}}
+function dlBox(f,id,s,dk){
+  const cur=s.dev[dk],r=relOf(cur,f.rel);
+  const label=dk==='ios'?'去 App Store 下载':`官方下载 ${DEVN[dk].s}版`;
+  let h=`<div class="sh" style="margin-bottom:8px"><h3>${f.d?'下载':'选择你的设备'}</h3>${f.d?'':`<span class="xs faint">已自动识别</span>`}</div>
+  <div class="devpick" role="group" aria-label="选择设备">${Object.keys(DEVN).map(k=>{const ok=!!s.dev[k],det=(f.d?'pc':'android')===k;
+    return`<button class="dev" data-act="dev" data-v="${k}" aria-pressed="${k===dk}" ${ok?'':'disabled title="暂无此设备版本"'}><span>${DEVN[k].i}</span>${DEVN[k].s}${det&&ok?'<em>本机</em>':''}</button>`}).join('')}</div>`;
+  const vers=[[cur.v,cur.d,'最新'],...cur.h.map(x=>[x[0],x[1],x[2]==='bad'?'有问题':'旧版'])];
+  if(vers.length>1)h+=`<div class="vsel" role="group" aria-label="选择版本">${vers.map((v,i)=>`<button data-act="rel" data-v="${i}" aria-pressed="${f.rel===i}"><b class="mono">${v[0]}</b><span class="xs">${v[2]} · ${day(v[1])}</span></button>`).join('')}</div>`;
+  else h+=`<div style="height:12px"></div>`;
+  if(r.old)h+=`<div class="oldnote">你正在看旧版本 ${r.v}。没有特别需要，建议下载最新版 ${cur.v}。</div>`;
+  if(!r.old&&r.a==='bad'){
+    h+=`<div class="alert">⚠ ${r.v} 有问题，建议先下载稳定版 <b>${cur.stable}</b></div>
+     <button class="btn p block lg" data-act="toast" data-t="示例：跳转官方下载 ${cur.stable}">⬇ 下载稳定版 ${cur.stable}</button>
+     <button class="btn g block" style="margin-top:8px" data-act="toast" data-t="示例：跳转官方下载 ${r.v}">仍要下载 ${r.v}</button>`;
+  }else h+=`<button class="btn p block lg" data-act="dl">⬇ ${label}${r.old?' '+r.v:''}</button>`;
+  h+=`<div class="meta2"><span>✓ 官方来源 ${s.site}</span><span>📦 ${r.size}</span><span>🖥 ${REQ[dk]}</span></div>`;
+  if(dk!=='ios')h+=`<div class="backup"><div class="t"><b>备用：网盘下载</b> <span class="xs faint">官网打不开时用</span><div class="ell muted xs" style="margin-top:2px">pan.example.com/s/1aBcD · 提取码 <span class="code">k3m9</span></div></div><button class="btn sm s" data-act="copy" data-text="k3m9" data-ok="提取码已复制">复制提取码</button></div>`;
+  if(f.d&&dk!=='pc')h+=`<div class="qr">${qr(id+dk)}<div class="small"><b>用手机扫码下载</b><br><span class="muted">手机扫码后打开这个页面，直接下载${DEVN[dk].s}版。${dk==='tv'?'<br>也可以在电脑上下载，用 U 盘拷到电视。':''}</span></div></div>`;
+  if(!f.d&&dk==='pc')h+=`<p class="small muted" style="margin-top:10px">💡 这是电脑版，建议到电脑上打开。<a data-act="copy" data-text="${link(id)}?d=pc" data-ok="链接已复制，发到电脑上打开">复制链接</a></p>`;
+  return h;
+}
+function tabBody(f,id,s,dk){
+  const cur=s.dev[dk],t=TUT[dk];
+  if(f.tab==='notes'){
+    const sec=(k,lbl)=>(cur.n[k]||[]).map(x=>`<li><span class="k ${k}">${lbl}</span>${x}</li>`).join('');
+    return`<div class="card"><div class="diff"><span class="mono">${cur.p}</span>→<span class="mono new">${cur.v}</span><span class="faint small">${DEVN[dk].s}版 · ${day(cur.d)}</span></div>
+     <ul class="nl">${sec('add','新增')}${sec('fix','修复')}${sec('opt','优化')}${cur.known.map(x=>`<li><span class="k known">已知问题</span>${x}</li>`).join('')}</ul>
+     <div class="shots">${SHOTC.map((c,i)=>`<div class="shot" style="background:${c}">截图 ${i+1}</div>`).join('')}</div></div>`;
+  }
+  if(f.tab==='tut')return`<div class="card"><h3 style="margin-bottom:4px">${DEVN[dk].n}安装教程</h3><p class="xs faint">大约 2 分钟</p><ol class="steps">${t.s.map(x=>`<li><div>${x[0]}<div class="ill">示意图：${x[1]}</div></div></li>`).join('')}</ol><div class="tip">💡 ${t.tip}</div></div>`;
+  if(f.tab==='faq')return`<div class="card">${t.q.map(q=>`<details><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join('')}<details><summary>以上都没解决？</summary><p>点下方“有问题”提交反馈，或在群里 @群主，说一下设备型号和卡在哪一步。</p></details></div>`;
+  if(f.tab==='hist')return`<div class="card"><div class="tl"><div class="n cur"><div class="row"><b class="mono">${cur.v}</b>${vtag(cur.a)}<span class="xs faint" style="margin-left:auto">${day(cur.d)}</span></div><div class="small muted">${cur.sum}</div></div>${cur.h.map((x,i)=>`<div class="n ${x[2]==='bad'?'bad':''}"><div class="row"><b class="mono">${x[0]}</b>${vtag(x[2])}<span class="xs faint" style="margin-left:auto">${day(x[1])}</span></div><div class="small muted">${x[3]} · <a data-act="rel" data-v="${i+1}">下载这个版本</a></div></div>`).join('')||''}</div>${cur.h.length?'':'<p class="small faint">暂无更早的版本记录</p>'}</div>`;
+  return`<div class="card"><table class="info"><tr><td>开发者</td><td>${s.devr}</td></tr><tr><td>官方网站</td><td><a data-act="toast" data-t="示例：打开官网">${s.site} ↗</a></td></tr><tr><td>支持设备</td><td>${Object.keys(s.dev).map(d=>DEVN[d].n).join('、')}</td></tr><tr><td>系统要求</td><td>${REQ[dk]}</td></tr><tr><td>安装包大小</td><td>${cur.size}</td></tr><tr><td>收费</td><td>免费，含可选内购</td></tr><tr><td>标签</td><td>${s.tags.map(x=>`<span class="mini">${x}</span>`).join(' ')}</td></tr><tr><td>收录时间</td><td>2026年8月</td></tr></table></div>`;
+}
+function fbBox(id,s){
+  const mine=G.fb[id];let[o,b]=s.fb;if(mine==='ok')o++;if(mine==='bad')b++;const p=Math.round(o/(o+b)*100);
+  return`<div class="sh"><h3>更新后能正常用吗？</h3><span class="xs faint">${o+b} 人反馈</span></div>
+   <div class="fb"><button data-act="fb" data-id="${id}" data-v="ok" aria-pressed="${mine==='ok'}">👍 能正常用 · ${o}</button><button data-act="fb" data-id="${id}" data-v="bad" aria-pressed="${mine==='bad'}">👎 有问题 · ${b}</button></div>
+   <div class="bar"><i style="width:${p}%"></i></div><p class="xs muted" style="margin-top:5px">${p}% 的群友反馈能正常使用${p<60?' · <b style="color:var(--bad)">问题较多，建议先等等</b>':''}</p>`;
+}
+function detailView(f){
+  const id=f.id,s=SOFT[id],dk=pickDev(f,s),cur=s.dev[dk];
+  G.seen.add(id);if(!G.recent.includes(id))G.recent.unshift(id);G.recent=G.recent.slice(0,6);
+  const head=`<div class="dhead">${ico(s,f.d?'xl':'lg')}<div class="grow"><div class="row xs">${CATS.find(c=>c[0]===s.cat).slice(1,3).reverse().join(' ')}<span class="faint">· ${s.devr}</span></div><h1>${s.name}</h1><p class="small muted">${s.desc}</p></div>${f.d?`<div class="row">${favBtn(id,'btn')}<button class="btn g" data-act="sheet" data-v="share">↗ 分享</button></div>`:''}</div>
+   <div class="kpis"><div><b style="color:var(--ok)">${pct(s)}%</b><span>反馈能用</span></div><div><b>${num(s.favs)}</b><span>人收藏</span></div><div><b>${day(cur.d)}</b><span>最近更新</span></div></div>
+   <div class="verdict ${cur.a}"><span class="vi">${ADV[cur.a].i}</span><div><b>${ADV[cur.a].t} · ${DEVN[dk].s}版 ${cur.v}</b><span class="small">${cur.tip}</span></div></div>`;
+  const tabs=`<div class="dtabs" role="tablist">${[['notes','更新内容'],['tut','安装教程'],['faq','常见问题'],['hist','版本记录'],['info','软件信息']].map(([k,n])=>`<button role="tab" data-act="tab" data-v="${k}" aria-selected="${f.tab===k}">${n}</button>`).join('')}</div>`;
+  const anns=pubAnn().filter(a=>a.soft.includes(id));
+  const rel=anns.length?`<div class="card"><div class="sh"><h3>相关公告</h3></div>${anns.map(a=>annCard(a,true)).join('')}</div>`:'';
+  const sims=vis().filter(([k,x])=>k!==id&&x.cat===s.cat).concat(vis().filter(([k,x])=>k!==id&&x.cat!==s.cat)).slice(0,4);
+  const sim=`<div><div class="sh"><h3>大家还在看</h3></div><div class="hs" style="${f.d?'margin:0;padding:2px 0 4px':''}">${sims.map(([k,x])=>`<button class="sim" data-act="open" data-id="${k}">${ico(x,'sm')}<b class="small ell" style="display:block;margin-top:6px">${x.name}</b><span class="xs muted">${latest(x)[1].v}</span></button>`).join('')}</div></div>`;
+  if(f.d)return`<div class="dbody"><p class="small muted" style="margin-bottom:16px"><a data-act="go" data-r="home">首页</a> › <a data-act="cat" data-v="${s.cat}">${CATS.find(c=>c[0]===s.cat)[1]}</a> › ${s.name}</p>
+   <div class="two"><div style="display:flex;flex-direction:column;gap:16px">${head}<div>${tabs}<div style="margin-top:10px">${tabBody(f,id,s,dk)}</div></div><div class="card">${fbBox(id,s)}</div>${rel}${sim}</div>
+   <aside class="aside"><div class="card">${dlBox(f,id,s,dk)}</div>${ad('side',f)}</aside></div></div>${dfoot()}`;
+  return`<div class="sec">${head}</div><div class="sec card">${dlBox(f,id,s,dk)}</div><div class="sec">${ad('wide',f)}</div>
+   ${tabs}<div class="sec">${tabBody(f,id,s,dk)}</div><div class="sec card">${fbBox(id,s)}</div>${rel?`<div class="sec">${rel}</div>`:''}<div class="sec">${sim}</div>${foot()}`;
+}
+
+/* ================= 页面：公告 ================= */
+function annView(f){
+  const types=['全部','群公告','使用提醒','维护通知'];
+  const list=pubAnn().filter(a=>f.atype==='全部'||a.type===f.atype);
+  const h=`<div class="chips" style="margin-bottom:12px">${types.map(t=>`<button class="chip" data-act="atype" data-v="${t}" aria-pressed="${f.atype===t}">${t}</button>`).join('')}</div>${list.map(a=>annCard(a,true)).join('')}`;
+  if(f.d)return`<div class="dbody" style="max-width:820px"><h1 style="font-size:28px">群公告</h1><p class="muted" style="margin-bottom:14px">重要通知、使用提醒和维护安排。</p>${h}</div>${dfoot()}`;
+  return`<div class="sec">${h}</div>${foot()}`;
+}
+function annDetail(f){
+  const a=ANN.find(x=>x.id===f.id);
+  const body=`<div class="article">${a.ended?'<div class="oldnote">这条公告已结束，内容仅供参考。</div>':''}<div class="row xs">${a.pin?'<span class="tag gold">📌 置顶</span>':''}<span class="tag ${a.cls==='imp'?'bad':a.cls==='tip'?'gold':'b'}">${a.type}</span><span class="faint">${day(a.d)}发布${a.until?' · 有效期到 '+day(a.until):''} · ${num(a.views)} 人看过</span></div>
+   <h1>${a.t}</h1><div class="body">${a.b.map(p=>`<p>${p}</p>`).join('')}</div>
+   ${a.soft.length?`<div class="sh" style="margin-top:18px"><h3>相关软件</h3></div>${a.soft.map(id=>{const s=SOFT[id],[dk,r]=latest(s);return`<button class="rc" data-act="open" data-id="${id}"><div class="row">${ico(s,'sm')}<div class="grow"><b>${s.name}</b><div class="xs muted mono">${r.v} · ${day(r.d)}</div></div>${vtag(r.a)}</div></button>`}).join('')}`:''}
+   <div class="row" style="margin-top:16px"><button class="btn g grow" data-act="copy" data-text="https://ding.example/n/${a.id}" data-ok="公告链接已复制">🔗 复制公告链接</button></div></div>`;
+  if(f.d)return`<div class="dbody" style="max-width:760px"><p class="small muted" style="margin-bottom:16px"><a data-act="go" data-r="ann">群公告</a> › 详情</p><div class="card" style="padding:28px 32px">${body}</div></div>${dfoot()}`;
+  return`<div class="sec">${body}</div>${foot()}`;
+}
+
+/* ================= 页面：搜索 ================= */
+function searchRes(f){
+  const q=f.q.trim();
+  if(!q)return`<div class="sh"><h3>大家在搜</h3></div><div class="chips" style="flex-wrap:wrap">${HOT.map((x,i)=>`<button class="chip" data-act="hot" data-v="${x}">${i<3?'🔥 ':''}${x}</button>`).join('')}</div>
+   <div class="sh" style="margin-top:18px"><h3>最近看过</h3><button data-act="toast" data-t="已清空">清空</button></div>${G.recent.map(id=>{const s=SOFT[id];return`<button class="rank" data-act="open" data-id="${id}">${ico(s,'sm')}<div class="grow"><b class="small">${s.name}</b><div class="xs faint">${s.desc}</div></div><span class="faint">›</span></button>`}).join('')}`;
+  const hl=t=>esc(t).split(esc(q)).join(`<mark>${esc(q)}</mark>`);
+  const ss=vis().filter(([id,s])=>(s.name+s.desc+s.tags.join('')+CATS.find(c=>c[0]===s.cat)[1]).includes(q));
+  const aa=pubAnn().filter(a=>(a.t+a.b.join('')).includes(q));
+  if(!ss.length&&!aa.length)return`<div class="empty"><span class="e">🔍</span>没找到“${esc(q)}”<p class="small" style="margin:6px 0 12px">换个关键词试试，或者告诉群主你想要什么软件</p><button class="btn s" data-act="sheet" data-v="request">＋ 我想要这个软件</button></div>`;
+  return`<div class="res">${ss.length?`<div class="sh"><h3>软件 · ${ss.length}</h3></div>${ss.map(([id,s])=>{const[dk,r]=latest(s);return`<button class="rc" data-act="open" data-id="${id}"><div class="row">${ico(s,'sm')}<div class="grow"><b>${hl(s.name)}</b><div class="xs muted ell">${hl(s.desc)}</div></div>${vtag(r.a)}</div></button>`}).join('')}`:''}
+   ${aa.length?`<div class="sh" style="margin-top:14px"><h3>公告 · ${aa.length}</h3></div>${aa.map(a=>`<button class="ac" data-act="ann" data-id="${a.id}"><b>${hl(a.t)}</b><p>${day(a.d)}</p></button>`).join('')}`:''}</div>`;
+}
+function searchView(f,fid){
+  if(f.d)return`<div class="dbody" style="max-width:820px"><label class="search" style="min-height:52px;background:#fff;border-color:var(--line)"><span>🔍</span><input data-act="q" placeholder="搜软件名、用途或公告" value="${esc(f.q)}"></label><div id="${fid}-res" style="margin-top:18px">${searchRes(f)}</div></div>${dfoot()}`;
+  return`<div class="sec" id="${fid}-res">${searchRes(f)}</div>`;
+}
+
+/* ================= 页面：我的 ================= */
+function favList(max){
+  if(!G.fav.size)return`<div class="empty"><span class="e">☆</span>还没有收藏<p class="xs">在软件页点「☆ 收藏」，有新版本时会提醒你</p></div>`;
+  return[...G.fav].slice(0,max||99).map(id=>{const s=SOFT[id],[dk,r]=latest(s);
+   return`<div class="lr">${ico(s,'sm')}<div class="grow" data-act="open" data-id="${id}" style="cursor:pointer"><b class="small">${s.name}</b>${hasNew(id)?'<span class="dot"></span>':''}<div class="xs muted"><span class="mono">${r.v}</span> · ${day(r.d)} · ${ADV[r.a].t}</div></div><button class="btn sm ${hasNew(id)?'p':'g'}" data-act="open" data-id="${id}">${hasNew(id)?'看新版':'查看'}</button></div>`}).join('');
+}
+function meView(f){
+  const fbN=Object.keys(G.fb).length;
+  const blocks=`
+   <div class="card"><div class="sh"><h3>⭐ 我的收藏</h3>${newCount()?`<button data-act="seenall">全部已读</button>`:''}</div>${favList()}</div>
+   <div class="card" style="background:linear-gradient(180deg,#F5F8FF,#fff);border-color:#D3DFFB"><div class="sh"><h3>🔄 换手机也能保留收藏</h3></div><p class="small muted">不用注册。生成一个同步码，在新手机的“我的”页面输入，收藏就回来了。</p>
+    <div class="row" style="margin-top:12px"><button class="btn p grow" data-act="sheet" data-v="sync" data-m="gen">生成同步码</button><button class="btn g grow" data-act="sheet" data-v="sync" data-m="in">输入同步码</button></div>${G.sync?`<p class="xs muted" style="margin-top:8px">当前同步码 <b class="mono">${G.sync}</b> · 30 天内有效</p>`:''}</div>
+   <div class="card"><div class="sh"><h3>📱 我的常用设备</h3></div><p class="xs muted" style="margin-bottom:8px">打开软件页时，默认显示这个设备的下载</p><div class="chips" style="flex-wrap:wrap">${[['','自动识别'],...Object.entries(DEVN).map(([k,v])=>[k,v.i+' '+v.n])].map(([k,n])=>`<button class="chip" data-act="mydev" data-v="${k}" aria-pressed="${(G.myDev||'')===k}">${n}</button>`).join('')}</div></div>
+   <div class="card"><div class="sh"><h3>🔔 更新提醒</h3></div>
+    <div class="setrow"><span>打开网站时，提醒收藏的软件有新版<div class="xs faint">在首页和“我的”显示红点</div></span><span class="sw" role="switch" aria-checked="true"></span></div>
+    <div class="setrow"><span>微信 / 邮件推送新版本<div class="xs faint">需要登录 · 规划中</div></span><button class="sw dis" role="switch" aria-checked="false" data-act="toast" data-t="即将推出：开启时才需要登录"></button></div></div>
+   <div class="card"><div class="sh"><h3>🕘 最近看过</h3></div><div class="hs" style="${f.d?'margin:0;padding:2px 0 4px':''}">${G.recent.map(id=>{const s=SOFT[id];return`<button class="sim" data-act="open" data-id="${id}">${ico(s,'sm')}<b class="small ell" style="display:block;margin-top:6px">${s.name}</b><span class="xs muted">${latest(s)[1].v}</span></button>`}).join('')}</div></div>
+   <div class="card"><div class="sh"><h3>💬 我的反馈</h3></div>${fbN?Object.entries(G.fb).map(([id,v])=>`<div class="setrow"><span>${SOFT[id].name} ${latest(SOFT[id])[1].v}</span><span class="tag ${v==='ok'?'ok':'bad'}">${v==='ok'?'能正常用':'有问题'}</span></div>`).join(''):'<p class="small muted">在软件页点“能正常用 / 有问题”，帮其他群友判断要不要更新。</p>'}</div>
+   <div class="card"><div class="sh"><h3>🙋 想要的软件</h3><button data-act="sheet" data-v="request">＋ 提交</button></div>${G.reqs.map(r=>`<div class="setrow"><span>${esc(r[0])}</span><span class="tag ${r[1]==='已收录'?'ok':'gray'}">${r[1]}</span></div>`).join('')}</div>
+   <div class="card"><div class="setrow" data-act="toast" data-t="示例：关于本站">关于${G.name}<span class="arr">›</span></div><div class="setrow" data-act="toast" data-t="示例：隐私说明">隐私说明：不收集个人信息，反馈匿名<span class="arr">›</span></div><div class="setrow" data-act="toast" data-t="示例：免责声明">免责声明<span class="arr">›</span></div></div>`;
+  const head=`<div class="me-head"><div class="row" style="gap:12px"><div class="av">🙂</div><div class="grow"><b style="font-size:18px">访客</b><div class="xs" style="opacity:.85">不用注册 · 收藏保存在这台${f.d?'电脑':'手机'}上</div></div><button class="btn sm" style="background:rgba(255,255,255,.18);color:#fff" data-act="sheet" data-v="sync" data-m="gen">同步码</button></div></div>
+   <div class="me-stats"><button><b>${G.fav.size}</b><span>收藏</span></button><button><b>${G.recent.length}</b><span>看过</span></button><button><b>${fbN}</b><span>反馈</span></button></div>`;
+  if(f.d)return`<div class="dbody" style="max-width:860px"><div style="border-radius:20px;overflow:hidden;margin-bottom:28px">${head.replace('me-stats"','me-stats" style="margin:0;border-radius:0"')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">${blocks}</div></div>${dfoot()}`;
+  return`${head}<div style="display:flex;flex-direction:column;gap:12px;padding:14px">${blocks}</div>${foot()}`;
+}
+
+/* ================= 后台：演示数据 ================= */
+for(const id in SOFT){const s=SOFT[id];s.st='on';s.w7=Math.round(s.views*.21)}
+SOFT.reader.st='off';
+const DRAFTS=[{id:'unzip',dk:'pc',v:'2.5.1',d:'10-17',a:'opt',sum:'修复中文文件名乱码',tip:''}];
+const FBT=['闪退','装不上','下载不了','登录不了','网盘链接失效','其他'];
+const FBS=[
+ {id:1,t:'10-17 21:40',sid:'cloud',dk:'pc',v:'4.1.0',type:'登录不了',note:'输入密码后一直转圈，重启也不行',st:'new'},
+ {id:2,t:'10-17 20:12',sid:'cloud',dk:'pc',v:'4.1.0',type:'闪退',note:'Win11，打开两秒就退出',st:'new'},
+ {id:3,t:'10-17 19:05',sid:'guangmu',dk:'android',v:'3.2.1',type:'网盘链接失效',note:'提取码是对的，但提示文件不存在',link:'pan.example.com/s/1aBcD',st:'new'},
+ {id:4,t:'10-17 18:47',sid:'guangmu',dk:'android',v:'3.2.1',type:'网盘链接失效',note:'',link:'pan.example.com/s/1aBcD',st:'new'},
+ {id:5,t:'10-17 16:30',sid:'note',dk:'pc',v:'5.9.3',type:'其他',note:'两台电脑同时改，内容被覆盖了',st:'new'},
+ {id:6,t:'10-17 11:02',sid:'xinghe',dk:'tv',v:'5.0.3',type:'装不上',note:'当贝盒子提示解析包出错',st:'new'},
+ {id:7,t:'10-16 22:18',sid:'cloud',dk:'pc',v:'4.1.0',type:'登录不了',note:'扫码登录也失败',st:'new'},
+ {id:8,t:'10-16 20:55',sid:'guangmu',dk:'android',v:'3.2.1',type:'网盘链接失效',note:'',link:'pan.example.com/s/1aBcD',st:'new'},
+ {id:9,t:'10-16 15:40',sid:'browser',dk:'android',v:'9.8.0',type:'下载不了',note:'下载到 99% 就失败',st:'new'},
+ {id:10,t:'10-16 09:12',sid:'note',dk:'ios',v:'6.0.0',type:'其他',note:'知识图谱打开很慢',st:'done'},
+ {id:11,t:'10-15 23:01',sid:'cloud',dk:'pc',v:'4.1.0',type:'登录不了',note:'',st:'done'},
+ {id:12,t:'10-15 14:26',sid:'player',dk:'android',v:'7.1.1',type:'闪退',note:'是我手机内存不够，已经好了',st:'ignore'},
+ {id:13,t:'10-14 10:08',sid:'guangmu',dk:'tv',v:'3.2.1',type:'装不上',note:'电视没打开未知来源',st:'done'},
+ {id:14,t:'10-14 08:33',sid:'cloud',dk:'android',v:'3.3.2',type:'下载不了',note:'后台下载还是会断',st:'new'}
+];
+const VRANK=[['cloud','pc','4.1.0',21,47],['note','pc','5.9.3',64,9],['guangmu','android','3.2.1',128,6],['browser','android','9.8.0',29,5],['xinghe','tv','5.0.3',88,4]];
+const WANTS=[
+ {n:'某某输入法',c:23,devs:['android','ios'],note:'想要能离线语音输入的',first:'09-21',last:'10-17',st:'new'},
+ {n:'XX 剪辑',c:17,devs:['android','pc'],note:'做短视频用，最好有电脑版',first:'09-30',last:'10-17',st:'plan'},
+ {n:'某播放器 电视版',c:11,devs:['tv'],note:'当贝盒子能装的那种',first:'10-02',last:'10-16',st:'new'},
+ {n:'某某浏览器',c:9,devs:['android'],note:'能直接下载安装包的',first:'09-10',last:'09-26',st:'done',sid:'browser'},
+ {n:'YY 扫描',c:6,devs:['android'],note:'扫文件转 PDF',first:'10-08',last:'10-15',st:'new'},
+ {n:'某破解版游戏',c:5,devs:['android'],note:'',first:'10-03',last:'10-11',st:'no',why:'非官方版本，不收录'},
+ {n:'XX 输入法',c:4,devs:['android'],note:'',first:'10-01',last:'10-13',st:'new'},
+ {n:'ZZ 翻译',c:3,devs:['pc'],note:'划词翻译',first:'10-12',last:'10-14',st:'new'}
+];
+const ADM=[
+ {id:'m1',t:'某云盘会员限时 7 折',sub:'大文件高速下载',url:'https://promo.example/cloud',pos:['feed','side'],from:'10-10',to:'10-31',st:'投放中',imp:9800,clk:142,c:'linear-gradient(135deg,#FFE7B3,#FFC9C9)'},
+ {id:'m2',t:'电视盒子双 11 预售',sub:'4K 新品盒子',url:'https://promo.example/tv',pos:['detail'],from:'10-15',to:'11-11',st:'投放中',imp:6100,clk:73,c:'linear-gradient(135deg,#C7F0FF,#D9D2FF)'},
+ {id:'m3',t:'办公软件年卡',sub:'正版授权',url:'https://promo.example/office',pos:['side'],from:'10-25',to:'11-30',st:'待开始',imp:0,clk:0,c:'linear-gradient(135deg,#D7F5E3,#FFF1C2)'},
+ {id:'m4',t:'国庆流量卡',sub:'',url:'',pos:['feed'],from:'09-25',to:'10-08',st:'已结束',imp:15200,clk:198,c:'linear-gradient(135deg,#FFD6E0,#FFE9C7)'}
+];
+const SLOTS=[
+ ['feed','首页信息流','手机 + 电脑','列表第 3 条之后',[1500,1650,1720,1580,1890,2010,1850],[22,25,24,21,30,33,31]],
+ ['detail','详情页下载区下方','手机','下载区下方，不紧贴下载按钮',[1100,1180,1050,1260,1300,1240,1270],[12,14,11,15,16,14,15]],
+ ['side','电脑右侧栏','电脑','首页和详情页右侧 300×250',[420,460,380,470,450,480,440],[5,7,4,6,6,7,6]]
+];
+const SLOTN={feed:'首页信息流',detail:'详情下载区下方',side:'电脑右侧栏'};
+const MST={'投放中':'ok','已暂停':'warn','待开始':'b','已结束':'gray'};
+const LVL={'普通':'','提醒':'tip','重要':'imp'};
+const WST={new:['b','新的'],plan:['warn','计划中'],done:['ok','已收录'],no:['gray','不收录']};
+const FST={new:['b','新的'],done:['ok','已处理'],ignore:['gray','忽略']};
+const APN={dash:'工作台',software:'软件管理',softedit:'软件编辑',releases:'版本管理',reledit:'版本编辑',ann:'公告管理',fb:'用户反馈',req:'想要的软件',ads:'广告管理',settings:'站点设置'};
+
+/* ================= 后台：工具 ================= */
+const devMini=dk=>`<span class="mini">${DEVN[dk].i} ${DEVN[dk].s}</span>`;
+const catN=c=>(CATS.find(x=>x[0]===c)||CATS[0])[1];
+const swb=(on,act,attrs='')=>`<button class="sw" role="switch" aria-checked="${!!on}" data-act="${act}" ${attrs}></button>`;
+const opts=(list,cur)=>list.map(([v,n])=>`<option value="${esc(v)}" ${String(v)===String(cur)?'selected':''}>${esc(n)}</option>`).join('');
+const fchips=(k,list,cur)=>`<div class="chips">${list.map(([v,n])=>`<button class="chip" data-act="flt" data-k="${k}" data-v="${v}" aria-pressed="${cur===v}">${n}</button>`).join('')}</div>`;
+const fullDate=d=>d?'2026-'+d:'';
+const dday=d=>d?day(d):'—';
+const hexOf=c=>(String(c).match(/#[0-9A-Fa-f]{6}/)||['#2457E6'])[0];
+function shade(h){const n=parseInt(h.slice(1),16);const f=x=>Math.round(x*.8).toString(16).padStart(2,'0');return'#'+f(n>>16)+f(n>>8&255)+f(n&255)}
+const grad=h=>`linear-gradient(135deg,${h},${shade(h)})`;
+const sumA=a=>a.reduce((x,y)=>x+y,0);
+const spark=a=>`<div class="spark">${a.map(v=>`<i style="height:${v}%"></i>`).join('')}</div>`;
+function vfb(s,a,v){if(a==='bad')return pct(s);let h=0;for(const c of s.name+v)h=(h*31+c.charCodeAt(0))%997;return 84+h%14}
+function isBadV(sid,dk,v){const r=SOFT[sid].dev[dk];if(!r)return false;if(r.v===v)return r.a==='bad';const h=r.h.find(x=>x[0]===v);return!!h&&h[2]==='bad'}
+function ahead(title,desc,btns,crumb){return`<div class="ahead"><div class="grow"><div class="crumb"><a data-act="ap" data-v="dash">后台</a> › ${crumb||title}</div><h1>${title}</h1>${desc?`<p class="small muted">${desc}</p>`:''}</div>${btns||''}</div>`}
+function syncReq(w){G.reqs.forEach(r=>{if(r[0]===w.n)r[1]=w.st==='done'?'已收录':w.st==='no'?'不收录':'处理中'})}
+function syncNames(){document.querySelectorAll('[data-name]').forEach(x=>x.setAttribute('aria-pressed',NAMES[+x.dataset.name][0]===G.name))}
+function setAds(v){G.ads=v;const b=$('#adBtn');b.textContent=v?'开':'关';b.setAttribute('aria-pressed',v)}
+function relRows(){
+  const rows=[];
+  for(const[id,s]of Object.entries(SOFT))for(const[dk,r]of Object.entries(s.dev)){
+    rows.push({id,dk,v:r.v,d:r.d,a:r.a,st:'已发布',cur:true,fb:vfb(s,r.a,r.v)});
+    r.h.forEach(x=>rows.push({id,dk,v:x[0],d:x[1],a:x[2],st:'已发布',cur:false,fb:vfb(s,x[2],x[0])}));
+  }
+  DRAFTS.forEach(x=>rows.push({...x,st:'草稿',cur:false,fb:null}));
+  return rows.sort((a,b)=>b.d.localeCompare(a.d));
+}
+function stableOpts(id,dk,ex){const r=SOFT[id].dev[dk];if(!r)return[];return[[r.v,r.a,r.d],...r.h.map(x=>[x[0],x[2],x[1]])].filter(x=>x[0]!==ex&&x[1]!=='bad')}
+
+/* ================= 后台：外壳 ================= */
+function adminView(f){
+  if(!APN[f.ap])f.ap='dash';
+  if(f.ap==='softedit'&&!f.se)f.se=softForm('guangmu');
+  if(f.ap==='reledit'&&!f.re)f.re=relForm('note','pc');
+  const cur={softedit:'software',reledit:'releases'}[f.ap]||f.ap,isPub=f.ap==='reledit'&&f.re.isNew;
+  const nb=FBS.filter(x=>x.st==='new').length,nw=WANTS.filter(x=>x.st==='new').length;
+  const it=(k,i,n,bd)=>{const on=cur===k&&!(isPub&&k==='releases');return`<button class="${on?'on':''}" data-act="ap" data-v="${k}" ${on?'aria-current="page"':''}>${i} ${n}${bd?`<span class="badge">${bd}</span>`:''}</button>`};
+  const P={dash:admDash,software:admSoft,softedit:admSoftEdit,releases:admRel,reledit:admRelEdit,ann:admAnn,fb:admFb,req:admReq,ads:admAds,settings:admSet};
+  return`<div class="adm"><aside class="adm-side"><div class="brandrow"><span class="logo" id="desk-admlogo">${esc(G.glyph)}</span><b id="desk-admname">${esc(G.name)} · 后台</b></div>
+   <button class="pub ${isPub?'on':''}" data-act="newrel">🚀 发布更新</button>
+   ${it('dash','📊','工作台')}
+   <div class="grp">内容</div>${it('software','📦','软件管理')}${it('releases','🏷','版本管理')}${it('ann','📢','公告管理')}
+   <div class="grp">用户</div>${it('fb','💬','用户反馈',nb)}${it('req','🙋','想要的软件',nw)}
+   <div class="grp">运营</div>${it('ads','📣','广告管理')}${it('settings','⚙️','站点设置')}
+   <div style="margin-top:auto;padding:12px;font-size:12px;color:#6F7E99"><div style="margin-bottom:4px">群主 · qunzhu</div><button data-act="go" data-r="home" style="padding:0;color:#9fb0cf">← 返回网站</button></div></aside>
+  <main class="adm-main">${P[f.ap](f)}</main></div>`;
+}
+
+/* ================= 后台：工作台 ================= */
+function admDash(f){
+  const nb=FBS.filter(x=>x.st==='new').length;
+  const top=WANTS.map((w,i)=>[w,i]).filter(([w])=>w.st==='new'||w.st==='plan').sort((a,b)=>b[0].c-a[0].c).slice(0,5);
+  const rec=relRows().slice(0,5);
+  const gm=SOFT.guangmu.dev.android;
+  return`<div class="row"><div class="grow"><h1 style="font-size:24px">下午好，群主</h1><p class="small muted">今天有 3 件事需要处理 · <a data-act="fbgo">${nb} 条新反馈</a></p></div><button class="btn g" data-act="annedit">＋ 发公告</button><button class="btn p" data-act="newrel">🚀 发布更新</button></div>
+   <div class="kpi">
+    <div class="card"><span class="small muted">今日访问</span><b>1,284</b><span class="up">↑ 18% 较昨天</span>${spark([30,42,38,55,48,62,80])}</div>
+    <div class="card"><span class="small muted">下载点击</span><b>563</b><span class="up">↑ 9%</span>${spark([40,35,50,45,60,58,70])}</div>
+    <div class="card" data-act="fbgo" style="cursor:pointer"><span class="small muted">反馈“有问题”</span><b style="color:var(--bad)">56</b><span class="down">云盘助手占 47</span>${spark([10,8,12,9,30,70,95])}</div>
+    <div class="card" title="收藏保存在用户自己的设备上，这里按同步码和匿名上报估算"><span class="small muted">收藏总数（约） ⓘ</span><b>约 9,860</b><span class="up">↑ 约 120 本周</span>${spark([50,52,55,60,63,66,70])}</div></div>
+   <div class="agrid">
+    <div class="card"><div class="sh"><h3>⚡ 需要你处理</h3><button data-act="fbgo">全部反馈 ›</button></div>
+     <div class="todo"><span class="ti" style="background:var(--bad-soft)">🔥</span><div class="grow"><b class="small">云盘助手 电脑版 4.1.0：47 人反馈有问题</b><div class="xs muted">登录失败 31 · 闪退 9 · 其他 7　当前标记：${isBadV('cloud','pc','4.1.0')?'先别更新 ✓':'未标记'}</div></div><button class="btn sm g" data-act="fbgo" data-soft="cloud">查看</button></div>
+     <div class="todo"><span class="ti" style="background:var(--warn-soft)">🔗</span><div class="grow"><b class="small">光幕影视 网盘备用链接：3 人反馈失效</b><div class="xs muted">最近一次反馈：10分钟前</div></div><button class="btn sm s" data-act="reledit" data-id="guangmu" data-dev="android" data-v="${gm.v}" data-focus="links">更新链接</button></div>
+     <div class="todo"><span class="ti" style="background:var(--brand-soft)">🆕</span><div class="grow"><b class="small">墨记笔记 电脑版可能有新版本 5.9.4</b><div class="xs muted">自动检查发现，需要你确认后发布</div></div><button class="btn sm p" data-act="newrel" data-id="note" data-dev="pc" data-v="5.9.4" data-sum="修复多设备同时编辑时的同步冲突">去发布</button></div></div>
+    <div class="card"><div class="sh"><h3>🙋 想要的软件</h3><button data-act="ap" data-v="req">全部 ›</button></div>
+     ${top.map(([w,i])=>`<div class="slot"><b class="small grow">${esc(w.n)}${w.st==='plan'?' <span class="tag warn">计划中</span>':''}</b><span class="xs muted">${w.c} 人想要</span><button class="btn sm s" data-act="winc" data-i="${i}">收录</button></div>`).join('')||'<div class="empty">都处理完了 🎉</div>'}</div>
+    <div class="card"><div class="sh"><h3>🗂 最近发布</h3><button data-act="ap" data-v="releases">全部 ›</button></div>
+     <table class="tbl"><tr><th>软件</th><th>版本</th><th>状态</th><th>访问</th><th></th></tr>
+     ${rec.map(x=>{const s=SOFT[x.id];return`<tr><td><b>${esc(s.name)}</b></td><td class="mono">${x.v} <span class="xs faint">${DEVN[x.dk].s}</span></td><td>${x.st==='草稿'?'<span class="tag gray">草稿</span>':vtag(x.a)}</td><td>${x.st==='草稿'?'—':num(Math.round(s.w7/Object.keys(s.dev).length))}</td><td><div class="acts"><button class="btn sm g" data-act="reledit" data-id="${x.id}" data-dev="${x.dk}" data-v="${x.v}">编辑</button>${x.st==='草稿'?'':`<button class="btn sm g" data-act="rcopy" data-id="${x.id}" data-dev="${x.dk}" data-v="${x.v}">复制群通知</button>`}</div></td></tr>`}).join('')}</table></div>
+    <div class="card"><div class="sh"><h3>📣 广告位</h3><button data-act="ap" data-v="ads">管理 ›</button></div>
+     ${G.ads?'':'<div class="oldnote">广告总开关已关闭，前台不显示任何广告</div>'}
+     ${SLOTS.map(([k,n,w,_,imp,clk])=>`<div class="slot"><div class="grow"><b class="small">${n}</b><div class="xs muted">${w} · 近7天 ${num(sumA(imp))} 曝光 · ${sumA(clk)} 点击</div></div>${swb(G.slots[k],'slot','data-v="'+k+'"')}</div>`).join('')}</div>
+   </div>`;
+}
+
+/* ================= 后台：软件管理 ================= */
+function softRows(f){
+  const q=(f.sq||'').trim().toLowerCase();
+  const list=Object.entries(SOFT).filter(([id,s])=>(f.scat==='all'||s.cat===f.scat)&&(f.sst==='all'||s.st===f.sst)&&(!q||(s.name+id+s.tags.join('')+s.desc).toLowerCase().includes(q)));
+  if(!list.length)return`<tr><td colspan="7"><div class="empty"><span class="e">📦</span>没有符合条件的软件</div></td></tr>`;
+  const ST={on:['ok','已上架'],off:['gray','已下架'],draft:['warn','草稿']};
+  return list.map(([id,s])=>{const t=ST[s.st];return`<tr><td><div class="row">${ico(s,'sm')}<div style="min-width:0"><b>${esc(s.name)}</b><div class="xs faint mono">/s/${id}</div></div></div></td>
+   <td>${catN(s.cat)}</td>
+   <td class="devi">${Object.keys(s.dev).map(d=>`<span title="${DEVN[d].n}">${DEVN[d].i}</span>`).join('')||'<span class="xs faint">—</span>'}</td>
+   <td>${Object.entries(s.dev).map(([dk,r])=>`<div class="xs row" style="gap:5px;line-height:1.75"><span class="faint" style="width:26px">${DEVN[dk].s}</span><b class="mono">${r.v}</b>${r.a==='bad'?'<span class="tag bad" style="line-height:16px;font-size:11px;padding:0 4px">先别更新</span>':''}</div>`).join('')||'<span class="xs faint">还没有版本</span>'}</td>
+   <td><span class="tag ${t[0]}">${t[1]}</span></td>
+   <td class="num mono">${s.st==='on'?num(s.w7):'—'}</td>
+   <td><div class="acts"><button class="btn sm g" data-act="softedit" data-id="${id}">编辑</button><button class="btn sm s" data-act="newrel" data-id="${id}">发布更新</button><button class="btn sm ${s.st==='on'?'d':'g'}" data-act="softoff" data-id="${id}">${s.st==='on'?'下架':'上架'}</button></div></td></tr>`}).join('');
+}
+function admSoft(f){
+  const all=Object.values(SOFT);
+  return ahead('软件管理',`共 ${all.length} 款 · 已上架 ${all.filter(s=>s.st==='on').length} · 已下架 ${all.filter(s=>s.st==='off').length} · 草稿 ${all.filter(s=>s.st==='draft').length}`,`<button class="btn p" data-act="softedit">＋ 添加软件</button>`)+
+  `<div class="toolbar"><label class="search"><span>🔍</span><input data-act="asq" placeholder="搜名称、slug、标签" value="${esc(f.sq||'')}"></label><select class="sel" data-bind="f:sst" data-rr="1" aria-label="状态">${opts([['all','全部状态'],['on','已上架'],['off','已下架'],['draft','草稿']],f.sst)}</select>${fchips('scat',CATS.map(c=>[c[0],c[1]]),f.scat)}</div>
+  <div class="card tcard"><table class="tbl"><thead><tr><th>软件</th><th>分类</th><th>支持设备</th><th>各设备最新版本</th><th>状态</th><th class="num">近7天访问</th><th style="text-align:right">操作</th></tr></thead><tbody id="desk-softtb">${softRows(f)}</tbody></table></div>`;
+}
+
+/* ================= 后台：软件编辑 ================= */
+function tutAll(){const t={};for(const dk of Object.keys(DEVN))t[dk]={s:TUT[dk].s.map(x=>x[0]),tip:TUT[dk].tip};return t}
+function softForm(id,name){
+  if(id&&SOFT[id]){const s=SOFT[id],devs=Object.keys(s.dev);
+    const faq=[];devs.forEach(dk=>TUT[dk].q.slice(0,2).forEach(q=>faq.push({q:q[0],a:q[1],dev:dk})));faq.push({q:'以上都没解决？',a:'在群里 @群主，说一下设备型号和卡在哪一步。',dev:'all'});
+    return{isNew:false,id,name:s.name,slug:id,cat:s.cat,desc:s.desc,intro:s.intro||`${s.desc}。由${s.devr}开发，特点：${s.tags.join('、')}。`,devr:s.devr,site:s.site,tags:[...s.tags],devs,color:hexOf(s.c),glyph:s.g,tdev:devs[0],tut:tutAll(),faq,shots:SHOTC.slice(),icon:false};
+  }
+  return{isNew:true,id:'',name:name||'',slug:'',cat:'tool',desc:'',intro:'',devr:'',site:'',tags:[],devs:['android'],color:'#2457E6',glyph:(name||'新')[0],tdev:'android',tut:tutAll(),faq:[{q:'',a:'',dev:'all'}],shots:[],icon:false};
+}
+function seCheck(e){
+  const dup=e.isNew&&SOFT[e.slug];
+  const c=[[!!e.name.trim(),'填写软件名称'],[/^[a-z0-9-]{2,}$/.test(e.slug)&&!dup,dup?'slug 已被占用':'slug 只用小写字母、数字、横线'],[!!e.desc.trim(),'填写一句话说明'],[e.devs.length>0,'至少选一个支持设备'],[e.devs.length>0&&e.devs.every(k=>e.tut[k].s.some(x=>x.trim())),'每个设备至少一步安装教程']];
+  return c.map(([ok,t])=>`<li class="${ok?'yes':'no'}">${ok?'✓':'✕'} ${t}</li>`).join('');
+}
+function sePreview(f){const e=f.se,s={c:grad(e.color),g:e.icon?'🖼':esc(e.glyph||'?')};
+  return`<div class="ptitle">前台卡片预览</div><div class="lc" style="cursor:default;box-shadow:none">${ico(s)}<b>${esc(e.name||'软件名称')}</b><div class="desc">${esc(e.desc||'一句话说明会显示在这里')}</div><div class="devi">${e.devs.map(d=>`<span>${DEVN[d].i}</span>`).join('')}</div><div class="row xs" style="flex-wrap:wrap"><span class="tag gray">${catN(e.cat)}</span>${e.tags.slice(0,2).map(x=>`<span class="mini">${esc(x)}</span>`).join('')}</div></div>`}
+function admSoftEdit(f){
+  const e=f.se;if(!e.devs.includes(e.tdev))e.tdev=e.devs[0];
+  const t=e.tdev?e.tut[e.tdev]:null;
+  const lock='<span class="lock">🔒 创建后锁定</span>';
+  const base=`<div class="card fc"><h3>基本信息</h3>
+   <div class="f2"><div class="field"><label>软件名称 *</label><input data-bind="se:name" value="${esc(e.name)}" placeholder="例如：光幕影视"></div>
+   <div class="field"><label>网址标识 slug ${e.isNew?'*':lock}</label><input class="mono" data-bind="se:slug" value="${esc(e.slug)}" placeholder="例如：guangmu" ${e.isNew?'':'disabled'}><div class="hint">${e.isNew?'保存后不能修改':'已分享出去的链接依赖它'} · ding.example/s/<b id="desk-slugpv">${esc(e.slug||'…')}</b></div></div>
+   <div class="field"><label>分类</label><select data-bind="se:cat">${opts(CATS.slice(1).map(c=>[c[0],c[2]+' '+c[1]]),e.cat)}</select></div>
+   <div class="field"><label>开发者</label><input data-bind="se:devr" value="${esc(e.devr)}" placeholder="开发者或团队名称"></div>
+   <div class="field"><label>官网</label><input data-bind="se:site" value="${esc(e.site)}" placeholder="example.com"></div>
+   <div class="field"><label>标签 <span class="lock">回车添加</span></label><div class="tagin">${e.tags.map((x,i)=>`<span class="tag gray">${esc(x)}<button data-act="stagdel" data-i="${i}" aria-label="删除标签 ${esc(x)}">✕</button></span>`).join('')}<input id="desk-tagin" data-key="stag" placeholder="${e.tags.length?'':'例如：免广告'}"></div></div></div>
+   <div class="field"><label>一句话说明 * <span class="lock">列表和卡片里显示，建议 20 字以内</span></label><input data-bind="se:desc" value="${esc(e.desc)}" maxlength="40"></div>
+   <div class="field"><label>详细简介</label><textarea rows="3" data-bind="se:intro">${esc(e.intro)}</textarea></div></div>`;
+  const devc=`<div class="card fc"><h3>支持设备 <small>选中的设备才会出现在前台和安装教程里</small></h3><div class="devpick" style="margin-top:10px">${Object.entries(DEVN).map(([k,d])=>`<button class="dev sm" data-act="sedev" data-v="${k}" aria-pressed="${e.devs.includes(k)}"><span>${d.i}</span>${d.n}</button>`).join('')}</div></div>`;
+  const iconc=`<div class="card fc"><h3>图标与主色</h3><div class="row" style="gap:16px;margin-top:10px;align-items:flex-start">
+   <div class="ico lg" style="background:${grad(e.color)}" id="desk-icopv">${e.icon?'🖼':esc(e.glyph||'?')}</div>
+   <div class="grow"><div class="upl"><span style="font-size:22px">⬆</span><div class="grow"><b class="small">${e.icon?'已上传 icon.png（示意）':'上传图标'}</b><div class="xs faint">PNG / SVG，至少 256×256；不上传时用文字图标 + 主色</div></div><button class="btn sm g" data-act="seicon">${e.icon?'移除':'选择文件'}</button></div>
+   <div class="f2"><div class="field"><label>文字图标</label><input data-bind="se:glyph" value="${esc(e.glyph)}" maxlength="2"></div>
+   <div class="field"><label>主色</label><div class="swatches">${['#E11D48','#2563EB','#6D28D9','#15803D','#D97706','#0F766E','#334155','#0369A1'].map(c=>`<button class="swatch" style="background:${c}" data-act="secolor" data-v="${c}" aria-pressed="${e.color.toLowerCase()===c.toLowerCase()}" aria-label="主色 ${c}"></button>`).join('')}<input type="color" data-bind="se:color" value="${e.color}" aria-label="自定义主色"></div></div></div></div></div></div>`;
+  const tutc=`<div class="card fc"><h3>安装教程 <small>每个设备一套步骤，前台按用户选的设备显示</small></h3>
+   ${t?`<div class="seg" role="tablist">${e.devs.map(k=>`<button role="tab" data-act="setdev" data-v="${k}" aria-selected="${e.tdev===k}">${DEVN[k].i} ${DEVN[k].s} · ${e.tut[k].s.length} 步</button>`).join('')}</div>
+   <div class="field" style="margin-top:0"><label>${DEVN[e.tdev].n}安装步骤</label>${t.s.map((x,i)=>`<div class="lrow"><span class="no">${i+1}</span><input data-bind="se:tut.${e.tdev}.s.${i}" value="${esc(x)}" placeholder="这一步要做什么"><button class="btn sm g" data-act="toast" data-t="示例：上传第 ${i+1} 步示意图">🖼 示意图</button><button class="xbtn" data-act="sstepdel" data-i="${i}" aria-label="删除第 ${i+1} 步">✕</button></div>`).join('')}<button class="addrow" data-act="sstepadd">＋ 添加步骤</button></div>
+   <div class="field"><label>安装提醒</label><input data-bind="se:tut.${e.tdev}.tip" value="${esc(t.tip)}"></div>`:'<p class="small muted" style="margin-top:8px">先在上面选择支持的设备</p>'}</div>`;
+  const faqc=`<div class="card fc"><h3>常见问题 <small>可以只对某个设备显示</small></h3>${e.faq.map((q,i)=>`<div class="lnk"><div class="lrow" style="margin:0"><input data-bind="se:faq.${i}.q" value="${esc(q.q)}" placeholder="问题" style="font-weight:600"><select data-bind="se:faq.${i}.dev" style="width:116px;flex:none" aria-label="适用设备">${opts([['all','全部设备'],...e.devs.map(k=>[k,DEVN[k].i+' '+DEVN[k].s])],q.dev)}</select><button class="xbtn" data-act="sfaqdel" data-i="${i}" aria-label="删除问题">✕</button></div><textarea rows="2" data-bind="se:faq.${i}.a" placeholder="回答" style="margin-top:6px">${esc(q.a)}</textarea></div>`).join('')}<button class="addrow" data-act="sfaqadd">＋ 添加问题</button></div>`;
+  const shotc=`<div class="card fc"><h3>截图 <small>竖屏，最多 8 张，拖动排序（示意）</small></h3><div class="thumbs">${e.shots.map((c,i)=>`<div class="thumb" style="background:${c}">截图 ${i+1}<button class="xbtn" data-act="sshotdel" data-i="${i}" aria-label="删除截图 ${i+1}">✕</button></div>`).join('')}${e.shots.length<8?`<button class="thumb add" data-act="sshotadd">＋<br>添加截图</button>`:''}</div></div>`;
+  const so=e.isNew?null:SOFT[e.id];
+  const side=`<div class="sside"><div class="card" id="desk-sepv">${sePreview(f)}</div>
+   <div class="card"><div class="ptitle">保存前检查</div><ul class="chk" id="desk-sechk">${seCheck(e)}</ul></div>
+   ${so?`<div class="card small"><div class="ptitle">这个软件</div><div class="kv"><span>设备版本</span><span>${Object.keys(so.dev).length} 个</span></div><div class="kv"><span>近7天访问</span><span>${num(so.w7)}</span></div><div class="kv"><span>收藏（约）</span><span>${num(so.favs)}</span></div><div class="row" style="margin-top:8px"><button class="btn sm s grow" data-act="ap" data-v="releases" data-soft="${e.id}">查看版本 ›</button><button class="btn sm g grow" data-act="open" data-id="${e.id}">前台查看</button></div></div>`:`<div class="card small"><div class="ptitle">接下来</div><p class="small muted">保存后软件是“草稿”，前台看不到。发布第一个版本后自动上架。</p></div>`}</div>`;
+  const bar=`<div class="formbar"><span class="xs faint grow">${e.isNew?'新软件 · 保存后进入发布第一个版本':'修改保存后前台立即生效'}</span><button class="btn g" data-act="ap" data-v="software">取消</button><button class="btn p" data-act="sesave">${e.isNew?'保存并发布第一个版本 ›':'保存'}</button></div>`;
+  return ahead(e.isNew?'添加软件':'编辑软件 · '+esc(e.name),e.isNew?'先填基本信息，再发布第一个版本':'修改资料、设备、安装教程和常见问题','',`<a data-act="ap" data-v="software">软件管理</a> › ${e.isNew?'添加':'编辑'}`)+
+   `<div class="split"><div>${base}${devc}${iconc}${tutc}${faqc}${shotc}</div>${side}</div>${bar}`;
+}
+
+/* ================= 后台：版本管理 ================= */
+function admRel(f){
+  const rows=relRows().filter(x=>(f.rsoft==='all'||x.id===f.rsoft)&&(f.rdev==='all'||x.dk===f.rdev)&&(f.radv==='all'||x.a===f.radv)&&(f.rst==='all'||x.st===f.rst));
+  const groups=new Map();for(const x of rows){const k=x.id+'|'+x.dk;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)}
+  const body=[...groups.values()].map(g=>{const x0=g[0],s=SOFT[x0.id];
+    return`<tr class="grp"><td colspan="6"><div class="row">${ico(s,'sm')}<b>${esc(s.name)}</b>${devMini(x0.dk)}<span class="faint">${g.length} 个版本</span><span class="grow"></span><button class="btn sm s" data-act="newrel" data-id="${x0.id}" data-dev="${x0.dk}">＋ 新版本</button></div></td></tr>`+
+    g.map(x=>`<tr><td style="padding-left:54px"><b class="mono">${x.v}</b>${x.cur?' <span class="mini">当前</span>':''}</td><td>${dday(x.d)}</td><td>${vtag(x.a)}</td><td>${x.st==='草稿'?'<span class="tag gray">草稿</span>':'<span class="tag b">已发布</span>'}</td>
+     <td>${x.fb==null?'<span class="faint">—</span>':`<div class="row" style="gap:6px"><span class="mbar"><i style="width:${x.fb}%"></i></span><span class="xs ${x.fb<60?'down':'muted'}">${x.fb}%</span></div>`}</td>
+     <td><div class="acts"><button class="btn sm g" data-act="reledit" data-id="${x.id}" data-dev="${x.dk}" data-v="${x.v}">编辑</button>${x.st==='草稿'?'':`<button class="btn sm g" data-act="rcopy" data-id="${x.id}" data-dev="${x.dk}" data-v="${x.v}">复制群通知</button>`}${x.st!=='草稿'&&x.a!=='bad'?`<button class="btn sm d" data-act="markbad" data-sid="${x.id}" data-dk="${x.dk}" data-v="${x.v}">标为先别更新</button>`:''}</div></td></tr>`).join('')}).join('');
+  return ahead('版本管理',`${rows.length} 个版本 · 按软件和设备分组 · 反馈能用比例来自前台“能正常用 / 有问题”`,`<button class="btn p" data-act="newrel">🚀 发布更新</button>`)+
+   `<div class="toolbar"><select class="sel" data-bind="f:rsoft" data-rr="1" aria-label="软件">${opts([['all','全部软件'],...Object.entries(SOFT).map(([k,s])=>[k,s.name])],f.rsoft)}</select>
+    ${fchips('rdev',[['all','全部设备'],...Object.entries(DEVN).map(([k,d])=>[k,d.i+' '+d.s])],f.rdev)}
+    <select class="sel" data-bind="f:radv" data-rr="1" aria-label="更新建议">${opts([['all','全部建议'],...Object.entries(ADV).map(([k,a])=>[k,a.t])],f.radv)}</select>
+    <select class="sel" data-bind="f:rst" data-rr="1" aria-label="状态">${opts([['all','全部状态'],['已发布','已发布'],['草稿','草稿']],f.rst)}</select></div>
+   <div class="card tcard"><table class="tbl"><thead><tr><th style="padding-left:54px">版本号</th><th>官方发布日期</th><th>更新建议</th><th>状态</th><th>反馈能用</th><th style="text-align:right">操作</th></tr></thead><tbody>${body||'<tr><td colspan="6"><div class="empty"><span class="e">🏷</span>没有符合条件的版本</div></td></tr>'}</tbody></table></div>`;
+}
+
+/* ================= 后台：版本编辑 ================= */
+function linksFor(id,dk){const s=SOFT[id];
+  if(dk==='ios')return[{n:'App Store',type:'官方',url:'https://apps.apple.com/app/'+id,code:'',main:true,ok:true}];
+  return[{n:'官方下载',type:'官方',url:'https://'+s.site+'/download/'+dk,code:'',main:true,ok:true},{n:'网盘备用',type:'网盘',url:'https://pan.example.com/s/1aBcD',code:'k3m9',main:false,ok:!(id==='guangmu'&&dk==='android')}];
+}
+function relForm(id,dk,v,pre){
+  const s=SOFT[id];if(!dk||(!s.dev[dk]&&v))dk=Object.keys(s.dev)[0]||'android';
+  const r=s.dev[dk];
+  const base={id,dk,isNew:true,v:'',date:'2026-10-18',a:'ok',tip:'',stable:'',sum:'',notes:{add:[''],fix:[''],opt:[],known:[]},size:'',req:REQ[dk],links:linksFor(id,dk),warn:TUT[dk].tip};
+  if(!v)return Object.assign(base,pre||{});
+  const dr=DRAFTS.find(x=>x.id===id&&x.dk===dk&&x.v===v);
+  if(dr)return Object.assign(base,{v,date:fullDate(dr.d),a:dr.a,sum:dr.sum,tip:dr.tip||'',notes:dr.notes?JSON.parse(JSON.stringify(dr.notes)):{add:[],fix:[dr.sum],opt:[],known:[]},fromDraft:true});
+  if(r&&r.v===v)return Object.assign(base,{isNew:false,v,date:fullDate(r.d),a:r.a,tip:r.tip,stable:r.stable||'',sum:r.sum,notes:{add:[...r.n.add],fix:[...r.n.fix],opt:[...r.n.opt],known:[...r.known]},size:r.size});
+  const h=r&&r.h.find(x=>x[0]===v);
+  if(h)return Object.assign(base,{isNew:false,v,date:fullDate(h[1]),a:h[2],sum:h[3],notes:{add:[],fix:[h[3]],opt:[],known:[]},size:r.size});
+  return Object.assign(base,{v});
+}
+function relIssues(e){const r=SOFT[e.id].dev[e.dk],v=e.v.trim(),out=[];
+  if(!v)out.push('版本号');
+  else if(e.isNew&&r&&(r.v===v||r.h.some(x=>x[0]===v)))out.push('版本号已存在');
+  if(!e.sum.trim())out.push('一句话摘要');
+  if(e.a==='bad'&&!e.stable)out.push('推荐稳定版');
+  if(!e.links.some(l=>l.main&&l.ok&&l.url.trim()))out.push('有效的主入口');
+  return out}
+function relNotice(e){const s=SOFT[e.id],cl=a=>a.map(x=>x.trim()).filter(Boolean);
+  const adv={ok:'✅ 建议更新',warn:'⏳ 可以等等，不急',bad:'⛔ 先别更新',opt:'○ 可选更新，不更新也没关系'}[e.a];
+  const pts=[...cl(e.notes.add).map(x=>'· 新增：'+x),...cl(e.notes.fix).map(x=>'· 修复：'+x),...cl(e.notes.opt).map(x=>'· 优化：'+x)].slice(0,3);
+  const kn=cl(e.notes.known);
+  return`【${G.name}】${s.name} ${DEVN[e.dk].s}版 ${e.v.trim()||'（版本号）'} 更新了\n${e.sum.trim()||'（一句话摘要）'}\n${adv}${e.tip.trim()?'：'+e.tip.trim():''}${e.a==='bad'&&e.stable?`\n👉 先用稳定版 ${e.stable}，本站可以直接下载`:''}${pts.length?'\n\n'+pts.join('\n'):''}${kn.length?'\n⚠ 已知问题：'+kn.join('；'):''}\n\n下载和安装方法 👇\n${link(e.id)}?d=${e.dk}${G.tail?'\n'+G.tail:''}`}
+function relPreview(f){const e=f.re,s=SOFT[e.id],old=s.dev[e.dk],iss=relIssues(e),v=e.v.trim();
+  const p=old?(old.v===v?old.p:old.v):'—';
+  const tip=e.tip.trim()||ADV[e.a].t+'。';
+  const chk=[['版本号',!iss.includes('版本号')&&!iss.includes('版本号已存在'),iss.includes('版本号已存在')?'（已存在）':''],['一句话摘要',!iss.includes('一句话摘要'),''],...(e.a==='bad'?[['推荐稳定版',!iss.includes('推荐稳定版'),'']]:[]),['有效的主入口',!iss.includes('有效的主入口'),'']];
+  return`<div class="card"><div class="sh" style="margin-bottom:8px"><h3>💬 群通知文案</h3><button class="btn sm s" data-act="relcopy">复制</button></div><div class="notice">${esc(relNotice(e))}</div></div>
+   <div class="card"><div class="ptitle">前台卡片预览</div><div class="rc" style="margin:0;box-shadow:none;cursor:default"><div class="row">${ico(s)}<div class="grow"><div class="row"><b class="ell">${esc(s.name)}</b><span style="margin-left:auto">${vtag(e.a)}</span></div><div class="ver mono"><span class="faint">${esc(p)}</span> → <b>${esc(v||'—')}</b></div></div></div><p>${esc(e.sum||'一句话摘要会显示在这里')}</p><div class="ft">${devMini(e.dk)}<span style="margin-left:auto">${e.date?day(e.date.slice(5)):'—'}</span></div></div>
+    <div class="verdict ${e.a}" style="margin-top:10px"><span class="vi">${ADV[e.a].i}</span><div><b>${ADV[e.a].t} · ${DEVN[e.dk].s}版 ${esc(v)}</b><span class="small">${esc(tip)}${e.a==='bad'&&e.stable?` 推荐先用 ${esc(e.stable)}。`:''}</span></div></div></div>
+   <div class="card"><div class="ptitle">发布前检查</div><ul class="chk">${chk.map(([t,ok,x])=>`<li class="${ok?'yes':'no'}">${ok?'✓':'✕'} ${t}${x}</li>`).join('')}</ul></div>`}
+function admRelEdit(f){
+  const e=f.re,s=SOFT[e.id],old=s.dev[e.dk],lock=e.isNew?'':'disabled',lk='<span class="lock">🔒 创建后锁定</span>';
+  const so=stableOpts(e.id,e.dk,e.v.trim());
+  const PH={add:'新增了什么',fix:'修好了什么',opt:'哪里变好了',known:'还有什么问题'};
+  const sec=(k,n)=>`<div class="ngrp"><div class="row"><span class="k ${k}" style="font-size:11px;font-weight:700;border-radius:5px;padding:0 6px;line-height:20px">${n}</span><span class="xs faint">${e.notes[k].length} 条</span></div>${e.notes[k].map((x,i)=>`<div class="lrow"><input data-bind="re:notes.${k}.${i}" value="${esc(x)}" placeholder="${PH[k]}"><button class="xbtn" data-act="rdel" data-k="${k}" data-i="${i}" aria-label="删除这一行">✕</button></div>`).join('')}<button class="addrow" data-act="radd" data-k="${k}">＋ 添加${n}</button></div>`;
+  const basic=`<div class="card fc"><h3>版本信息</h3><div class="f2">
+    <div class="field"><label>软件 ${e.isNew?'':lk}</label><select data-bind="re:id" data-rr="relsoft" ${lock}>${opts(Object.entries(SOFT).map(([k,x])=>[k,x.name]),e.id)}</select></div>
+    <div class="field"><label>设备 ${e.isNew?'':lk}</label><select data-bind="re:dk" data-rr="reldev" ${lock}>${opts(Object.entries(DEVN).map(([k,d])=>[k,d.i+' '+d.n+(s.dev[k]?'':'（新设备）')]),e.dk)}</select></div>
+    <div class="field"><label>版本号 * ${e.isNew?'':lk}</label><input class="mono" data-bind="re:v" value="${esc(e.v)}" placeholder="例如 5.9.4" ${lock}><div class="hint">${old?`当前最新：${old.v}（${day(old.d)}）`:'这个设备还没有版本'}</div></div>
+    <div class="field"><label>官方发布日期</label><input type="date" data-bind="re:date" value="${e.date}"></div></div></div>`;
+  const advc=`<div class="card fc"><h3>更新建议</h3><div class="advpick" style="margin-top:10px">${[['ok','建议更新','新功能或重要修复'],['warn','可以等等','有小问题，不急'],['bad','先别更新','有严重问题'],['opt','可选','按需更新']].map(([k,n,d])=>`<button class="${k}" data-act="radv" data-v="${k}" aria-pressed="${e.a===k}"><b>${ADV[k].i} ${n}</b>${d}</button>`).join('')}</div>
+    <div class="field"><label>建议说明 <span class="lock">显示在前台结论区和群通知里</span></label><input data-bind="re:tip" value="${esc(e.tip)}" placeholder="例如：修复了播放卡顿，旧版也还能用，不着急。"></div>
+    ${e.a==='bad'?`<div class="field ${e.stable?'':'bad'}"><label>推荐稳定版 * <span class="lock">前台会优先给出这个版本的下载</span></label><select data-bind="re:stable" data-rr="1">${so.length?opts([['','请选择同软件同设备的已发布版本'],...so.map(x=>[x[0],x[0]+' · '+day(x[2])+' · '+ADV[x[1]].t])],e.stable):'<option value="">暂无可选的已发布版本</option>'}</select>${e.stable?'':`<div class="err">选“先别更新”时必须选推荐稳定版，否则不能发布</div>`}</div>`:''}</div>`;
+  const cont=`<div class="card fc"><h3>更新内容</h3><div class="field"><label>一句话摘要 * <span class="lock">卡片和群通知第二行</span></label><input data-bind="re:sum" value="${esc(e.sum)}" placeholder="例如：修复播放卡顿，新增倍速播放" maxlength="40"></div>${sec('add','新增')}${sec('fix','修复')}${sec('opt','优化')}${sec('known','已知问题')}</div>`;
+  const pkg=`<div class="card fc"><h3>安装包</h3><div class="f2"><div class="field"><label>安装包大小</label><input data-bind="re:size" value="${esc(e.size)}" placeholder="例如 38.2 MB"></div><div class="field"><label>系统要求</label><input data-bind="re:req" value="${esc(e.req)}"></div></div></div>`;
+  const lnk=`<div class="card fc" id="desk-links"><h3>获取入口 <small>主入口显示为大按钮，其余作为备用</small></h3>${e.links.map((l,i)=>`<div class="lnk ${l.main?'main':''} ${l.ok?'':'dead'}"><div class="g4"><input data-bind="re:links.${i}.n" value="${esc(l.n)}" placeholder="名称" aria-label="入口名称"><select data-bind="re:links.${i}.type" data-rr="1" aria-label="类型">${opts([['官方','官方'],['网盘','网盘']],l.type)}</select><input data-bind="re:links.${i}.url" value="${esc(l.url)}" placeholder="https://" aria-label="链接"><input data-bind="re:links.${i}.code" value="${esc(l.code)}" placeholder="${l.type==='网盘'?'提取码':'无需提取码'}" ${l.type==='网盘'?'':'disabled'} aria-label="提取码"></div>
+    <div class="ft"><label><input type="radio" name="desk-main" data-ch="mainlink" data-i="${i}" ${l.main?'checked':''}> 主入口</label><span class="row" style="gap:6px">${swb(l.ok,'lnkok','data-i="'+i+'" aria-label="入口有效"')} ${l.ok?'有效':'<b style="color:var(--bad)">已失效，前台不显示</b>'}</span><span class="tag ${l.type==='网盘'?'gray':'ok'}">${l.type}</span><span class="grow"></span><button class="xbtn" data-act="lnkdel" data-i="${i}" aria-label="删除入口">✕</button></div></div>`).join('')}<button class="addrow" data-act="lnkadd">＋ 添加入口</button>${e.dk==='ios'?'<p class="xs faint" style="margin-top:6px">苹果手机只提供 App Store 入口</p>':''}</div>`;
+  const warn=`<div class="card fc"><h3>安装前提醒</h3><div class="field"><textarea rows="2" data-bind="re:warn" aria-label="安装前提醒">${esc(e.warn)}</textarea><div class="hint">显示在下载按钮下方和安装教程顶部</div></div></div>`;
+  const bar=`<div class="formbar"><span class="xs faint grow">${e.isNew?(e.fromDraft?'草稿':'新版本')+' · 发布后前台、收藏提醒立即生效':'已发布版本 · 保存后前台立即生效'}</span><button class="btn g" data-act="ap" data-v="releases">取消</button>${e.isNew?'<button class="btn g" data-act="relsave">保存草稿</button>':''}<button class="btn s" data-act="relprev">👁 预览</button><button class="btn p" data-act="relpub">${e.isNew?'发布并复制群通知':'保存并复制群通知'}</button></div>`;
+  return ahead(e.isNew?'发布更新':`编辑版本 · ${esc(s.name)} ${esc(e.v)}`,`${esc(s.name)} · ${DEVN[e.dk].n}`,'',`<a data-act="ap" data-v="releases">版本管理</a> › ${e.isNew?'发布更新':'编辑'}`)+
+   `<div class="split"><div>${basic}${advc}${cont}${pkg}${lnk}${warn}</div><div class="sside" id="desk-relprev">${relPreview(f)}</div></div>${bar}`;
+}
+function relPublish(f){const e=f.re,iss=relIssues(e);if(iss.length){toast('还不能发布，缺：'+iss.join('、'));return false}
+  const s=SOFT[e.id],old=s.dev[e.dk],d=(e.date||'2026-10-18').slice(5),v=e.v.trim();
+  const cl=a=>a.map(x=>x.trim()).filter(Boolean);
+  const n={add:cl(e.notes.add),fix:cl(e.notes.fix),opt:cl(e.notes.opt)},known=cl(e.notes.known),tip=e.tip.trim()||ADV[e.a].t+'。';
+  if(old&&old.v===v)Object.assign(old,{d,a:e.a,tip,sum:e.sum.trim(),size:e.size||old.size,stable:e.a==='bad'?e.stable:null,n,known});
+  else{const h=old&&old.h.find(x=>x[0]===v);
+    if(h){h[1]=d;h[2]=e.a;h[3]=e.sum.trim()}
+    else{s.dev[e.dk]={v,p:old?old.v:'—',d,a:e.a,sum:e.sum.trim(),tip,size:e.size||'—',stable:e.a==='bad'?e.stable:null,n,known,h:old?[[old.v,old.d,old.a,old.sum],...old.h]:[]};
+      if(s.st==='draft')s.st='on';G.seen.delete(e.id)}}
+  const di=DRAFTS.findIndex(x=>x.id===e.id&&x.dk===e.dk&&x.v===v);if(di>=0)DRAFTS.splice(di,1);
+  copy(relNotice(e),e.isNew?'已发布，群通知已复制':'已保存，群通知已复制');return true}
+
+/* ================= 后台：公告管理 ================= */
+function annSt(a){return a.draft?['gray','草稿']:a.ended?['opt','已结束']:['ok','已发布']}
+function annForm(id){const a=id&&ANN.find(x=>x.id===id);
+  if(!a)return{id:null,t:'',sum:'',body:'',type:'群公告',lvl:'普通',until:'',pin:false,soft:[],img:false,link:''};
+  return{id,t:a.t,sum:a.sum||'',body:a.b.join('\n'),type:a.type,lvl:a.cls==='imp'?'重要':a.cls==='tip'?'提醒':'普通',until:fullDate(a.until),pin:!!a.pin,soft:[...a.soft],img:!!a.img,link:a.link||''}}
+const annPv=e=>`<div class="ac ${LVL[e.lvl]}" style="margin:0;box-shadow:none"><div class="row xs">${e.pin?'<span class="tag gold">📌 置顶</span>':''}<span class="tag ${e.lvl==='重要'?'bad':e.lvl==='提醒'?'gold':'b'}">${e.type}</span><span class="faint" style="margin-left:auto">${e.until?'有效期到 '+day(e.until.slice(5)):'长期有效'}</span></div><b>${esc(e.t||'公告标题')}</b><p>${esc(e.sum||e.body.split('\n')[0]||'摘要会显示在这里')}</p>${e.img?'<div class="steps"><div class="ill" style="height:60px">配图</div></div>':''}</div>`;
+function admAnn(f){
+  const cnt=k=>ANN.filter(a=>k==='全部'||annSt(a)[1]===k).length;
+  const list=ANN.filter(a=>f.ast==='全部'||annSt(a)[1]===f.ast).sort((a,b)=>!!b.pin-!!a.pin||b.d.localeCompare(a.d));
+  const rows=list.map(a=>{const st=annSt(a);return`<tr><td style="width:12px;padding-right:0"><span class="lv l-${a.ended?'off':a.cls}" title="重要程度：${a.cls==='imp'?'重要':a.cls==='tip'?'提醒':'普通'}"></span></td>
+   <td><b class="small">${esc(a.t)}</b><div class="xs muted ell" style="max-width:300px">${esc(a.sum||a.b[0])}</div>${a.soft.length?`<div class="xs faint">关联：${a.soft.map(id=>SOFT[id].name).join('、')}</div>`:''}</td>
+   <td><span class="tag ${a.cls==='imp'?'bad':a.cls==='tip'?'gold':'b'}">${a.type}</span></td>
+   <td>${swb(!!a.pin,'annpin','data-id="'+a.id+'" aria-label="置顶"')}</td>
+   <td class="xs">${dday(a.d)} ${a.draft?'创建':'发布'}<div class="faint">${a.until?'到 '+day(a.until):'长期有效'}</div></td>
+   <td><span class="tag ${st[0]}">${st[1]}</span></td><td class="num">${a.draft?'—':num(a.views)}</td>
+   <td><div class="acts"><button class="btn sm g" data-act="annedit" data-id="${a.id}">编辑</button>${a.draft?`<button class="btn sm p" data-act="annpub" data-id="${a.id}">发布</button>`:a.ended?`<button class="btn sm g" data-act="annend" data-id="${a.id}">恢复</button>`:`<button class="btn sm g" data-act="annend" data-id="${a.id}">结束</button><button class="btn sm g" data-act="copy" data-text="https://ding.example/n/${a.id}" data-ok="公告链接已复制">链接</button>`}</div></td></tr>`}).join('');
+  return ahead('公告管理','置顶的公告显示在首页最上面；到期后自动变为“已结束”',`<button class="btn p" data-act="annedit">＋ 发公告</button>`)+
+   `<div class="toolbar">${fchips('ast',['全部','已发布','草稿','已结束'].map(k=>[k,`${k} ${cnt(k)}`]),f.ast)}<span class="grow"></span><span class="xs muted row" style="gap:10px">左侧色条 = 重要程度：<span class="row" style="gap:4px"><span class="lv" style="height:12px"></span>普通</span><span class="row" style="gap:4px"><span class="lv l-tip" style="height:12px"></span>提醒</span><span class="row" style="gap:4px"><span class="lv l-imp" style="height:12px"></span>重要</span></span></div>
+   <div class="card tcard"><table class="tbl"><thead><tr><th></th><th>标题 / 摘要</th><th>类型</th><th>置顶</th><th>时间 / 有效期</th><th>状态</th><th class="num">看过</th><th style="text-align:right">操作</th></tr></thead><tbody>${rows||'<tr><td colspan="8"><div class="empty"><span class="e">📢</span>没有公告</div></td></tr>'}</tbody></table></div>`;
+}
+
+/* ================= 后台：用户反馈 ================= */
+function admFb(f){
+  const list=FBS.filter(x=>(f.fst==='all'||x.st===f.fst)&&(f.ftype==='all'||x.type===f.ftype)&&(f.fsoft==='all'||x.sid===f.fsoft));
+  for(const id of[...f.fsel])if(!list.some(x=>x.id===id))f.fsel.delete(id);
+  const allOn=list.length>0&&list.every(x=>f.fsel.has(x.id));
+  const nNew=FBS.filter(x=>x.st==='new').length;
+  const tc={};FBS.forEach(x=>tc[x.type]=(tc[x.type]||0)+1);const tmax=Math.max(...Object.values(tc));
+  const kpi=`<div class="mini-kpi">
+    <div class="card"><span class="small muted">近7天 能正常用</span><b style="color:var(--ok)">1,186 次</b><span class="up">↑ 12% 较上周</span></div>
+    <div class="card"><span class="small muted">近7天 有问题</span><b style="color:var(--bad)">56 次</b><span class="down">↑ 31 较上周</span></div>
+    <div class="card"><span class="small muted">待处理的问题明细</span><b>${nNew} 条</b><span class="xs faint">共 ${FBS.length} 条</span></div>
+    <div class="card"><span class="small muted">问题最多的类型</span><b>登录不了</b><span class="xs faint">全部来自云盘助手 4.1.0</span></div></div>`;
+  const rank=`<div class="agrid" style="margin-bottom:16px"><div class="card"><div class="sh"><h3>📉 按版本排行 <span class="xs faint" style="font-weight:400">近7天“有问题”次数</span></h3></div>
+    ${VRANK.map(([sid,dk,v,o,b])=>{const s=SOFT[sid],p=Math.round(o/(o+b)*100);return`<div class="vrank"><div class="row" style="min-width:0">${ico(s,'sm')}<div style="min-width:0"><b class="small">${s.name} ${DEVN[dk].s}版 <span class="mono">${v}</span></b><div class="xs muted">有问题 <b style="color:var(--bad)">${b}</b> · 能用 ${o}</div></div></div><div><span class="mbar"><i style="width:${p}%"></i></span><div class="xs ${p<60?'down':'faint'}">${p}% 能用</div></div><div style="text-align:right">${isBadV(sid,dk,v)?'<span class="tag bad">已标先别更新</span>':`<button class="btn sm d" data-act="markbad" data-sid="${sid}" data-dk="${dk}" data-v="${v}">标为先别更新</button>`}</div></div>`}).join('')}</div>
+    <div class="card"><div class="sh"><h3>问题类型</h3><span class="xs faint">全部明细</span></div>${FBT.map(t=>`<div class="vrank" style="grid-template-columns:96px 1fr 30px"><span class="small">${t}</span><span class="mbar" style="background:#EEF1F6"><i style="width:${(tc[t]||0)/tmax*100}%;background:${t==='网盘链接失效'?'#E0A043':'#E5484D'}"></i></span><b class="small mono" style="text-align:right">${tc[t]||0}</b></div>`).join('')}</div></div>`;
+  const rows=list.map(x=>{const s=SOFT[x.sid],sel=f.fsel.has(x.id),bad=isBadV(x.sid,x.dk,x.v);return`<tr class="${sel?'sel-on':''}"><td><input type="checkbox" class="ck" data-ch="fsel" data-id="${x.id}" ${sel?'checked':''} aria-label="选择"></td>
+   <td class="xs mono">${x.t}</td><td><b class="small">${s.name}</b><div class="xs muted"><span class="mono">${x.v}</span> · ${DEVN[x.dk].s}${bad?' · <span style="color:var(--bad)">先别更新</span>':''}</div></td>
+   <td><span class="tag ${x.type==='网盘链接失效'?'warn':'gray'}">${x.type}</span></td>
+   <td class="small" style="max-width:210px">${x.note?esc(x.note):'<span class="faint">（没有补充说明）</span>'}${x.link?`<div class="xs"><a data-act="toast" data-t="示例：打开 ${x.link}">🔗 ${x.link}</a></div>`:''}</td>
+   <td><span class="tag ${FST[x.st][0]}">${FST[x.st][1]}</span></td>
+   <td><div class="acts">${x.type==='网盘链接失效'?`<button class="btn sm s" data-act="reledit" data-id="${x.sid}" data-dev="${x.dk}" data-v="${x.v}" data-focus="links">编辑链接</button>`:bad?'':`<button class="btn sm d" data-act="markbad" data-sid="${x.sid}" data-dk="${x.dk}" data-v="${x.v}">标为先别更新</button>`}${x.st==='new'?`<button class="btn sm g" data-act="fbst" data-id="${x.id}" data-v="done">已处理</button><button class="btn sm g" data-act="fbst" data-id="${x.id}" data-v="ignore">忽略</button>`:`<button class="btn sm g" data-act="fbst" data-id="${x.id}" data-v="new">撤销</button>`}</div></td></tr>`}).join('');
+  const cnt=k=>FBS.filter(x=>k==='all'||x.st===k).length;
+  return ahead('用户反馈','前台“有问题”的匿名反馈；“能正常用”只计数，不进明细')+kpi+rank+
+   `<div class="sh"><h3>问题明细</h3></div>
+   <div class="toolbar">${fchips('fst',[['all','全部'],['new','新的'],['done','已处理'],['ignore','忽略']].map(([k,n])=>[k,`${n} ${cnt(k)}`]),f.fst)}<span class="grow"></span>
+    <select class="sel" data-bind="f:ftype" data-rr="1" aria-label="类型">${opts([['all','全部类型'],...FBT.map(t=>[t,t])],f.ftype)}</select>
+    <select class="sel" data-bind="f:fsoft" data-rr="1" aria-label="软件">${opts([['all','全部软件'],...Object.entries(SOFT).filter(([k])=>FBS.some(x=>x.sid===k)).map(([k,s])=>[k,s.name])],f.fsoft)}</select></div>
+   ${f.fsel.size?`<div class="batch">已选 <b>${f.fsel.size}</b> 条<span class="grow"></span><button class="btn" data-act="fbbatch" data-v="done">✓ 标为已处理</button><button class="btn" data-act="fbbatch" data-v="ignore">忽略</button><button class="btn" data-act="fbbatch" data-v="new">标为新的</button><button class="btn" data-act="fbclear">取消选择</button></div>`:''}
+   <div class="card tcard"><table class="tbl"><thead><tr><th style="width:28px"><input type="checkbox" class="ck" data-ch="fselall" ${allOn?'checked':''} aria-label="全选"></th><th>时间</th><th>软件 · 版本 · 设备</th><th>类型</th><th>说明 / 关联链接</th><th>状态</th><th style="text-align:right">操作</th></tr></thead><tbody>${rows||'<tr><td colspan="7"><div class="empty"><span class="e">💬</span>没有符合条件的反馈</div></td></tr>'}</tbody></table></div>`;
+}
+
+/* ================= 后台：想要的软件 ================= */
+function admReq(f){
+  const list=WANTS.map((w,i)=>[w,i]).filter(([w])=>f.wst==='all'||w.st===f.wst).sort((a,b)=>b[0].c-a[0].c);
+  const max=Math.max(...WANTS.map(w=>w.c));
+  const cnt=k=>WANTS.filter(w=>k==='all'||w.st===k).length;
+  const rows=list.map(([w,i])=>`<tr><td><b class="small">${esc(w.n)}</b></td>
+   <td><div class="row" style="gap:6px"><b class="mono small" style="width:22px">${w.c}</b><span class="mbar" style="background:#EEF1F6;width:64px"><i style="width:${w.c/max*100}%;background:var(--brand)"></i></span></div></td>
+   <td>${w.devs.map(devMini).join(' ')}</td>
+   <td class="small" style="max-width:200px">${w.note?esc(w.note):'<span class="faint">—</span>'}</td>
+   <td class="xs">首次 ${dday(w.first)}<div class="faint">最近 ${dday(w.last)}</div></td>
+   <td><span class="tag ${WST[w.st][0]}">${WST[w.st][1]}</span>${w.st==='done'&&w.sid&&SOFT[w.sid]?`<div class="xs"><a data-act="softedit" data-id="${w.sid}">→ ${SOFT[w.sid].name}</a></div>`:''}${w.st==='no'&&w.why?`<div class="xs faint">${esc(w.why)}</div>`:''}</td>
+   <td><div class="acts">${w.st==='new'?`<button class="btn sm g" data-act="wset" data-i="${i}" data-v="plan">标为计划中</button>`:''}${w.st==='new'||w.st==='plan'?`<button class="btn sm p" data-act="winc" data-i="${i}">收录</button><button class="btn sm g" data-act="wset" data-i="${i}" data-v="no">不收录</button>`:`<button class="btn sm g" data-act="wset" data-i="${i}" data-v="new">撤销</button>`}</div></td></tr>`).join('');
+  return ahead('想要的软件','群友在前台提交，名称相同的自动合并计数；收录后，提交的人会在“我的”里看到“已收录”')+
+   `<div class="toolbar">${fchips('wst',[['all','全部'],['new','新的'],['plan','计划中'],['done','已收录'],['no','不收录']].map(([k,n])=>[k,`${n} ${cnt(k)}`]),f.wst)}</div>
+   <div class="card tcard"><table class="tbl"><thead><tr><th>名称</th><th>想要人数</th><th>设备</th><th>最近补充说明</th><th>提交时间</th><th>状态</th><th style="text-align:right">操作</th></tr></thead><tbody>${rows||'<tr><td colspan="7"><div class="empty"><span class="e">🙋</span>没有符合条件的记录</div></td></tr>'}</tbody></table></div>`;
+}
+function guessSoft(w){return Object.keys(SOFT).find(k=>w.n.includes(SOFT[k].name.slice(-2)))||Object.keys(SOFT)[0]}
+
+/* ================= 后台：广告管理 ================= */
+function adsChart(imp,on){const mx=Math.max(...imp),w=100/imp.length;return`<svg class="mchart" viewBox="0 0 100 40" preserveAspectRatio="none" aria-label="近 7 天每日曝光">${imp.map((v,i)=>`<rect x="${(i*w+1.5).toFixed(2)}" y="${(40-v/mx*36).toFixed(2)}" width="${(w-3).toFixed(2)}" height="${(v/mx*36).toFixed(2)}" rx="1" fill="${!on?'#D5DCE7':i===imp.length-1?'#2457E6':'#C9D8FF'}"><title>${num(v)} 曝光</title></rect>`).join('')}</svg>`}
+const amPv=m=>`<div class="ad feed" style="margin:0"><span class="lbl">广告</span><div class="img" style="background:${m.c}">推广图<small>16:9</small></div><div class="txt"><b>${esc(m.t||'推广标题')}</b><span class="muted xs">${esc(m.sub||'推广说明')} · 了解详情 ›</span></div></div>`;
+function amForm(id){const m=id&&ADM.find(x=>x.id===id);
+  if(!m)return{id:null,t:'',sub:'',url:'',pos:['feed'],from:'2026-10-18',to:'2026-10-31',st:'投放中',c:'linear-gradient(135deg,#E0E7FF,#FCE7F3)'};
+  return{id,t:m.t,sub:m.sub,url:m.url,pos:[...m.pos],from:fullDate(m.from),to:fullDate(m.to),st:m.st,c:m.c}}
+function admAds(f){
+  const master=`<div class="card master"><span style="font-size:26px">📣</span><div class="grow"><b>广告总开关</b><div class="small muted">${G.ads?'已开启：下面打开的广告位会在前台显示（和顶部控制栏的“广告”同步）':'已关闭：前台所有广告位都不显示，统计数据照常保留'}</div></div>${swb(G.ads,'adsall','aria-label="广告总开关"')}</div>`;
+  const slots=SLOTS.map(([k,n,where,desc,imp,clk])=>{const on=G.slots[k]&&G.ads,I=sumA(imp),C=sumA(clk);return`<div class="card slotc ${on?'':'off'}"><div class="row" style="align-items:flex-start"><div class="grow"><b>${n}</b><div class="xs muted">${where} · ${desc}</div></div>${swb(G.slots[k],'slot','data-v="'+k+'" aria-label="'+n+'"')}</div>
+    ${adsChart(imp,on)}<div class="xs faint row"><span>近 7 天每日曝光</span><span class="grow"></span><span>10/12 – 10/18</span></div>
+    <div class="stat3"><div><b>${num(I)}</b><span>曝光</span></div><div><b>${C}</b><span>点击</span></div><div><b>${(C/I*100).toFixed(1)}%</b><span>点击率</span></div></div>
+    <div class="xs muted" style="margin-top:8px">正在投放：${ADM.filter(m=>m.st==='投放中'&&m.pos.includes(k)).map(m=>esc(m.t)).join('、')||'<span class="faint">无，前台显示占位</span>'}</div></div>`}).join('');
+  const rows=ADM.map(m=>`<tr><td><div class="cover" style="background:${m.c}">封面</div></td><td><b class="small">${esc(m.t)}</b><div class="xs faint ell" style="max-width:170px">${esc(m.url||'未填写链接')}</div></td>
+   <td>${m.pos.map(p=>`<span class="mini">${SLOTN[p]}</span>`).join(' ')}</td><td class="xs">${dday(m.from)} – ${dday(m.to)}</td><td><span class="tag ${MST[m.st]}">${m.st}</span></td>
+   <td class="num">${m.imp?num(m.imp):'—'}</td><td class="num">${m.clk||'—'}</td><td class="num">${m.imp?(m.clk/m.imp*100).toFixed(1)+'%':'—'}</td>
+   <td><div class="acts"><button class="btn sm g" data-act="amedit" data-id="${m.id}">编辑</button>${m.st==='投放中'?`<button class="btn sm g" data-act="amtog" data-id="${m.id}">暂停</button>`:m.st==='已暂停'?`<button class="btn sm s" data-act="amtog" data-id="${m.id}">恢复</button>`:''}</div></td></tr>`).join('');
+  return ahead('广告管理','只有 3 个广告位，都标注“广告”，不放在下载按钮旁边',`<button class="btn p" data-act="amedit">＋ 新建推广</button>`)+master+`<div class="slots">${slots}</div>
+   <div class="card tcard"><div class="sh" style="margin:10px 0 2px"><h3>推广素材</h3><span class="xs faint">同一位置有多条“投放中”时轮流显示</span></div><table class="tbl"><thead><tr><th>封面</th><th>标题</th><th>投放位置</th><th>起止时间</th><th>状态</th><th class="num">曝光</th><th class="num">点击</th><th class="num">点击率</th><th style="text-align:right">操作</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ================= 后台：站点设置 ================= */
+const sitePv=()=>`<span class="logo">${esc(G.glyph)}</span><span class="brand">${esc(G.name)}</span><span class="xs faint" style="margin-left:auto">浏览器标题：${esc(G.name)} · ${esc(G.intro)}</span>`;
+const sampleNotice=()=>`【${G.name}】光幕影视 安卓版 3.2.1 更新了\n修复播放卡顿，新增倍速播放\n✅ 建议更新\n\n下载和安装方法 👇\n${link('guangmu')}?d=android${G.tail?'\n'+G.tail:''}`;
+function admSet(f){
+  const site=`<div class="card"><h3>站点信息</h3>
+    <div class="field"><label>站名 <span class="lock">输入后整套原型立即使用新站名</span></label><input data-act="sitename" value="${esc(G.name)}" maxlength="12"><div class="chips" style="flex-wrap:wrap;margin-top:8px">${NAMES.map((n,i)=>`<button class="chip" data-act="setname" data-v="${i}" aria-pressed="${G.name===n[0]}">${n[0]}</button>`).join('')}</div><div class="sitepv" id="desk-sitepv">${sitePv()}</div></div>
+    <div class="field"><label>站点介绍</label><input data-bind="G:intro" value="${esc(G.intro)}"><div class="hint">显示在页脚和分享海报上</div></div>
+    <div class="field"><label>页脚说明</label><textarea rows="2" data-bind="G:footer">${esc(G.footer)}</textarea></div>
+    <div class="field"><label>备案号</label><input data-bind="G:icp" value="${esc(G.icp)}" placeholder="例如：京ICP备00000000号"><div class="hint">留空时页脚显示“待填写”</div></div></div>`;
+  const mob=`<div class="card"><h3>手机端</h3><div class="setrow"><span>小红书内打开提示<div class="xs faint">在小红书里打开时，顶部提示“去浏览器打开”，点下载时弹出图示引导。可用顶部“模拟小红书内打开”查看效果</div></span>${swb(G.xhs,'xhs','aria-label="小红书内打开提示"')}</div></div>`;
+  const notice=`<div class="card"><h3>群通知</h3><div class="field"><label>末尾提示语 <span class="lock">每条群通知最后都会带上</span></label><textarea rows="2" data-bind="G:tail">${esc(G.tail)}</textarea></div><div class="field"><label>效果预览</label><div class="notice" id="desk-tailpv">${esc(sampleNotice())}</div></div></div>`;
+  const acct=`<div class="card"><h3>管理员账号</h3><div style="margin-top:6px"><div class="kv"><span>账号</span><span class="mono">qunzhu</span></div><div class="kv"><span>上次登录</span><span>今天 14:02 · 本机</span></div><div class="kv"><span>密码</span><span>已设置 · 90 天前修改</span></div></div><div class="row" style="margin-top:10px"><button class="btn sm g" data-act="sheet" data-v="pwd">修改密码</button><button class="btn sm g" data-act="toast" data-t="示例：已退出登录">退出登录</button></div><p class="xs faint" style="margin-top:8px">后台只有群主一个账号（示意）</p></div>`;
+  const data=`<div class="card"><h3>数据保留</h3><div style="margin-top:6px"><div class="kv"><span>访问、下载点击统计</span><span>保留 90 天</span></div><div class="kv"><span>同步码</span><span>30 天有效，过期自动删除</span></div><div class="kv"><span>用户反馈</span><span>匿名，不记录账号和手机号</span></div><div class="kv"><span>收藏</span><span>只保存在用户自己的设备上</span></div></div><button class="btn sm g" style="margin-top:10px" data-act="toast" data-t="示例：已导出最近 90 天统计 CSV">导出统计数据</button></div>`;
+  return ahead('站点设置','这里的修改会立即反映在前台画面里')+`<div class="setgrid"><div style="display:flex;flex-direction:column;gap:16px">${site}${mob}</div><div style="display:flex;flex-direction:column;gap:16px">${notice}${acct}${data}</div></div><div class="formbar"><span class="xs faint grow">修改即时生效（示意）</span><button class="btn p" data-act="toast" data-t="设置已保存">保存设置</button></div>`;
+}
+
+/* ================= 后台：弹层 ================= */
+function adminSheet(f){
+  const s=f.sheet;let h='',drw=false;
+  const foot2=(ok,okText,cls='p')=>`<div class="row" style="margin-top:16px"><button class="btn g grow" data-act="closesheet">取消</button><button class="btn ${cls} grow" data-act="${ok}">${okText}</button></div>`;
+  if(s==='annedit'){const e=f.ae;drw=true;
+    h=`<h2>${e.id?'编辑公告':'发公告'}</h2><p class="small muted">${e.id?'修改后前台立即更新':'发布后出现在首页和公告页'}</p>
+    <div class="field"><label>标题 *</label><input data-bind="ae:t" value="${esc(e.t)}" placeholder="例如：周末服务器维护通知"></div>
+    <div class="field"><label>摘要 <span class="lock">列表和首页卡片里显示一行</span></label><input data-bind="ae:sum" value="${esc(e.sum)}" placeholder="不填则用正文第一段"></div>
+    <div class="field"><label>正文 <span class="lock">每行一段</span></label><textarea rows="5" data-bind="ae:body">${esc(e.body)}</textarea></div>
+    <div class="field"><label>类型</label><div class="chips">${['群公告','使用提醒','维护通知'].map(x=>`<button class="chip" data-act="aetype" data-v="${x}" aria-pressed="${e.type===x}">${x}</button>`).join('')}</div></div>
+    <div class="field"><label>重要程度</label><div class="seg" style="margin:0">${['普通','提醒','重要'].map(x=>`<button data-act="aelvl" data-v="${x}" aria-selected="${e.lvl===x}"><span class="lv l-${LVL[x]}" style="display:inline-block;height:12px;vertical-align:-1px;margin-right:6px"></span>${x}</button>`).join('')}</div></div>
+    <div class="f2"><div class="field"><label>到期时间</label><input type="date" data-bind="ae:until" value="${e.until}"><div class="hint">留空表示长期有效</div></div><div class="field"><label>置顶</label><div class="row" style="min-height:42px">${swb(e.pin,'aepin','aria-label="置顶"')}<span class="small muted">显示在首页最上面</span></div></div></div>
+    <div class="field"><label>关联软件 <span class="lock">公告会显示在这些软件的详情页</span></label><div class="chips" style="flex-wrap:wrap">${Object.entries(SOFT).map(([k,x])=>`<button class="chip" data-act="aesoft" data-v="${k}" aria-pressed="${e.soft.includes(k)}">${x.name}</button>`).join('')}</div></div>
+    <div class="field"><label>图片</label><div class="upl"><span style="font-size:22px">🖼</span><div class="grow"><b class="small">${e.img?'已上传 notice.png（示意）':'上传配图（选填）'}</b><div class="xs faint">建议宽度 1080，显示在正文上方</div></div><button class="btn sm g" data-act="aeimg">${e.img?'移除':'选择文件'}</button></div></div>
+    <div class="field"><label>链接（选填）</label><input data-bind="ae:link" value="${esc(e.link)}" placeholder="https://"></div>
+    <div class="field"><label>预览</label><div id="desk-aepv">${annPv(e)}</div></div>
+    <div class="sfoot"><button class="btn g" data-act="closesheet">取消</button><button class="btn g grow" data-act="aesave" data-v="draft">存草稿</button><button class="btn p grow" data-act="aesave" data-v="pub">发布并复制群通知</button></div>`}
+  if(s==='amedit'){const m=f.am;drw=true;
+    h=`<h2>${m.id?'编辑推广':'新建推广'}</h2><p class="small muted">前台会自动加上“广告”标记</p>
+    <div class="field"><label>标题 *</label><input data-bind="am:t" value="${esc(m.t)}" maxlength="20" placeholder="最多一行"></div>
+    <div class="field"><label>说明</label><input data-bind="am:sub" value="${esc(m.sub)}"></div>
+    <div class="field"><label>封面</label><div class="upl"><div class="cover" style="background:${m.c};width:96px;height:54px">封面</div><div class="grow"><b class="small">上传封面</b><div class="xs faint">信息流 16:9 · 横幅 750×220 · 侧栏 300×250</div></div><button class="btn sm g" data-act="toast" data-t="示例：选择图片">选择文件</button></div></div>
+    <div class="field"><label>跳转链接</label><input data-bind="am:url" value="${esc(m.url)}" placeholder="https://"></div>
+    <div class="field"><label>投放位置 * <span class="lock">可多选</span></label><div class="chips" style="flex-wrap:wrap">${SLOTS.map(x=>`<button class="chip" data-act="ampos" data-v="${x[0]}" aria-pressed="${m.pos.includes(x[0])}">${x[1]}${G.slots[x[0]]?'':' · 位置已关闭'}</button>`).join('')}</div></div>
+    <div class="f2"><div class="field"><label>开始时间</label><input type="date" data-bind="am:from" value="${m.from}"></div><div class="field"><label>结束时间</label><input type="date" data-bind="am:to" value="${m.to}"></div></div>
+    <div class="field"><label>状态</label><select data-bind="am:st">${opts(Object.keys(MST).map(x=>[x,x]),m.st)}</select></div>
+    <div class="field"><label>前台预览（首页信息流）</label><div id="desk-ampv">${amPv(m)}</div></div>
+    <div class="sfoot"><button class="btn g" data-act="closesheet">取消</button><span class="grow"></span><button class="btn p" data-act="amsave">保存</button></div>`}
+  if(s==='markbad'){const mb=f.mb,so=SOFT[mb.sid],r=so.dev[mb.dk],ops=stableOpts(mb.sid,mb.dk,mb.v),cur=r.v===mb.v?r.a:((r.h.find(x=>x[0]===mb.v)||[])[2]||'ok');
+    h=`<h2>把这个版本标为“先别更新”</h2><p class="small muted">${so.name} · ${DEVN[mb.dk].n} · <b class="mono">${mb.v}</b>　当前建议：${ADV[cur].t}</p>
+    <div class="alert" style="margin-top:12px">标记后前台立即显示红色“先别更新”，下载按钮改为推荐的稳定版。</div>
+    <div class="field ${mb.stable?'':'bad'}"><label>推荐稳定版 *</label><select data-bind="mb:stable" data-rr="1">${ops.length?opts([['','请选择'],...ops.map(x=>[x[0],x[0]+' · '+day(x[2])])],mb.stable):'<option value="">暂无可选的已发布版本</option>'}</select>${ops.length?'':'<div class="err">这个设备没有其他已发布版本，请先在版本管理里补充</div>'}</div>
+    <div class="field"><label>给群友的说明</label><textarea rows="3" data-bind="mb:tip">${esc(mb.tip)}</textarea></div>
+    ${foot2('mbok','确认标记','d')}`}
+  if(s==='reqinc'){const ri=f.ri,w=WANTS[ri.i];
+    h=`<h2>收录“${esc(w.n)}”</h2><p class="small muted">${w.c} 人想要 · ${w.devs.map(d=>DEVN[d].s).join('、')}${w.note?' · '+esc(w.note):''}</p>
+    <div class="seg" role="tablist"><button role="tab" data-act="rimode" data-v="link" aria-selected="${ri.mode==='link'}">关联到已有软件</button><button role="tab" data-act="rimode" data-v="new" aria-selected="${ri.mode==='new'}">新建软件</button></div>
+    ${ri.mode==='link'?`<div class="field"><label>选择软件</label><select data-bind="ri:sid">${opts(Object.entries(SOFT).map(([k,x])=>[k,x.name]),ri.sid)}</select><div class="hint">提交过的群友会在“我的 → 想要的软件”看到“已收录”</div></div>`:`<p class="small muted">会打开“添加软件”页面并带上名称“${esc(w.n)}”和设备，保存后自动标为已收录。</p>`}
+    ${foot2('riok',ri.mode==='link'?'确认收录':'去新建 ›')}`}
+  if(s==='pwd')h=`<h2>修改密码</h2><p class="small muted">仅示意，不会真的修改</p><div class="field"><label>当前密码</label><input type="password" value="12345678" autocomplete="off"></div><div class="field"><label>新密码</label><input type="password" placeholder="至少 8 位，字母和数字混合" autocomplete="off"></div><div class="field"><label>再输入一次</label><input type="password" autocomplete="off"></div>${foot2('pwdok','保存新密码')}`;
+  if(s==='relprev'){const e=f.re,so=SOFT[e.id],cl=a=>a.map(x=>x.trim()).filter(Boolean),bad=e.a==='bad'&&e.stable,main=e.links.find(l=>l.main&&l.ok)||e.links.find(l=>l.ok),bk=e.links.filter(l=>l!==main&&l.ok);
+    const li=(k,n,arr)=>arr.map(x=>`<li><span class="k ${k}">${n}</span>${esc(x)}</li>`).join('');
+    h=`<h2>前台预览</h2><p class="small muted">${DEVN[e.dk].n}上看到的样子 · ${e.isNew?'还没有发布':'已发布版本'}</p>
+    <div class="dhead" style="margin-top:12px">${ico(so,'lg')}<div class="grow"><h1 style="font-size:20px">${esc(so.name)}</h1><p class="small muted">${esc(so.desc)}</p></div></div>
+    <div class="verdict ${e.a}"><span class="vi">${ADV[e.a].i}</span><div><b>${ADV[e.a].t} · ${DEVN[e.dk].s}版 ${esc(e.v)}</b><span class="small">${esc(e.tip||ADV[e.a].t+'。')}</span></div></div>
+    ${bad?`<div class="alert" style="margin-top:10px">⚠ ${esc(e.v)} 有问题，建议先下载稳定版 <b>${esc(e.stable)}</b></div>`:''}
+    <button class="btn p block lg" style="margin-top:10px" data-act="toast" data-t="预览中不能下载">⬇ ${bad?'下载稳定版 '+esc(e.stable):esc(main?main.n:'（没有有效入口）')}</button>
+    <div class="meta2"><span>📦 ${esc(e.size||'—')}</span><span>🖥 ${esc(e.req)}</span></div>
+    ${bk.map(l=>`<div class="backup"><div class="t"><b>备用：${esc(l.n)}</b><div class="ell muted xs">${esc(l.url)}${l.code?` · 提取码 <span class="code">${esc(l.code)}</span>`:''}</div></div></div>`).join('')}
+    ${e.warn?`<div class="tip">💡 ${esc(e.warn)}</div>`:''}
+    <div class="card" style="margin-top:12px;box-shadow:none"><div class="diff"><span class="mono new">${esc(e.v||'—')}</span><span class="faint small">${e.date?day(e.date.slice(5)):''}</span></div><ul class="nl">${li('add','新增',cl(e.notes.add))}${li('fix','修复',cl(e.notes.fix))}${li('opt','优化',cl(e.notes.opt))}${li('known','已知问题',cl(e.notes.known))}</ul></div>
+    <button class="btn g block" style="margin-top:12px" data-act="closesheet">关闭预览</button>`}
+  if(!h)return'';
+  return`<div class="ov d-ov ${drw?'drw':''}" data-act="ovclose"><div class="sheet ${s==='relprev'||s==='reqinc'||s==='markbad'?'wide':''}" role="dialog" aria-modal="true" aria-label="${s}">${h}</div></div>`;
+}
+
+/* ================= 后台：交互 ================= */
+function focusEl(id){const fr=document.getElementById('desk'),el=document.getElementById(id);if(el)fr.scrollTop+=el.getBoundingClientRect().top-fr.getBoundingClientRect().top-12}
+function setBind(f,t){const i=t.dataset.bind.indexOf(':'),root=t.dataset.bind.slice(0,i),path=t.dataset.bind.slice(i+1);const o=root==='f'?f:root==='G'?G:f[root];if(!o)return;const ks=path.split('.');let c=o;for(const k of ks.slice(0,-1))c=c[k];c[ks[ks.length-1]]=t.type==='checkbox'?t.checked:t.value}
+function livePv(fid,f){if(fid!=='desk')return;const g=id=>document.getElementById('desk-'+id);let x;
+  if((x=g('relprev'))&&f.re)x.innerHTML=relPreview(f);
+  if((x=g('sepv'))&&f.se)x.innerHTML=sePreview(f);
+  if((x=g('sechk'))&&f.se)x.innerHTML=seCheck(f.se);
+  if((x=g('slugpv'))&&f.se)x.textContent=f.se.slug||'…';
+  if((x=g('icopv'))&&f.se){x.style.background=grad(f.se.color);if(!f.se.icon)x.textContent=f.se.glyph||'?'}
+  if((x=g('aepv'))&&f.ae)x.innerHTML=annPv(f.ae);
+  if((x=g('ampv'))&&f.am)x.innerHTML=amPv(f.am);
+  if((x=g('tailpv')))x.textContent=sampleNotice();
+  if((x=g('sitepv')))x.innerHTML=sitePv();
+  if((x=g('admname')))x.textContent=G.name+' · 后台';
+  if((x=g('admlogo')))x.textContent=G.glyph;
+}
+function admAct(fid,f,a,v,b,re){
+  const d=b.dataset;
+  switch(a){
+   case'ap':f.ap=v;f.sheet=null;if(d.soft)f.rsoft=d.soft;re();return true;
+   case'flt':f[d.k]=v;if(d.k==='fst')f.fsel.clear();re(true);return true;
+   case'fbgo':Object.assign(f,{ap:'fb',fsoft:d.soft||'all',fst:'new',ftype:'all',sheet:null});f.fsel.clear();re();return true;
+   case'newrel':{const id=d.id&&SOFT[d.id]?d.id:'note';f.re=relForm(id,d.dev||null,null,d.v?{v:d.v,sum:d.sum||'',notes:{add:[''],fix:[d.sum||''],opt:[],known:[]}}:null);f.ap='reledit';f.sheet=null;re();return true}
+   case'reledit':f.re=relForm(d.id,d.dev,d.v);f.ap='reledit';f.sheet=null;re();if(d.focus==='links'){focusEl('desk-links');toast('在“获取入口”里更新失效的链接')}return true;
+   case'rcopy':copy(relNotice(relForm(d.id,d.dev,d.v)),'群通知已复制');return true;
+   case'radv':f.re.a=v;re(true);return true;
+   case'radd':f.re.notes[d.k].push('');re(true);return true;
+   case'rdel':f.re.notes[d.k].splice(+d.i,1);re(true);return true;
+   case'lnkadd':f.re.links.push({n:'备用入口',type:'网盘',url:'',code:'',main:!f.re.links.length,ok:true});re(true);return true;
+   case'lnkdel':{const L=f.re.links,was=L[+d.i].main;L.splice(+d.i,1);if(was&&L[0])L[0].main=true;re(true);return true}
+   case'lnkok':{const l=f.re.links[+d.i];l.ok=!l.ok;re(true);return true}
+   case'relcopy':copy(relNotice(f.re),'群通知已复制');return true;
+   case'relprev':f.sheet='relprev';re(true);return true;
+   case'relsave':{const e=f.re,vv=e.v.trim();if(!vv){toast('先填写版本号');return true}const o={id:e.id,dk:e.dk,v:vv,d:(e.date||'2026-10-18').slice(5),a:e.a,sum:e.sum,tip:e.tip,notes:JSON.parse(JSON.stringify(e.notes))};const dr=DRAFTS.find(x=>x.id===e.id&&x.dk===e.dk&&x.v===vv);dr?Object.assign(dr,o):DRAFTS.push(o);toast('已保存草稿');f.ap='releases';re();return true}
+   case'relpub':if(relPublish(f)){f.ap='releases';f.sheet=null;renderAll(true);re()}else re(true);return true;
+   case'markbad':{const ops=stableOpts(d.sid,d.dk,d.v);f.mb={sid:d.sid,dk:d.dk,v:d.v,stable:ops.length?ops[0][0]:'',tip:`${d.v} 问题较多，还没更新的先别更新；已经更新的可以装回稳定版。`};f.sheet='markbad';re(true);return true}
+   case'mbok':{const mb=f.mb;if(!mb.stable){toast('请先选择推荐稳定版');return true}const r=SOFT[mb.sid].dev[mb.dk];
+     if(r.v===mb.v){Object.assign(r,{a:'bad',stable:mb.stable,tip:mb.tip});if(!r.known.length)r.known=['群友反馈问题较多，等待官方修复']}else{const h=r.h.find(x=>x[0]===mb.v);if(h)h[2]='bad'}
+     f.sheet=null;toast(`已把 ${SOFT[mb.sid].name} ${mb.v} 标为先别更新，前台已同步`);renderAll(true);return true}
+   case'softedit':f.se=softForm(d.id||null);f.ap='softedit';f.sheet=null;re();return true;
+   case'softoff':{const s=SOFT[d.id];if(s.st==='draft'){toast('还没有版本，发布第一个版本后自动上架');return true}s.st=s.st==='on'?'off':'on';toast(s.st==='on'?`已上架「${s.name}」`:`已下架「${s.name}」，前台不再显示`);renderAll(true);return true}
+   case'sedev':{const e=f.se;e.devs=Object.keys(DEVN).filter(k=>k===v?!e.devs.includes(k):e.devs.includes(k));if(!e.devs.includes(e.tdev))e.tdev=e.devs[0];re(true);return true}
+   case'setdev':f.se.tdev=v;re(true);return true;
+   case'sstepadd':f.se.tut[f.se.tdev].s.push('');re(true);return true;
+   case'sstepdel':f.se.tut[f.se.tdev].s.splice(+d.i,1);re(true);return true;
+   case'sfaqadd':f.se.faq.push({q:'',a:'',dev:'all'});re(true);return true;
+   case'sfaqdel':f.se.faq.splice(+d.i,1);re(true);return true;
+   case'stagdel':f.se.tags.splice(+d.i,1);re(true);return true;
+   case'secolor':f.se.color=v;re(true);return true;
+   case'seicon':f.se.icon=!f.se.icon;re(true);return true;
+   case'sshotadd':f.se.shots.push(SHOTC[f.se.shots.length%SHOTC.length]);re(true);return true;
+   case'sshotdel':f.se.shots.splice(+d.i,1);re(true);return true;
+   case'sesave':{const e=f.se;if(/class="no"/.test(seCheck(e))){toast('还有未完成的项目，见右侧“保存前检查”');return true}
+     if(e.isNew){SOFT[e.slug]={name:e.name.trim(),g:e.icon?'🖼':(e.glyph||e.name[0]),c:grad(e.color),cat:e.cat,desc:e.desc,intro:e.intro,views:0,favs:0,fb:[0,0],devr:e.devr||'—',site:e.site||e.slug+'.example',tags:e.tags,dev:{},st:'draft',w7:0};
+       if(e.fromWant!=null){const w=WANTS[e.fromWant];w.st='done';w.sid=e.slug;syncReq(w)}
+       f.re=relForm(e.slug,e.devs[0],null);f.ap='reledit';toast('已创建草稿，填写第一个版本后自动上架');renderAll(true);return true}
+     Object.assign(SOFT[e.id],{name:e.name.trim(),g:e.icon?'🖼':(e.glyph||e.name[0]),c:grad(e.color),cat:e.cat,desc:e.desc,intro:e.intro,devr:e.devr,site:e.site,tags:e.tags});
+     toast('已保存，前台已更新');renderAll(true);return true}
+   case'annedit':f.ae=annForm(d.id);f.sheet='annedit';re(true);return true;
+   case'annpin':{const x=ANN.find(y=>y.id===d.id);x.pin=!x.pin;toast(x.pin?'已置顶':'已取消置顶');renderAll(true);return true}
+   case'annend':{const x=ANN.find(y=>y.id===d.id);x.ended=!x.ended;toast(x.ended?'已结束，前台显示为灰色':'已恢复');renderAll(true);return true}
+   case'annpub':{const x=ANN.find(y=>y.id===d.id);x.draft=false;x.d='10-18';copy(`【${G.name}】${x.t}\n${x.sum||x.b[0]}\n详情 👉 https://ding.example/n/${x.id}`,'已发布，群通知已复制');renderAll(true);return true}
+   case'aetype':f.ae.type=v;re(true);return true;
+   case'aelvl':f.ae.lvl=v;re(true);return true;
+   case'aepin':f.ae.pin=!f.ae.pin;re(true);return true;
+   case'aeimg':f.ae.img=!f.ae.img;re(true);return true;
+   case'aesoft':{const s=f.ae.soft,i=s.indexOf(v);i>=0?s.splice(i,1):s.push(v);re(true);return true}
+   case'aesave':{const e=f.ae;if(!e.t.trim()){toast('请填写标题');return true}
+     const paras=e.body.split('\n').map(x=>x.trim()).filter(Boolean);
+     const o={type:e.type,cls:LVL[e.lvl],imp:e.lvl,t:e.t.trim(),sum:e.sum.trim(),b:paras.length?paras:[e.sum.trim()||e.t.trim()],pin:e.pin,until:e.until?e.until.slice(5):'',soft:[...e.soft],img:e.img,link:e.link,draft:v==='draft',ended:false};
+     let id=e.id;if(id){const x=ANN.find(y=>y.id===id);if(v==='pub'&&x.draft)o.d='10-18';Object.assign(x,o)}else{id='a'+(100+ANN.length);ANN.unshift({id,d:'10-18',views:0,...o})}
+     f.sheet=null;if(v==='pub')copy(`【${G.name}】${o.t}\n${o.sum||o.b[0]}\n详情 👉 https://ding.example/n/${id}`,'已发布，群通知已复制');else toast('已存为草稿');f.ap='ann';renderAll(true);return true}
+   case'fbst':{const x=FBS.find(y=>y.id===+d.id);x.st=v;toast('已标为“'+FST[v][1]+'”');re(true);return true}
+   case'fbbatch':{const n=f.fsel.size;FBS.forEach(x=>{if(f.fsel.has(x.id))x.st=v});f.fsel.clear();toast(`已将 ${n} 条标为“${FST[v][1]}”`);re(true);return true}
+   case'fbclear':f.fsel.clear();re(true);return true;
+   case'wset':{const w=WANTS[+d.i];w.st=v;if(v==='no')w.why=w.why||'不符合收录范围';syncReq(w);toast({plan:'已标为计划中',no:'已标为不收录',new:'已撤销'}[v]);renderAll(true);return true}
+   case'winc':{const w=WANTS[+d.i];f.ri={i:+d.i,mode:'link',sid:w.sid||guessSoft(w)};f.sheet='reqinc';re(true);return true}
+   case'rimode':f.ri.mode=v;re(true);return true;
+   case'riok':{const ri=f.ri,w=WANTS[ri.i];
+     if(ri.mode==='link'){w.st='done';w.sid=ri.sid;syncReq(w);f.sheet=null;toast(`已收录，关联到「${SOFT[ri.sid].name}」`);renderAll(true);return true}
+     f.se=softForm(null,w.n);f.se.fromWant=ri.i;f.se.devs=Object.keys(DEVN).filter(k=>w.devs.includes(k));f.se.tdev=f.se.devs[0];f.ap='softedit';f.sheet=null;re();return true}
+   case'adsall':setAds(!G.ads);toast(G.ads?'广告已开启':'广告已全部关闭');renderAll(true);return true;
+   case'slot':G.slots[v]=!G.slots[v];toast(`${SLOTS.find(x=>x[0]===v)[1]}：${G.slots[v]?'已开启':'已关闭'}`);renderAll(true);return true;
+   case'amedit':f.am=amForm(d.id);f.sheet='amedit';re(true);return true;
+   case'ampos':{const p=f.am.pos,i=p.indexOf(v);i>=0?p.splice(i,1):p.push(v);re(true);return true}
+   case'amtog':{const m=ADM.find(x=>x.id===d.id);m.st=m.st==='投放中'?'已暂停':'投放中';toast(m.st==='投放中'?'已恢复投放':'已暂停投放');renderAll(true);return true}
+   case'amsave':{const m=f.am;if(!m.t.trim()){toast('请填写标题');return true}if(!m.pos.length){toast('至少选一个投放位置');return true}if(m.from&&m.to&&m.from>m.to){toast('结束时间不能早于开始时间');return true}
+     const o={t:m.t.trim(),sub:m.sub,url:m.url,pos:[...m.pos],from:m.from.slice(5),to:m.to.slice(5),st:m.st,c:m.c};
+     if(m.id)Object.assign(ADM.find(x=>x.id===m.id),o);else ADM.unshift({id:'m'+(ADM.length+1),imp:0,clk:0,...o});
+     f.sheet=null;toast('推广已保存');renderAll(true);return true}
+   case'setname':[G.name,G.glyph]=NAMES[+v];syncNames();renderAll(true);return true;
+   case'xhs':G.xhs=!G.xhs;toast(G.xhs?'已开启小红书打开提示':'已关闭小红书打开提示');renderAll(true);return true;
+   case'pwdok':f.sheet=null;toast('示意：密码已修改');re(true);return true;
+  }
+  return false;
+}
+
+/* ================= 弹层 ================= */
+function noticeText(sm){
+  const adv={ok:'✅ 建议更新',warn:'⏳ 可以等等，不急',bad:'⛔ 先别更新'}[sm.adv||'ok'];
+  return`【${G.name}】${sm.soft||'墨记笔记'} ${sm.ver||'5.9.4'} 更新了\n${sm.sum||'修复同步冲突'}\n${adv}\n\n下载和安装方法 👇\n${link('note')}${G.tail?'\n'+G.tail:''}`;
+}
+function sheetHTML(f){
+  const s=f.sheet;if(!s)return'';
+  if(f.d){const ax=adminSheet(f);if(ax)return ax}
+  const close=`<button class="btn g block" style="margin-top:10px" data-act="closesheet">关闭</button>`;
+  let h='';
+  if(s==='guide')h=`<h2>请在浏览器中打开后下载</h2><p class="small muted">小红书里不能直接下载安装包，按下面做：</p>
+   <div style="margin-top:10px"><div class="gstep"><i>1</i>点右上角的三个点<span class="fake">···</span></div><div class="gstep"><i>2</i>选择「在浏览器打开」<span class="fake">🌐 在浏览器打开</span></div><div class="gstep"><i>3</i>在浏览器里再点「官方下载」<span class="fake">⬇ 官方下载</span></div></div>
+   <div class="tip">找不到这个选项？复制链接，打开手机自带的浏览器，粘贴到地址栏。</div>
+   <button class="btn p block" style="margin-top:14px" data-act="copy" data-text="${link(f.id||'guangmu')}" data-ok="链接已复制，去浏览器粘贴打开">复制链接</button>${close}`;
+  if(s==='share'){const so=SOFT[f.id],dk=pickDev(f,so),r=so.dev[dk];
+   h=`<h2>分享这个软件</h2><div class="poster"><div class="top"><div class="row">${ico(so,'sm')}<div><b>${so.name} ${r.v}</b><div class="xs" style="opacity:.85">${ADV[r.a].t} · ${day(r.d)}</div></div></div><p class="small" style="margin-top:8px;opacity:.95">${r.sum}</p></div><div class="bot">${qr(f.id)}<div class="small"><b>扫码查看下载和教程</b><div class="xs muted">${esc(G.name)} · ${esc(G.intro)}</div></div></div></div>
+    <div class="row" style="margin-top:14px;gap:8px"><button class="btn s grow" data-act="copy" data-text="${link(f.id)}" data-ok="链接已复制">🔗 复制链接</button><button class="btn s grow" data-act="copy" data-text="【${so.name} ${r.v}】${r.sum} ${link(f.id)}" data-ok="群通知文案已复制">💬 复制群文案</button><button class="btn s grow" data-act="toast" data-t="示例：海报已保存到相册">🖼 保存海报</button></div>${close}`}
+  if(s==='issue'){const so=SOFT[f.id];
+   h=`<h2>遇到了什么问题？</h2><p class="small muted">${so.name} · ${DEVN[pickDev(f,so)].n}　匿名提交，群主会看到</p>
+    <div class="chips" style="flex-wrap:wrap;margin-top:12px">${['闪退','装不上','下载不了','登录不了','网盘链接失效','其他'].map(t=>`<button class="chip" data-act="pick" data-v="${t}" aria-pressed="${f.sm.pick===t}">${t}</button>`).join('')}</div>
+    <div class="field"><label>补充说明（选填）</label><textarea rows="3" placeholder="比如：手机型号、卡在哪一步"></textarea></div>
+    <button class="btn p block" style="margin-top:14px" data-act="submitissue">提交反馈</button>${close}`}
+  if(s==='sync'){const gen=(f.sm.m||'gen')==='gen';
+   h=`<h2>同步收藏</h2><p class="small muted">不用注册，用同步码在另一台设备上恢复收藏。</p>
+    <div class="seg" role="tablist"><button role="tab" data-act="syncm" data-v="gen" aria-selected="${gen}">生成同步码</button><button role="tab" data-act="syncm" data-v="in" aria-selected="${!gen}">输入同步码</button></div>
+    ${gen?`<div class="bigcode">${G.sync||'XB7-K2M'}</div><p class="xs muted" style="text-align:center">包含你的 ${G.fav.size} 个收藏 · 30 天内有效 · 不包含任何个人信息</p><button class="btn p block" style="margin-top:14px" data-act="copysync">复制同步码</button>`
+    :`<div class="field"><label>在另一台设备上生成的同步码</label><input placeholder="例如 XB7-K2M" style="font-size:20px;letter-spacing:3px;text-align:center" class="mono"></div><button class="btn p block" style="margin-top:14px" data-act="restoresync">恢复收藏</button><p class="xs muted" style="margin-top:8px">恢复后会和这台设备上的收藏合并，不会覆盖。</p>`}${close}`}
+  if(s==='request')h=`<h2>想要什么软件？</h2><p class="small muted">告诉群主，收录后会在“我的 → 想要的软件”里显示。</p>
+   <div class="field"><label>软件名称</label><input id="${f._id}-req" placeholder="例如：某某输入法" value="${esc(f.q||'')}"></div>
+   <div class="field"><label>用在什么设备</label><div class="chips" style="flex-wrap:wrap">${Object.values(DEVN).map(d=>`<button class="chip">${d.i} ${d.s}</button>`).join('')}</div></div>
+   <div class="field"><label>用途（选填）</label><input placeholder="比如：电视上看直播"></div>
+   <button class="btn p block" style="margin-top:14px" data-act="submitreq">提交</button>${close}`;
+  if(s==='publish'||s==='publishAnn'){const sm=f.sm;
+   h=s==='publishAnn'?`<h2>发公告</h2><div class="field"><label>标题</label><input value="周末服务器维护通知"></div><div class="field"><label>类型</label><div class="chips"><button class="chip" aria-pressed="true">维护通知</button><button class="chip">群公告</button><button class="chip">使用提醒</button></div></div><div class="field"><label>正文</label><textarea rows="4">本周六 22:00–24:00 维护，期间网站可能打不开。</textarea></div><div class="row" style="margin-top:14px"><button class="btn g grow" data-act="closesheet">存草稿</button><button class="btn p grow" data-act="pubok">发布并复制群通知</button></div>`
+   :`<h2>发布更新</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="field"><label>软件</label><input data-act="pub" data-k="soft" value="${esc(sm.soft||'墨记笔记')}"></div><div class="field"><label>新版本号</label><input data-act="pub" data-k="ver" value="${esc(sm.ver||'5.9.4')}"></div></div>
+    <div class="field"><label>更新建议</label><div class="chips">${[['ok','建议更新'],['warn','可以等等'],['bad','先别更新']].map(([k,n])=>`<button class="chip" data-act="padv" data-v="${k}" aria-pressed="${(sm.adv||'ok')===k}">${n}</button>`).join('')}</div></div>
+    <div class="field"><label>一句话说明</label><input data-act="pub" data-k="sum" value="${esc(sm.sum||'修复同步冲突')}"></div>
+    <div class="field"><label>官方下载链接（电脑）</label><input value="https://note.example/download"></div>
+    <div class="field"><label>群通知预览</label><div class="notice" id="${f._id}-notice">${esc(noticeText(sm))}</div></div>
+    <div class="row" style="margin-top:14px"><button class="btn g grow" data-act="closesheet">存草稿</button><button class="btn p grow" data-act="pubok">发布并复制群通知</button></div>`}
+  return`<div class="ov ${f.d?'d-ov':''}" data-act="ovclose"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${h}</div></div>`;
+}
+
+/* ================= 外壳 ================= */
+function foot(){return`<div class="foot">${esc(G.name)} · ${esc(G.intro)}<br>${esc(G.footer)} · <a data-act="toast" data-t="示例：免责声明">免责声明</a></div>`}
+function dfoot(){return`<div class="dfoot"><div class="in"><div><b style="color:var(--ink)">${esc(G.name)}</b> · ${esc(G.intro)}，${esc(G.footer)}<br>备案号：${G.icp?esc(G.icp):'待填写'}</div><div><a data-act="toast" data-t="示例">关于本站</a><a data-act="toast" data-t="示例">隐私说明</a><a data-act="toast" data-t="示例">免责声明</a><a data-act="go" data-r="admin">群主后台</a></div></div></div>`}
+const TITLES={home:'',lib:'软件库',ann:'群公告',search:'搜索',me:'我的',detail:'',annd:'公告详情',admin:''};
+function body(f,fid){
+  switch(f.r){case'home':return homeView(f);case'lib':return libView(f);case'ann':return annView(f);case'annd':return annDetail(f);
+  case'search':return searchView(f,fid);case'me':return meView(f);case'detail':return detailView(f);case'admin':return f.d?adminView(f):homeView(f)}
+}
+function renderFrame(fid,keep){
+  const f=F[fid];f._id=fid;
+  const el=document.getElementById(fid);
+  const b=body(f,fid);const nn=newCount();
+  if(f.d){
+    const tab=(r,n)=>`<button class="${f.r===r||(r==='lib'&&f.r==='detail')||(r==='ann'&&f.r==='annd')?'on':''}" data-act="go" data-r="${r}">${n}</button>`;
+    const nav=f.r==='admin'?'':`<div class="dnav"><div class="in"><span class="logo">${G.glyph}</span><span class="brand">${G.name}</span><nav>${tab('home','首页')}${tab('lib','软件库')}${tab('ann','群公告')}${tab('me','我的收藏'+(nn?` <span class="badge">${nn}</span>`:''))}</nav><label class="search"><span>🔍</span><input data-act="dq" placeholder="搜软件名或用途" value="${f.r==='search'?'':''}"></label></div></div>`;
+    const st=el.scrollTop;el.innerHTML=nav+b;el.scrollTop=keep?st:0;
+    const ovh=document.getElementById('desk-ov'),os=ovh.querySelector('.sheet'),ost=os?os.scrollTop:0,same=!!f.sheet&&f._ls===f.sheet;f._ls=f.sheet;
+    ovh.innerHTML=sheetHTML(f);
+    if(same&&ovh.firstElementChild){ovh.firstElementChild.classList.add('still');const ns=ovh.querySelector('.sheet');if(ns)ns.scrollTop=ost}
+    $('#durl').textContent='ding.example'+({home:'',lib:'/software',ann:'/notice',annd:'/n/'+f.id,search:'/search',me:'/me',detail:'/s/'+f.id,admin:'/admin'+admPath(f)}[f.r]);
+    return;
+  }
+  const sc=el.querySelector('.scroll');const st=sc?sc.scrollTop:0;
+  let top;
+  if(f.r==='detail'){const s=SOFT[f.id];top=`<div class="mtop"><button class="ib back" data-act="back" aria-label="返回">‹</button><b class="grow ell">${s.name}</b>${favBtn(f.id)}<button class="ib" data-act="sheet" data-v="share" aria-label="分享">↗</button></div>`}
+  else if(f.r==='annd')top=`<div class="mtop"><button class="ib back" data-act="go" data-r="ann" aria-label="返回">‹</button><b class="grow">公告详情</b><button class="ib" data-act="copy" data-text="https://ding.example/n/${f.id}" data-ok="链接已复制">↗</button></div>`;
+  else if(f.r==='search')top=`<div class="mtop"><button class="ib back" data-act="back" aria-label="返回">‹</button><label class="search grow"><span>🔍</span><input data-act="q" placeholder="搜软件名、用途或公告" value="${esc(f.q)}"></label></div>`;
+  else if(f.r==='home'||f.r==='admin')top=`<div class="mtop"><span class="logo">${G.glyph}</span><span class="brand grow">${G.name}</span><button class="ib" data-act="go" data-r="search" aria-label="搜索">🔍</button><button class="ib" data-act="go" data-r="me" aria-label="收藏" style="position:relative">⭐${nn?'<span class="dot" style="position:absolute;top:6px;right:6px"></span>':''}</button></div>`;
+  else top=`<div class="mtop"><b class="grow" style="font-size:17px">${TITLES[f.r]}</b>${f.r==='lib'?`<button class="ib" data-act="go" data-r="search">🔍</button>`:''}</div>`;
+  let sticky='';
+  if(f.r==='detail'){const s=SOFT[f.id],dk=pickDev(f,s),r=s.dev[dk];sticky=`<div class="sticky"><button class="btn g" data-act="sheet" data-v="issue" style="min-width:auto;padding:0 12px">👎 有问题</button><button class="btn p" data-act="dl">⬇ ${r.a==='bad'&&!f.rel?'下载稳定版 '+r.stable:dk==='ios'?'去 App Store':'官方下载 '+DEVN[dk].s+'版'}</button></div>`}
+  const inapp=G.inapp&&G.xhs&&(f.r==='detail'||f.r==='home')?`<div class="inapp">⚠<div class="grow"><b>在小红书里无法直接下载</b><br>点右上角「···」→「在浏览器打开」</div><button class="btn sm g" data-act="sheet" data-v="guide">怎么做</button></div>`:'';
+  const tabs=f.r==='search'?'':`<div class="tabs">${[['home','🏠','首页'],['lib','📦','软件库'],['ann','📢','公告'],['me','👤','我的']].map(([r,i,n])=>`<button class="${f.r===r||(r==='lib'&&f.r==='detail')||(r==='ann'&&f.r==='annd')?'on':''}" data-act="go" data-r="${r}"><span>${i}</span>${n}${r==='me'&&nn?`<span class="badge">${nn}</span>`:''}</button>`).join('')}</div>`;
+  el.innerHTML=`<div class="sbar">9:41<span>●●● 5G 🔋</span></div>${top}${inapp}<div class="scroll">${b}</div>${sticky}${tabs}${sheetHTML(f)}`;
+  el.querySelector('.scroll').scrollTop=keep?st:0;
+}
+function admPath(f){if(f.r!=='admin')return'';return{dash:'',software:'/software',softedit:'/software/'+(f.se&&!f.se.isNew?f.se.id:'new'),releases:'/releases',reledit:'/releases/'+(f.re&&!f.re.isNew?f.re.id+'/'+f.re.dk+'/'+f.re.v:'new'),ann:'/notices',fb:'/feedback',req:'/wanted',ads:'/ads',settings:'/settings'}[f.ap]||''}
+function renderAll(keep=true){for(const k in F)renderFrame(k,keep)}
+
+/* ================= 交互 ================= */
+function go(f,r,extra){f.hist=f.hist||[];f.hist.push({r:f.r,id:f.id});f.r=r;Object.assign(f,extra||{});f.sheet=null}
+function bind(fid){
+  const host=fid==='desk'?document.querySelector('.dwrap'):document.getElementById(fid);
+  const f=F[fid];
+  host.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT'||b.tagName==='TEXTAREA')return;
+    const a=b.dataset.act,v=b.dataset.v;
+    if(a==='ovclose'&&e.target!==b)return;
+    e.preventDefault();e.stopPropagation();
+    const re=(k=false)=>renderFrame(fid,k);
+    if(f.d&&admAct(fid,f,a,v,b,re))return;
+    switch(a){
+     case'open':go(f,'detail',{id:b.dataset.id,dev:b.dataset.dev||null,rel:0,tab:'notes'});renderAll(true);re();return;
+     case'ann':go(f,'annd',{id:b.dataset.id});re();return;
+     case'go':go(f,b.dataset.r);re();return;
+     case'back':{const p=(f.hist||[]).pop();if(p){f.r=p.r;f.id=p.id}else f.r='home';re();return}
+     case'cat':go(f,'lib',{cat:v});re();return;
+     case'sort':f.sort=v;re(true);return;
+     case'fdev':f.fdev=v;re(true);return;
+     case'atype':f.atype=v;re(true);return;
+     case'dev':f.dev=v;f.rel=0;re(true);return;
+     case'rel':f.rel=+v;if(f.d)re(true);else{re(true);host.querySelector('.scroll').scrollTo({top:0,behavior:'smooth'})}return;
+     case'tab':f.tab=v;re(true);return;
+     case'fav':{const id=b.dataset.id;G.fav.has(id)?G.fav.delete(id):G.fav.add(id);G.seen.add(id);toast(G.fav.has(id)?'已收藏，有新版本会提醒你':'已取消收藏');renderAll(true);return}
+     case'seenall':G.fav.forEach(id=>G.seen.add(id));toast('已全部标为已读');renderAll(true);return;
+     case'fb':{const id=b.dataset.id;if(G.fb[id]===v)delete G.fb[id];else{G.fb[id]=v;if(v==='bad'){f.sheet='issue';f.sm={}}else toast('谢谢你的反馈 👍')}renderAll(true);return}
+     case'mydev':G.myDev=v||null;toast('已设为常用设备');renderAll(true);return;
+     case'hot':f.q=v;re(true);return;
+     case'sheet':f.sheet=v;f.sm={m:b.dataset.m};re(true);return;
+     case'closesheet':case'ovclose':f.sheet=null;re(true);return;
+     case'pick':f.sm.pick=v;re(true);return;
+     case'submitissue':f.sheet=null;toast('已提交，群主会尽快处理');re(true);return;
+     case'syncm':f.sm.m=v;re(true);return;
+     case'copysync':G.sync=G.sync||'XB7-K2M';copy(G.sync,'同步码已复制，在新设备上输入即可');renderAll(true);return;
+     case'restoresync':['note','player'].forEach(id=>G.fav.add(id));f.sheet=null;toast('已恢复，新增 2 个收藏');renderAll(true);return;
+     case'submitreq':{const i=document.getElementById(fid+'-req');{const nm=i&&i.value.trim()||'未命名软件';G.reqs.unshift([nm,'处理中']);const w=WANTS.find(x=>x.n===nm);if(w){w.c++;w.last='10-18'}else WANTS.unshift({n:nm,c:1,devs:['android'],note:'（刚从前台提交）',first:'10-18',last:'10-18',st:'new'})}f.sheet=null;toast('已提交，收录后会在“我的”里显示');renderAll(true);return}
+     case'padv':f.sm.adv=v;re(true);return;
+     case'pubok':f.sheet=null;copy(noticeText(f.sm),'已发布，群通知已复制');re(true);return;
+     case'dl':if(G.inapp&&G.xhs&&!f.d){f.sheet='guide';re(true)}else toast('示例：跳转到官方下载页');return;
+     case'closead':b.parentNode.remove();return;
+     case'copy':copy(b.dataset.text,b.dataset.ok);return;
+     case'toast':toast(b.dataset.t);return;
+    }
+  });
+  host.addEventListener('input',e=>{
+    const t=e.target,a=t.dataset.act;
+    if(a==='q'){f.q=t.value;const r=document.getElementById(fid+'-res');if(r)r.innerHTML=searchRes(f);}
+    if(a==='dq'){go(f,'search',{q:t.value});renderFrame(fid);const i=document.querySelector('#desk input[data-act=q]');i.focus();i.setSelectionRange(i.value.length,i.value.length)}
+    if(a==='pub'){f.sm[t.dataset.k]=t.value;const n=document.getElementById(fid+'-notice');if(n)n.textContent=noticeText(f.sm)}
+    if(t.dataset.bind){setBind(f,t);livePv(fid,f);if(t.dataset.bind.startsWith('G:'))['m1','m2','m3'].forEach(k=>renderFrame(k,true))}
+    if(a==='asq'){f.sq=t.value;const tb=document.getElementById('desk-softtb');if(tb)tb.innerHTML=softRows(f)}
+    if(a==='sitename'){G.name=t.value.trim()||'未命名';G.glyph=[...G.name][0];syncNames();['m1','m2','m3'].forEach(k=>renderFrame(k,true));livePv(fid,f)}
+  });
+  host.addEventListener('change',e=>{
+    const t=e.target,ch=t.dataset.ch;
+    if(t.dataset.bind){setBind(f,t);const rr=t.dataset.rr;
+      if(rr==='relsoft'||rr==='reldev'){const r=f.re,so=SOFT[r.id];if(rr==='relsoft'&&!so.dev[r.dk]&&Object.keys(so.dev).length)r.dk=Object.keys(so.dev)[0];r.links=linksFor(r.id,r.dk);r.req=REQ[r.dk];r.warn=TUT[r.dk].tip;r.stable=''}
+      if(rr)renderFrame(fid,true);else livePv(fid,f)}
+    if(ch==='fsel'){const id=+t.dataset.id;t.checked?f.fsel.add(id):f.fsel.delete(id);renderFrame(fid,true)}
+    if(ch==='fselall'){document.querySelectorAll('#desk [data-ch=fsel]').forEach(x=>t.checked?f.fsel.add(+x.dataset.id):f.fsel.delete(+x.dataset.id));renderFrame(fid,true)}
+    if(ch==='mainlink'){f.re.links.forEach((l,i)=>l.main=i===+t.dataset.i);renderFrame(fid,true)}
+  });
+  host.addEventListener('keydown',e=>{
+    const t=e.target;
+    if(t.dataset&&t.dataset.key==='stag'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();const v=t.value.trim();if(v&&!f.se.tags.includes(v))f.se.tags.push(v);renderFrame(fid,true);const i=document.getElementById('desk-tagin');if(i)i.focus()}
+  });
+}
+
+/* ================= 控制栏 ================= */
+$('#names').innerHTML=NAMES.map((n,i)=>`<button data-name="${i}" aria-pressed="${i===0}">${n[0]}</button>`).join('');
+$('#names').onclick=e=>{const b=e.target.closest('[data-name]');if(!b)return;[G.name,G.glyph]=NAMES[+b.dataset.name];syncNames();renderAll()};
+const AJ=[['','后台页面 ▾'],['dash','工作台'],['software','软件管理'],['softedit','软件编辑'],['releases','版本管理'],['reledit','版本编辑'],['ann','公告管理'],['fb','用户反馈'],['req','想要的软件'],['ads','广告管理'],['settings','站点设置']];
+$('#ajump').innerHTML=AJ.map(([v,n])=>`<option value="${v}">${n}</option>`).join('');
+$('#ajump').onchange=e=>{const v=e.target.value;if(!v)return;const f=F.desk;f.r='admin';f.ap=v;f.sheet=null;
+  if(v==='softedit')f.se=softForm('guangmu');if(v==='reledit')f.re=relForm('cloud','pc','4.1.0');
+  renderFrame('desk');e.target.value='';$('#secD').hidden=false;toast('后台只在电脑端提供');};
+const JUMPS=[['home','首页'],['lib','软件库'],['detail','软件详情'],['ann','公告'],['annd','公告详情'],['search','搜索'],['me','我的'],['admin','后台']];
+$('#jumps').innerHTML=JUMPS.map(j=>`<button data-j="${j[0]}">${j[1]}</button>`).join('');
+$('#jumps').onclick=e=>{const b=e.target.closest('[data-j]');if(!b)return;const r=b.dataset.j;
+  for(const k of['desk','m1']){const f=F[k];if(r==='admin'&&k==='m1')continue;f.r=r;f.sheet=null;if(r==='detail'){f.id='guangmu';f.rel=0;f.dev=null}if(r==='annd')f.id='a1';if(r==='search')f.q='';if(r==='admin')f.ap='dash'}
+  renderFrame('desk');renderFrame('m1');if(r==='admin')toast('后台只在电脑端提供');};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#secD').hidden=b.dataset.view==='m';$('#secM').hidden=b.dataset.view==='d'});
+$('#adBtn').onclick=()=>{setAds(!G.ads);renderAll()};
+$('#inappBtn').onclick=e=>{G.inapp=!G.inapp;e.target.setAttribute('aria-pressed',G.inapp);renderAll()};
+
+for(const k in F)bind(k);
+renderAll(false);
+</script>
+</body>
+</html>
