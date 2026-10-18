@@ -1,0 +1,16 @@
+{
+  "name": "updatehub",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev": "npm run dev --workspace @updatehub/web",
+    "build": "npm run build --workspace @updatehub/web",
+    "start": "npm run start --workspace @updatehub/web",
+    "lint": "npm run lint --workspace @updatehub/web",
+    "typecheck": "npm run typecheck --workspace @updatehub/web",
+    "mini:build": "node scripts/build-miniprograms.cjs",
+    "mini:check": "node --test tests/miniprogram.test.cjs"
+  },
+  "engines": { "node": ">=22" }
+}

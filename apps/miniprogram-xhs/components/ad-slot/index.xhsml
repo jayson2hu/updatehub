@@ -1,0 +1,1 @@
+<view xhs:if="{{promotion && !failed}}" class="promo"><text class="label">推广</text><image xhs:if="{{promotion.cover}}" src="{{promotion.cover}}" class="cover" mode="aspectFill" lazy-load binderror="onError"/><text class="title">{{promotion.title}}</text><text class="summary">{{promotion.summary}}</text><copy-link value="{{promotion.target_url}}" label="复制活动链接"/></view>

@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计稿 v3 · 手机 + 电脑 + 广告 + 用户</title>
+<style>
+:root{
+  --bg:#F5F7FB;--card:#fff;--ink:#18243B;--ink2:#626D80;--line:#E3E9F2;
+  --brand:#245BDD;--brand-soft:#EAF0FF;--ok:#17794B;--ok-soft:#E6F6EE;
+  --warn:#9A4A00;--warn-soft:#FFF1DE;--bad:#B3261E;--bad-soft:#FDEBEA;--r:14px;
+}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#E4E9F2}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--brand);text-decoration:none}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace}
+:focus-visible{outline:3px solid #7aa2ff;outline-offset:2px}
+.muted{color:var(--ink2)}.small{font-size:13px}
+[hidden]{display:none!important}
+
+/* ---------- 控制栏 ---------- */
+.ctl{position:sticky;top:0;z-index:50;background:#18243B;color:#fff;padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;font-size:13px}
+.ctl b{font-size:14px;margin-right:4px}
+.ctl .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ctl button{border:1px solid #3a4a6b;border-radius:999px;padding:4px 12px;color:#cfd8ea}
+.ctl button[aria-pressed=true]{background:#fff;color:#18243B;border-color:#fff;font-weight:700}
+.wrap{max-width:1240px;margin:0 auto;padding:20px}
+.cap{font-size:17px;margin:18px 0 4px}
+.cap+p{font-size:13px;color:var(--ink2);margin-bottom:12px}
+
+/* ---------- 外框 ---------- */
+.browser{border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 16px 40px rgba(20,30,60,.18);border:1px solid #c9d1df}
+.chrome{height:40px;background:#E9EDF3;display:flex;align-items:center;gap:8px;padding:0 14px}
+.chrome i{width:11px;height:11px;border-radius:50%;background:#F87171}.chrome i:nth-child(2){background:#FBBF24}.chrome i:nth-child(3){background:#34D399}
+.chrome span{flex:1;margin-left:12px;height:26px;border-radius:8px;background:#fff;font-size:12px;color:#555;display:flex;align-items:center;padding:0 12px}
+.dframe{height:780px;overflow-y:auto;background:var(--bg)}
+.phones{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:24px}
+.phone-wrap h4{font-size:14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.phone-wrap h4 button{font-size:12px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 10px;font-weight:400}
+.phone-wrap h4 button[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.phone{width:360px;height:740px;margin:0 auto;border:9px solid #18202E;border-radius:34px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 16px 40px rgba(20,30,60,.22)}
+.phone .scroll{flex:1;overflow-y:auto;position:relative}
+.sbar{height:24px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:12px;font-weight:600;background:#fff}
+@media(max-width:420px){.phone{width:100%;border-width:6px}}
+
+/* ---------- 通用 ---------- */
+.ico{flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px}
+.btn{min-height:46px;padding:0 16px;border-radius:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn.p{background:var(--brand);color:#fff}.btn.s{background:var(--brand-soft);color:var(--brand)}
+.btn.g{border:1px solid var(--line);background:#fff}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+.btn.block{width:100%}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:0 7px;line-height:20px;white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.b{background:var(--brand-soft);color:var(--brand)}.tag.gray{background:#EEF1F6;color:var(--ink2)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.sec{margin:12px 14px}
+h3{font-size:15px;margin-bottom:8px}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#245BDD,#5A8CFF);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:800;flex:none}
+.brand{font-weight:800;font-size:17px;letter-spacing:.5px}
+
+/* 顶栏 */
+.mtop{flex:none;height:50px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 12px}
+.mtop .back{width:40px;height:40px;font-size:24px;margin-left:-6px}
+.dnav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.dnav .in{max-width:1080px;margin:0 auto;height:60px;display:flex;align-items:center;gap:22px;padding:0 24px}
+.dnav nav{display:flex;gap:4px}
+.dnav nav button{padding:8px 12px;border-radius:9px;font-size:15px;color:var(--ink2)}
+.dnav nav button.on{color:var(--brand);background:var(--brand-soft);font-weight:700}
+.dnav .search{flex:1;max-width:320px;margin-left:auto}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px;min-height:42px}
+.search input{flex:1;border:0;outline:0;background:none;min-width:0}
+.search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.dbody{max-width:1080px;margin:0 auto;padding:22px 24px 40px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.aside{position:sticky;top:80px;display:flex;flex-direction:column;gap:14px}
+
+/* 列表 */
+.pin{display:flex;gap:10px;background:#FFF7E7;border:1px solid #F2DDAE;border-radius:12px;padding:10px 12px;font-size:14px;width:100%;text-align:left}
+.pin b{display:block}
+.day{font-size:12px;font-weight:700;color:var(--ink2);margin:14px 0 6px}
+.item{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;width:100%;text-align:left}
+.item:hover{border-color:#c4d2ee}
+.item .m{flex:1;min-width:0}
+.item .m .sum{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .devs{display:flex;gap:4px;margin-top:3px}
+.mini{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px;color:var(--ink2)}
+.item.followed{border-color:#9db6f0;background:#F8FAFF}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{min-height:34px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px}
+.chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+.hl{background:var(--brand-soft);color:var(--brand);border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:8px;align-items:center;width:100%;text-align:left;margin-top:10px}
+
+/* 详情 */
+.head{display:flex;gap:12px;align-items:center}
+.head .ico{width:56px;height:56px;font-size:24px;border-radius:14px}
+.head h1{font-size:20px;line-height:1.25}
+.d .head .ico{width:72px;height:72px;font-size:30px;border-radius:18px}
+.d .head h1{font-size:28px}
+.verdict{border-radius:12px;padding:12px 14px;display:flex;gap:10px;margin-top:12px}
+.verdict.ok{background:var(--ok-soft);color:#0f5534}.verdict.warn{background:var(--warn-soft);color:#6b3400}.verdict.bad{background:var(--bad-soft);color:#7d1b15}
+.verdict .big{font-size:22px;line-height:1.2}
+.verdict b{display:block;font-size:16px}
+.devpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dev{min-height:56px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:12.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25;position:relative}
+.dev span{font-size:18px}
+.dev[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.dev[disabled]{opacity:.38;cursor:not-allowed}
+.dev em{position:absolute;top:-8px;right:-4px;font-style:normal;font-size:10px;background:var(--brand);color:#fff;border-radius:6px;padding:0 5px;line-height:16px}
+.verline{display:flex;align-items:baseline;gap:8px;margin:12px 0 10px}
+.verline b{font-size:20px}
+.backup{display:flex;align-items:center;gap:8px;border:1px dashed #C8D2E2;border-radius:12px;padding:10px 12px;margin-top:10px}
+.backup .t{flex:1;min-width:0;font-size:13px}
+.backup .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.code{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--ink);letter-spacing:1px}
+.safe{font-size:12px;color:var(--ink2);margin-top:8px}
+.alert{background:var(--bad-soft);color:#7d1b15;border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:10px}
+.qr{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.qr svg{flex:none;width:96px;height:96px;border:6px solid #fff;outline:1px solid var(--line);border-radius:6px}
+.changes{padding-left:20px}.changes li{margin:3px 0}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;display:flex;gap:10px;margin:8px 0}
+.steps li:before{content:counter(s);flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-size:12px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+details{border-top:1px solid var(--line)}
+details:first-of-type{border-top:0}
+summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600;list-style:none;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--ink2);font-size:18px}
+details[open] summary:after{content:"−"}
+details p{font-size:14px;color:var(--ink2);padding-bottom:10px}
+.hist div{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.hist div:first-child{border-top:0}
+.fb{display:flex;gap:8px;margin-top:4px}
+.fb button{flex:1;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:14px}
+.fb button[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.bar{height:8px;border-radius:4px;background:var(--bad-soft);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:#3BA776}
+.inapp{background:var(--warn-soft);color:#6b3400;font-size:13px;padding:10px 12px;display:flex;gap:8px;align-items:center}
+.sticky{flex:none;background:#fff;border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px}
+.sticky .btn{flex:1}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:#fff}
+.tabs button{min-height:54px;font-size:12px;color:var(--ink2);line-height:1.3}
+.tabs button.on{color:var(--brand);font-weight:700}
+.foot{text-align:center;font-size:12px;color:var(--ink2);padding:18px 14px}
+
+/* 广告 */
+.ad{position:relative;border:1px solid var(--line);border-radius:var(--r);background:#fff;overflow:hidden}
+.ad .lbl{position:absolute;top:8px;left:8px;font-size:11px;background:rgba(0,0,0,.55);color:#fff;border-radius:4px;padding:0 6px;z-index:1}
+.ad .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;font-size:12px;z-index:1}
+.ad .img{background:repeating-linear-gradient(135deg,#FDF2D8 0 14px,#FBE7BD 14px 28px);display:grid;place-items:center;color:#8a5a00;font-weight:700;font-size:13px;text-align:center}
+.ad .txt{padding:8px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ad.feed{display:flex;align-items:stretch;margin-bottom:8px}
+.ad.feed .img{width:110px;flex:none}
+.ad.feed .txt{flex:1;flex-direction:column;align-items:flex-start;justify-content:center;padding:10px 36px 10px 12px}
+.ad.detail .img{height:110px}
+.ad.side .img{height:250px}
+.ad .sz{font-weight:400;font-size:11px;opacity:.8;display:block}
+
+/* 我的 */
+.list-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.list-row:first-child{border-top:0}
+.list-row .ico{width:38px;height:38px;font-size:16px;border-radius:10px}
+.list-row .m{flex:1;min-width:0}
+.dot{width:8px;height:8px;border-radius:50%;background:#E5484D;display:inline-block;margin-left:4px;vertical-align:middle}
+.opt{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.opt:first-of-type{border-top:0}
+.empty{text-align:center;color:var(--ink2);padding:20px 8px;font-size:14px}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin-top:26px}
+.legend .card h3{font-size:15px}
+.legend li,.legend p{font-size:13px;color:var(--ink2)}
+.legend ul{padding-left:18px}
+.legend table{width:100%;border-collapse:collapse;font-size:12.5px}
+.legend td,.legend th{border-top:1px solid var(--line);padding:5px 4px;text-align:left;vertical-align:top}
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);background:#18243B;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="ctl">
+  <div class="grp"><b>站名</b><span id="names"></span></div>
+  <div class="grp"><b>显示</b>
+    <button data-view="all" aria-pressed="true">电脑 + 手机</button><button data-view="d" aria-pressed="false">只看电脑</button><button data-view="m" aria-pressed="false">只看手机</button></div>
+  <div class="grp"><b>广告位</b><button id="adBtn" aria-pressed="true">开</button></div>
+</div>
+
+<div class="wrap">
+  <section id="secD">
+    <h2 class="cap">电脑端</h2>
+    <p>两栏布局：左边看内容，右边是固定的下载卡片和广告位。电脑上下载手机版或电视版时，提供「手机扫码」。可以点击列表和按钮操作。</p>
+    <div class="browser"><div class="chrome"><i></i><i></i><i></i><span id="durl">gengxin.example</span></div><div class="dframe d" id="desk"></div></div>
+  </section>
+
+  <section id="secM">
+    <h2 class="cap">手机端</h2>
+    <p>三个手机画面可以分别操作。关注、反馈、常用设备在所有画面（包括电脑端）之间同步，用来演示“用户”功能。</p>
+    <div class="phones">
+      <div class="phone-wrap"><h4>首页 · 最新更新</h4><div class="phone" id="m1"></div></div>
+      <div class="phone-wrap"><h4>更新页 · 选设备下载 <button id="inappBtn" aria-pressed="false">模拟小红书内打开</button></h4><div class="phone" id="m2"></div></div>
+      <div class="phone-wrap"><h4>我的 · 关注与反馈</h4><div class="phone" id="m3"></div></div>
+    </div>
+  </section>
+
+  <section class="legend">
+    <div class="card"><h3>① 站名</h3><p>顶部可以切换候选名，看实际效果。站名在后台“站点设置”里修改，不需要改代码。</p><ul><li><b>新版来了</b>：通知标题就是“新版来了：xx 3.2.1”（推荐）</li><li><b>更了么</b>：口语化，好记</li><li>版本驿站 / 追新小站 / 软件新鲜事</li></ul></div>
+    <div class="card"><h3>② 电脑端</h3><ul><li>默认识别为“电脑”，仍然可以切换设备</li><li>下载手机版或电视版时显示二维码：手机扫码后在手机上下载</li><li>电视版提示“下载到电脑，用U盘拷到电视”</li><li>下载卡片固定在右侧，滚动时一直能看到</li><li>手机上看电脑版时，提示“复制链接到电脑打开”</li></ul></div>
+    <div class="card"><h3>③ 广告位（顶部总开关）</h3>
+      <table><tr><th>位置</th><th>手机</th><th>电脑</th></tr>
+      <tr><td>首页列表第 3 条之后</td><td>✓ 小图横条</td><td>✓ 小图横条</td></tr>
+      <tr><td>更新页下载区之后</td><td>✓ 横幅</td><td>—</td></tr>
+      <tr><td>右侧栏</td><td>—</td><td>✓ 300×250</td></tr></table>
+      <ul style="margin-top:8px"><li>都标注“广告”，手机端可以关闭</li><li>不放在下载按钮旁边，也不用“下载”字样，避免误点</li><li>接入广告联盟一般要求网站已做 ICP 备案</li></ul></div>
+    <div class="card"><h3>④ 用户</h3><ul><li><b>不用注册</b>：从群里点进来就能用，没有门槛</li><li><b>关注软件</b>：保存在本机，首页优先显示关注的软件更新，并显示红点</li><li><b>常用设备</b>：记住后，打开更新页直接显示对应设备</li><li><b>更新反馈</b>：“能正常用 / 有问题”，帮助其他人判断要不要更新，也帮你更快发现问题</li><li><b>想要的软件</b>：用户提交，群主在后台查看</li><li>以后再做：登录同步、微信提醒（看后续需求）</li></ul></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const NAMES=['新版来了','更了么','版本驿站','追新小站','软件新鲜事','更新小站'];
+const DEVN={android:['安卓手机','📱','安卓'],ios:['苹果手机','🍎','苹果'],tv:['电视盒子','📺','电视'],pc:['电脑','💻','电脑']};
+const ADV={ok:['建议更新','✓'],warn:['可以等等','⏳'],bad:['先别更新','✕']};
+const SOFT={
+ guangmu:{name:'光幕影视',g:'光',c:'#E5484D',desc:'看电视剧、电影的播放器',fb:[128,6],dev:{
+   android:{v:'3.2.1',d:'10-16',a:'ok',sum:'修复播放卡顿，新增倍速播放',tip:'修复了播放卡顿，旧版也还能用，不着急。',size:'apk · 38 MB',src:'guangmu.example 官网',n:['修复部分机型播放卡顿','新增 0.5x–2x 倍速播放'],h:[['3.2.0','9月30日'],['3.1.4','9月12日']]},
+   tv:{v:'3.2.1',d:'10-16',a:'ok',sum:'修复播放卡顿，遥控器更好用',tip:'电视版建议更新，遥控器选不中的问题修好了。',size:'apk · 26 MB',src:'guangmu.example 官网',n:['修复播放卡顿','优化遥控器焦点'],h:[['3.2.0','9月30日']]},
+   ios:{v:'2.9.0',d:'10-10',a:'ok',sum:'适配新系统，修复投屏',tip:'直接在 App Store 更新即可。',size:'App Store',src:'App Store',n:['适配新系统','修复投屏失败'],h:[['2.8.3','9月2日']]},
+   pc:{v:'1.14.2',d:'10-12',a:'ok',sum:'修复杀毒软件误报',tip:'被杀毒软件拦截的话，更新到这个版本。',size:'exe · 64 MB',src:'guangmu.example 官网',n:['修复杀毒软件误报'],h:[['1.14.1','9月20日']]}}},
+ cloud:{name:'云盘助手',g:'云',c:'#2F6FED',desc:'网盘批量下载与转存',fb:[21,47],dev:{
+   pc:{v:'4.1.0',d:'10-14',a:'bad',sum:'登录异常，官方正在修复',tip:'4.1.0 有登录问题。还没更新的先别更新；已经更新的先用网页版。',size:'exe · 52 MB',src:'cloud.example 官网',n:['新增转存队列','（已知问题）部分账号无法登录'],h:[['4.0.6','9月20日 · 稳定']],stable:'4.0.6'},
+   android:{v:'3.3.2',d:'10-08',a:'ok',sum:'适配新系统',tip:'可以更新。',size:'apk · 30 MB',src:'cloud.example 官网',n:['适配新系统'],h:[['3.3.1','9月1日']]}}},
+ note:{name:'墨记笔记',g:'墨',c:'#16A34A',desc:'多设备同步的笔记',fb:[64,9],dev:{
+   ios:{v:'6.0.0',d:'10-13',a:'ok',sum:'大版本：新增知识图谱',tip:'建议更新，更新前先导出备份。',size:'App Store',src:'App Store',n:['新增知识图谱','编辑器重做'],h:[['5.9.3','10月1日']]},
+   pc:{v:'5.9.3',d:'10-01',a:'warn',sum:'同步偶尔冲突',tip:'偶尔出现同步冲突，不急的话等下个版本。',size:'exe · 88 MB',src:'note.example 官网',n:['修复图片显示'],h:[['5.9.2','9月15日']]}}},
+ clean:{name:'快清',g:'清',c:'#F59E0B',desc:'手机清理与省电',fb:[33,2],dev:{android:{v:'2.2.0',d:'10-09',a:'ok',sum:'新增省电模式',tip:'可以更新。',size:'apk · 12 MB',src:'clean.example 官网',n:['新增省电模式'],h:[]}}},
+ player:{name:'听海音乐',g:'听',c:'#8B5CF6',desc:'无损音乐播放器',fb:[52,3],dev:{android:{v:'7.1.1',d:'10-05',a:'ok',sum:'修复蓝牙断连',tip:'用蓝牙耳机的建议更新。',size:'apk · 45 MB',src:'player.example 官网',n:['修复蓝牙断连'],h:[]},ios:{v:'7.1.0',d:'10-03',a:'ok',sum:'修复歌词错位',tip:'可以更新。',size:'App Store',src:'App Store',n:['修复歌词错位'],h:[]}}},
+ tool:{name:'截图大师',g:'截',c:'#0EA5A4',desc:'滚动截图与标注',fb:[18,1],dev:{pc:{v:'3.0.4',d:'09-25',a:'ok',sum:'修复多屏截图错位',tip:'用多块屏幕的建议更新。',size:'exe · 9 MB',src:'tool.example 官网',n:['修复多屏错位'],h:[]}}}
+};
+const TUT={
+ android:{s:['点「官方下载」，下载完成后点通知栏打开','提示“禁止安装未知应用”时，点「设置」→ 允许','回到安装界面，点「安装」'],q:[['提示“解析包出错”','安装包没下完整，用浏览器重新下载，不要在小红书里下载。'],['安装后闪退','先卸载旧版再安装，仍然闪退的话在群里说一下手机型号。']]},
+ ios:{s:['点按钮跳转到 App Store','点「获取」或「更新」','打开后按提示允许权限'],q:[['App Store 搜不到','可能是地区原因，直接用上面的按钮打开。']]},
+ tv:{s:['在手机或电脑上下载电视版安装包','用「当贝助手」或 U 盘把安装包传到电视','在电视的文件管理里点安装包安装'],q:[['电视提示“禁止安装”','在电视「设置 → 安全」里打开“允许安装未知来源”。'],['遥控器选不中按钮','升级到最新版可以解决。']]},
+ pc:{s:['点「官方下载」，保存安装包','双击打开，按提示下一步','被杀毒软件拦截时，选择“允许”或“信任”'],q:[['杀毒软件报毒','来自官网的安装包可以信任；不放心的话在群里问一下。']]}
+};
+const ANN=[{t:'云盘助手 4.1.0 登录异常，先别升级',b:'已升级的用户请先用网页版，修复后群里会再通知。',d:'10月14日',pin:1},{t:'本周更新整理：光幕影视安卓、电视都可以升级',b:'安卓 3.2.1、电视 3.2.1 已确认稳定。',d:'10月16日'},{t:'怎么用这个网站：先选你的设备',b:'在更新页选设备，下载地址和教程会跟着换。',d:'10月1日'}];
+
+const G={name:NAMES[0],ads:true,follow:new Set(['guangmu','cloud']),seen:new Set(),fb:{},myDev:null};
+const F={
+ desk:{mode:'d',page:'home',q:'',fdev:'all'},
+ m1:{mode:'m',page:'home',q:'',fdev:'all'},
+ m2:{mode:'m',page:'detail',soft:'guangmu',dev:null,inapp:false},
+ m3:{mode:'m',page:'me'}
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const day=d=>{const[m,dd]=d.split('-');return `${+m}月${+dd}日`};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+function copy(t,ok){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(ok),()=>toast('复制失败，请长按文字手动复制'))}
+const ico=(s,cls='')=>`<div class="ico ${cls}" style="background:${s.c}">${s.g}</div>`;
+
+/* ---------- 数据 ---------- */
+function feed(){
+  const map=new Map();
+  for(const[id,s]of Object.entries(SOFT))for(const[dk,r]of Object.entries(s.dev)){
+    const k=id+'|'+r.d+'|'+r.v;if(!map.has(k))map.set(k,{id,s,r,devs:[]});map.get(k).devs.push(dk)}
+  return[...map.values()].sort((a,b)=>b.r.d.localeCompare(a.r.d));
+}
+function pickDev(f,s){
+  if(f.dev&&s.dev[f.dev])return f.dev;
+  if(G.myDev&&s.dev[G.myDev])return G.myDev;
+  const det=f.mode==='d'?'pc':'android';
+  return s.dev[det]?det:Object.keys(s.dev)[0];
+}
+const hasNew=id=>G.follow.has(id)&&!G.seen.has(id);
+
+/* ---------- 组件 ---------- */
+function ad(kind,mode){
+  if(!G.ads)return'';
+  const x=mode==='m'?`<button class="x" data-act="closead" aria-label="关闭广告">✕</button>`:'';
+  if(kind==='feed')return`<div class="ad feed"><span class="lbl">广告</span>${x}<div class="img">推广图<span class="sz">16:9</span></div><div class="txt"><b>这里是推广标题</b><span class="muted">推广说明文字 · 了解详情 ›</span></div></div>`;
+  if(kind==='detail')return`<div class="ad detail"><span class="lbl">广告</span>${x}<div class="img">横幅推广位<span class="sz">建议 750×220</span></div><div class="txt"><span>推广标题</span><span class="muted">了解 ›</span></div></div>`;
+  return`<div class="ad side"><span class="lbl">广告</span><div class="img">侧栏推广位<span class="sz">300×250</span></div><div class="txt"><span>推广标题</span><span class="muted">了解 ›</span></div></div>`;
+}
+function followBtn(id,sm){const on=G.follow.has(id);return`<button class="btn ${sm?'sm':''} ${on?'s':'g'}" data-act="follow" data-id="${id}" aria-pressed="${on}">${on?'★ 已关注':'☆ 关注'}</button>`}
+function qr(seed){
+  let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;
+  const n=21;let r='';const rnd=()=>(h=(h*1103515245+12345)>>>0)/4294967296;
+  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3"/>`;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12);if(!inF&&rnd()>.52)r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+  return`<svg viewBox="0 0 21 21" aria-label="二维码" fill="#18243B" shape-rendering="crispEdges">${r}${finder(0,0)}${finder(14,0)}${finder(0,14)}</svg>`;
+}
+function dlBox(f,id,s,dk){
+  const r=s.dev[dk],isD=f.mode==='d';
+  const label=dk==='ios'?'去 App Store 下载':`官方下载 ${DEVN[dk][2]}版`;
+  let h='';
+  h+=`<h3>${isD?'下载':'你的设备'}</h3><div class="devpick" role="group" aria-label="选择设备">${Object.keys(DEVN).map(k=>{
+    const ok=!!s.dev[k],det=(isD?'pc':'android')===k;
+    return`<button class="dev" data-act="dev" data-dev="${k}" aria-pressed="${k===dk}" ${ok?'':'disabled title="暂无此设备版本"'}><span>${DEVN[k][1]}</span>${DEVN[k][2]}${det&&ok?'<em>本机</em>':''}</button>`}).join('')}</div>`;
+  h+=`<div class="verline"><b class="mono">${r.v}</b><span class="tag ${r.a}">${ADV[r.a][1]} ${ADV[r.a][0]}</span><span class="muted small">${day(r.d)}</span></div>`;
+  if(r.a==='bad')h+=`<div class="alert">这个版本有问题，建议先下载稳定版 <b>${r.stable}</b></div><button class="btn p block" data-act="toast" data-t="示例：下载稳定版 ${r.stable}">⬇ 下载稳定版 ${r.stable}</button><button class="btn g block" style="margin-top:8px" data-act="toast" data-t="示例：跳转官方下载">仍要下载 ${r.v}</button>`;
+  else h+=`<button class="btn p block" data-act="toast" data-t="示例：跳转到官方下载页">⬇ ${label}</button>`;
+  h+=`<div class="safe">✓ 官方来源：${r.src} · ${r.size}</div>`;
+  if(dk!=='ios')h+=`<div class="backup"><div class="t"><b>备用：网盘下载</b><div>pan.example.com/s/1aBcD · 提取码 <span class="code">k3m9</span></div></div><button class="btn sm s" data-act="copy" data-text="k3m9" data-ok="提取码已复制">复制提取码</button></div>`;
+  if(isD&&dk!=='pc')h+=`<div class="qr">${qr(id+dk)}<div class="small"><b>用手机扫码</b><br><span class="muted">在手机上打开这个页面，直接下载${DEVN[dk][2]}版。${dk==='tv'?'<br>也可以在电脑上下载，用U盘拷到电视。':''}</span></div></div>`;
+  if(!isD&&dk==='pc')h+=`<p class="small muted" style="margin-top:10px">这是电脑版，建议在电脑上打开。<a href="#" data-act="copy" data-text="https://gengxin.example/s/${id}?d=pc" data-ok="链接已复制，发到电脑上打开">复制链接</a></p>`;
+  return h;
+}
+function fbBox(id,s){
+  const mine=G.fb[id];let[ok,bad]=s.fb;if(mine==='ok')ok++;if(mine==='bad')bad++;
+  const pct=Math.round(ok/(ok+bad)*100);
+  let h=`<h3>更新后能正常用吗？</h3><div class="fb"><button data-act="fb" data-id="${id}" data-v="ok" aria-pressed="${mine==='ok'}">👍 能正常用 ${ok}</button><button data-act="fb" data-id="${id}" data-v="bad" aria-pressed="${mine==='bad'}">👎 有问题 ${bad}</button></div>
+  <div class="bar"><i style="width:${pct}%"></i></div><p class="small muted" style="margin-top:4px">${pct}% 的群友反馈能正常使用</p>`;
+  if(mine==='bad')h+=`<div class="chips">${['闪退','装不上','下载不了','其他'].map(t=>`<button class="chip" data-act="toast" data-t="已告诉群主：${t}">${t}</button>`).join('')}</div>`;
+  return h;
+}
+
+/* ---------- 页面 ---------- */
+function homeList(f){
+  const q=(f.q||'').trim();
+  let rows=feed().filter(x=>(!q||x.s.name.includes(q))&&(f.fdev==='all'||x.devs.includes(f.fdev)));
+  rows.sort((a,b)=>(hasNew(b.id)-hasNew(a.id)));
+  if(!rows.length)return`<div class="empty">没找到“${esc(q)}”<br><button class="btn sm s" style="margin-top:10px" data-act="toast" data-t="已提交，群主会看到">告诉群主我想要这个软件</button></div>`;
+  let h='',last='',i=0,newShown=false;
+  for(const x of rows){
+    if(hasNew(x.id)){if(!newShown){h+=`<div class="day" style="color:var(--brand)">★ 你关注的软件有更新</div>`;newShown=true}}
+    else{const dd=day(x.r.d);if(dd!==last){last=dd;h+=`<div class="day">${dd}</div>`}}
+    h+=`<button class="item ${hasNew(x.id)?'followed':''}" data-act="open" data-id="${x.id}" data-dev="${x.devs[0]}">${ico(x.s)}<div class="m"><b>${x.s.name}</b> <span class="mono small muted">${x.r.v}</span>${hasNew(x.id)?'<span class="dot"></span>':''}<div class="sum">${x.r.sum}</div><div class="devs">${x.devs.map(d=>`<span class="mini">${DEVN[d][2]}</span>`).join('')}</div></div><span class="tag ${x.r.a}">${ADV[x.r.a][0]}</span></button>`;
+    if(++i===3)h+=ad('feed',f.mode);
+  }
+  return h;
+}
+function homeView(f,fid){
+  const filters=`<div class="chips" role="group" aria-label="按设备筛选">${[['all','全部'],...Object.entries(DEVN).map(([k,v])=>[k,v[2]])].map(([k,n])=>`<button class="chip" data-act="fdev" data-v="${k}" aria-pressed="${f.fdev===k}">${n}</button>`).join('')}</div>`;
+  const pin=`<button class="pin" data-act="nav" data-page="ann"><span>📌</span><div><b>${ANN[0].t}</b><span class="small" style="color:#7a5200">${ANN[0].b}</span></div></button>`;
+  const nNew=[...G.follow].filter(hasNew).length;
+  if(f.mode==='m')return`<div class="sec">${pin}<label class="search" style="margin-top:10px"><span>🔍</span><input data-act="q" placeholder="搜软件名，如“光幕”" value="${esc(f.q)}"></label>${filters}<div id="${fid}-list">${homeList(f)}</div></div><div class="foot">${G.name} · 只整理官方信息，不存放安装包</div>`;
+  return`<div class="dbody"><div class="two"><div><h1 style="font-size:26px">最新更新</h1><p class="muted">群里发过的软件更新都在这里，按日期排列。</p>${filters}<div id="${fid}-list" style="margin-top:6px">${homeList(f)}</div></div>
+  <aside class="aside"><div class="card"><h3>我的关注 ${nNew?`<span class="tag bad">${nNew} 个新版本</span>`:''}</h3>${meFollow()}</div>${pin}${ad('side','d')}</aside></div></div>`;
+}
+function detailView(f){
+  const id=f.soft,s=SOFT[id],dk=pickDev(f,s),r=s.dev[dk],t=TUT[dk];
+  G.seen.add(id);
+  const head=`<div class="head">${ico(s)}<div style="flex:1;min-width:0"><h1>${s.name} ${r.v}</h1><span class="muted small">${day(r.d)}更新 · ${s.desc}</span></div>${f.mode==='d'?followBtn(id):''}</div>
+  <div class="verdict ${r.a}"><span class="big">${ADV[r.a][1]}</span><div><b>${ADV[r.a][0]}</b><span class="small">${r.tip}</span></div></div>`;
+  const changes=`<div class="card"><h3>这次更新了什么</h3><ul class="changes">${r.n.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  const tut=`<div class="card"><h3>${DEVN[dk][0]}安装教程</h3><ol class="steps">${t.s.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
+  const faq=`<div class="card"><h3>常见问题</h3>${t.q.map(q=>`<details><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join('')}<details><summary>还是不会？</summary><p>在群里 @群主，说一下设备型号和卡在哪一步。</p></details></div>`;
+  const hist=`<div class="card"><h3>历史版本（${DEVN[dk][2]}）</h3><div class="hist"><div><span><b class="mono">${r.v}</b> 当前</span><span class="muted">${day(r.d)}</span></div>${r.h.map(x=>`<div><span class="mono">${x[0]}</span><span class="muted">${x[1]} · <a href="#" data-act="toast" data-t="示例：打开 ${x[0]}">下载</a></span></div>`).join('')}</div></div>`;
+  const fb=`<div class="card">${fbBox(id,s)}</div>`;
+  if(f.mode==='d'){
+    return`<div class="dbody"><p class="small muted" style="margin-bottom:14px"><a href="#" data-act="nav" data-page="home">最新更新</a> › ${s.name}</p><div class="two">
+     <div style="display:flex;flex-direction:column;gap:14px">${head}${changes}${tut}${faq}${fb}${hist}</div>
+     <aside class="aside"><div class="card">${dlBox(f,id,s,dk)}</div>${ad('side','d')}</aside></div></div>`;
+  }
+  return`${f.inapp?`<div class="inapp">⚠ <div style="flex:1"><b>在小红书里无法直接下载</b><br>点右上角「···」→「在浏览器打开」</div><button class="btn sm g" data-act="copy" data-text="https://gengxin.example/s/${id}" data-ok="链接已复制，去浏览器粘贴">复制链接</button></div>`:''}
+   <div class="sec">${head}</div><div class="sec card">${dlBox(f,id,s,dk)}</div><div class="sec">${ad('detail','m')}</div>
+   <div class="sec">${changes}</div><div class="sec">${tut}</div><div class="sec">${faq}</div><div class="sec">${fb}</div><div class="sec">${hist}</div><div class="foot">${G.name} · 只整理官方信息，不存放安装包</div>`;
+}
+function meFollow(){
+  if(!G.follow.size)return`<div class="empty">还没有关注<br><span class="small">在软件页点「☆ 关注」，有新版本时这里会提醒</span></div>`;
+  return[...G.follow].map(id=>{const s=SOFT[id];const r=Object.values(s.dev).sort((a,b)=>b.d.localeCompare(a.d))[0];
+    return`<div class="list-row">${ico(s)}<div class="m"><b>${s.name}</b>${hasNew(id)?'<span class="dot"></span>':''}<div class="small muted">最新 ${r.v} · ${day(r.d)}</div></div><button class="btn sm s" data-act="open" data-id="${id}">查看</button></div>`}).join('');
+}
+function meView(f){
+  const fbN=Object.keys(G.fb).length;
+  return`<div class="sec card" style="background:var(--brand-soft);border-color:#cfdcfb"><b>不用注册，直接使用</b><p class="small muted">关注和设置保存在这台手机的浏览器里。换手机或清除浏览器数据后需要重新关注。</p></div>
+  <div class="sec card"><h3>我关注的软件</h3>${meFollow()}</div>
+  <div class="sec card"><h3>我的常用设备</h3><p class="small muted">打开更新页时，默认显示这个设备的下载</p><div class="chips">${[['',' 自动识别'],...Object.entries(DEVN).map(([k,v])=>[k,v[0]])].map(([k,n])=>`<button class="chip" data-act="mydev" data-v="${k}" aria-pressed="${(G.myDev||'')===k}">${n}</button>`).join('')}</div></div>
+  <div class="sec card"><h3>更新提醒</h3>
+    <div class="opt"><span>群里通知</span><span class="tag ok">正在使用</span></div>
+    <div class="opt"><span>打开网站时提醒关注的软件</span><span class="tag ok">已开启</span></div>
+    <div class="opt"><span class="muted">微信 / 邮件提醒</span><span class="tag gray">规划中</span></div></div>
+  <div class="sec card"><h3>我的反馈</h3>${fbN?Object.entries(G.fb).map(([id,v])=>`<div class="opt"><span>${SOFT[id].name}</span><span class="tag ${v==='ok'?'ok':'bad'}">${v==='ok'?'能正常用':'有问题'}</span></div>`).join(''):'<p class="small muted">在更新页点“能正常用 / 有问题”，帮其他群友判断要不要更新。</p>'}
+    <button class="btn g block" style="margin-top:10px" data-act="toast" data-t="示例：打开“想要的软件”表单">＋ 想要某个软件？告诉群主</button></div>
+  <div class="sec card"><h3>隐私</h3><p class="small muted">不需要手机号，不收集个人信息。反馈是匿名的，只统计数量。</p></div>`;
+}
+function annView(f){
+  return`<div class="${f.mode==='d'?'dbody':'sec'}">${f.mode==='d'?'<h1 style="font-size:26px;margin-bottom:12px">群公告</h1>':''}${ANN.map(a=>`<div class="card" style="margin-bottom:10px">${a.pin?'<span class="tag bad">置顶</span> ':''}<span class="small muted">${a.d}</span><h3 style="margin:4px 0">${a.t}</h3><p class="small muted">${a.b}</p></div>`).join('')}</div>`;
+}
+
+/* ---------- 框架渲染 ---------- */
+function renderFrame(fid){
+  const f=F[fid],el=document.getElementById(fid);
+  const body=f.page==='home'?homeView(f,fid):f.page==='detail'?detailView(f):f.page==='me'?(f.mode==='d'?`<div class="dbody" style="max-width:640px">${meView(f)}</div>`:meView(f)):annView(f);
+  const nNew=[...G.follow].filter(hasNew).length;
+  const keep=el.querySelector('.scroll,.dscroll');const top=keep?keep.scrollTop:0;
+  if(f.mode==='d'){
+    const tab=(p,n)=>`<button class="${f.page===p?'on':''}" data-act="nav" data-page="${p}">${n}</button>`;
+    el.innerHTML=`<div class="dnav"><div class="in"><span class="logo">${G.name[0]}</span><span class="brand">${G.name}</span><nav>${tab('home','最新更新')}${tab('ann','群公告')}${tab('me','我的关注'+(nNew?` <span class="dot"></span>`:''))}</nav><label class="search"><span>🔍</span><input data-act="q" placeholder="搜软件名" value="${esc(f.q||'')}"></label></div></div>${body}`;
+    $('#durl').textContent='gengxin.example'+(f.page==='detail'?`/s/${f.soft}`:f.page==='home'?'':'/'+f.page);
+  }else{
+    const top=f.page==='detail'?`<div class="mtop"><button class="back" data-act="nav" data-page="home" aria-label="返回">‹</button><b style="flex:1">${SOFT[f.soft].name}</b>${followBtn(f.soft,true)}<button class="btn sm g" data-act="copy" data-text="https://gengxin.example/s/${f.soft}" data-ok="链接已复制">分享</button></div>`
+      :`<div class="mtop"><span class="logo">${G.name[0]}</span><span class="brand" style="flex:1">${G.name}</span><span class="small muted">${{home:'最新更新',me:'我的',ann:'群公告'}[f.page]}</span></div>`;
+    const tab=(p,i,n)=>`<button class="${f.page===p||(p==='home'&&f.page==='detail')?'on':''}" data-act="nav" data-page="${p}">${i}<br>${n}</button>`;
+    let sticky='';
+    if(f.page==='detail'){const s=SOFT[f.soft],dk=pickDev(f,s),r=s.dev[dk];sticky=`<div class="sticky"><button class="btn p" data-act="toast" data-t="示例：跳转到官方下载页">⬇ ${r.a==='bad'?'下载稳定版 '+r.stable:dk==='ios'?'去 App Store':'官方下载 '+DEVN[dk][2]+'版'}</button></div>`}
+    el.innerHTML=`<div class="sbar">9:41<span>●●● 5G</span></div>${top}<div class="scroll">${body}</div>${sticky}<div class="tabs">${tab('home','🏠','最新')}${tab('ann','📢','公告')}${tab('me','👤','我的'+(nNew?'<span class="dot"></span>':''))}</div>`;
+    const sc=el.querySelector('.scroll');if(sc)sc.scrollTop=f._keep?top:0;
+  }
+  if(f.mode==='d')el.scrollTop=f._keep?el.scrollTop:0;
+  f._keep=false;
+}
+function renderAll(keep){for(const k in F){F[k]._keep=keep;renderFrame(k)}}
+
+function bind(fid){
+  const el=document.getElementById(fid),f=F[fid];
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;
+    const a=b.dataset.act;e.preventDefault();
+    if(a==='open'){f.page='detail';f.soft=b.dataset.id;f.dev=b.dataset.dev||null;renderFrame(fid);if(hasNew(f.soft)===false)renderOthers(fid);return}
+    if(a==='nav'){f.page=b.dataset.page;renderFrame(fid);return}
+    if(a==='dev'){f.dev=b.dataset.dev;f._keep=true;renderFrame(fid);return}
+    if(a==='fdev'){f.fdev=b.dataset.v;f._keep=true;renderFrame(fid);return}
+    if(a==='follow'){const id=b.dataset.id;G.follow.has(id)?G.follow.delete(id):G.follow.add(id);toast(G.follow.has(id)?'已关注，有新版本会在首页提醒':'已取消关注');renderAll(true);return}
+    if(a==='fb'){const id=b.dataset.id;G.fb[id]=G.fb[id]===b.dataset.v?undefined:b.dataset.v;if(!G.fb[id])delete G.fb[id];else toast(b.dataset.v==='ok'?'谢谢反馈':'选一下遇到的问题');renderAll(true);return}
+    if(a==='mydev'){G.myDev=b.dataset.v||null;toast('已设为常用设备');renderAll(true);return}
+    if(a==='closead'){b.parentNode.remove();return}
+    if(a==='copy'){copy(b.dataset.text,b.dataset.ok);return}
+    if(a==='toast'){toast(b.dataset.t);return}
+  });
+  el.addEventListener('input',e=>{
+    if(e.target.dataset.act!=='q')return;
+    if(f.page!=='home'){f.page='home';f.q=e.target.value;renderFrame(fid);const i=el.querySelector('input[data-act=q]');i.focus();i.setSelectionRange(i.value.length,i.value.length);return}
+    f.q=e.target.value;const l=document.getElementById(fid+'-list');if(l)l.innerHTML=homeList(f);
+  });
+}
+function renderOthers(fid){for(const k in F)if(k!==fid){F[k]._keep=true;renderFrame(k)}}
+
+/* ---------- 控制栏 ---------- */
+$('#names').innerHTML=NAMES.map((n,i)=>`<button data-name="${n}" aria-pressed="${i===0}">${n}${i===NAMES.length-1?'（现名）':''}</button>`).join(' ');
+$('#names').addEventListener('click',e=>{const b=e.target.closest('[data-name]');if(!b)return;G.name=b.dataset.name;document.querySelectorAll('[data-name]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderAll(true)});
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x===b));const v=b.dataset.view;$('#secD').hidden=v==='m';$('#secM').hidden=v==='d'});
+$('#adBtn').onclick=e=>{G.ads=!G.ads;e.target.textContent=G.ads?'开':'关';e.target.setAttribute('aria-pressed',G.ads);renderAll(true)};
+$('#inappBtn').onclick=e=>{F.m2.inapp=!F.m2.inapp;e.target.setAttribute('aria-pressed',F.m2.inapp);F.m2._keep=true;renderFrame('m2')};
+
+for(const k in F)bind(k);
+F.desk.page='detail';F.desk.soft='guangmu';
+renderAll(false);
+</script>
+</body>
+</html>

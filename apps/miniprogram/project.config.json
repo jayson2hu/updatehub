@@ -1,0 +1,10 @@
+{
+  "description": "更新小站微信小程序，共用现有软件、版本与公告数据",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "更新小站",
+  "libVersion": "3.7.0",
+  "setting": { "urlCheck": false, "es6": true, "enhance": true, "postcss": true, "minified": true },
+  "packOptions": { "ignore": [{ "type": "file", "value": "README.md" }] }
+}

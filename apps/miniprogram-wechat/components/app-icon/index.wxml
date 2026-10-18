@@ -1,0 +1,1 @@
+<view class="app-icon {{large ? 'large' : ''}}" style="background:{{color || '#35664a'}}"><image wx:if="{{src && !failed}}" src="{{src}}" mode="aspectFill" binderror="onError"/><text wx:else>{{initials}}</text></view>

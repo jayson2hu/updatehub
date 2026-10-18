@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "软件目录",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "app-icon": "/components/app-icon/index",
+    "copy-link": "/components/copy-link/index",
+    "page-state": "/components/page-state/index",
+    "ad-slot": "/components/ad-slot/index"
+  }
+}

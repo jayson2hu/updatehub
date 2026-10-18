@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>更新小站 · 设计稿</title>
+<style>
+:root{
+  --bg:#F5F7FB;--surface:#fff;--ink:#18243B;--ink2:#626D80;--line:#E3E9F2;
+  --brand:#245BDD;--brand-soft:#EAF0FF;--note:#FFF7E7;--note-line:#F2DDAE;--note-ink:#7A5200;
+  --ok:#17794B;--ok-soft:#E6F6EE;--warn:#B4540A;--warn-soft:#FFF0E0;--bad:#B3261E;--bad-soft:#FDEBEA;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0}
+body{font:16px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#dfe5f1}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--brand);text-decoration:none}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace}
+
+/* 设计稿外框：桌面显示手机框 + 旁白，手机上全屏 */
+.stage{max-width:1120px;margin:0 auto;padding:24px 16px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:32px;align-items:start}
+.side{position:sticky;top:24px}
+.side h1{font-size:26px;line-height:1.3;margin-bottom:8px}
+.side p{color:var(--ink2);margin-bottom:12px;font-size:15px}
+.flow{background:#fff;border-radius:var(--r);padding:16px 18px;margin:16px 0;border:1px solid var(--line)}
+.flow ol{padding-left:20px;font-size:14px;color:var(--ink2)}
+.flow li{margin:4px 0}.flow b{color:var(--ink)}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.jump button{padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;min-height:40px}
+.jump button:hover{border-color:var(--brand);color:var(--brand)}
+
+.phone{width:400px;height:820px;background:var(--bg);border-radius:36px;border:10px solid #1b2333;box-shadow:0 24px 60px rgba(20,30,60,.3);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.screen{flex:1;overflow-y:auto;scroll-behavior:smooth;padding-bottom:84px}
+@media(max-width:900px){
+  body{background:var(--bg)}
+  .stage{display:block;padding:0}
+  .side{display:none}
+  .phone{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
+}
+
+/* 顶部 */
+.top{position:sticky;top:0;z-index:5;background:rgba(245,247,251,.94);backdrop-filter:blur(8px);padding:14px 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#245BDD,#5A8CFF);display:grid;place-items:center;color:#fff;font-weight:700}
+.top h2{font-size:18px;line-height:1.2}.top small{display:block;color:var(--ink2);font-size:12px}
+.top .back{width:44px;height:44px;margin-left:-8px;font-size:22px}
+.pad{padding:14px 16px}
+
+/* 公告 */
+.pin{background:var(--note);border:1px solid var(--note-line);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;text-align:left;width:100%}
+.pin .tag{flex:none;background:#F5B93B;color:#4a3000;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;height:22px;margin-top:2px}
+.pin b{display:block;line-height:1.4;text-wrap:balance}
+.pin span{font-size:14px;color:var(--note-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* 搜索 + 设备 */
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px;min-height:46px;margin-top:12px}
+.search input{flex:1;border:0;outline:0;font:inherit;background:none;min-width:0}
+.search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chip{flex:none;min-height:40px;padding:0 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px}
+.chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+
+.day{font-size:13px;color:var(--ink2);margin:18px 0 8px;font-weight:600}
+.card{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;width:100%;text-align:left}
+.card:active{background:#fafcff}
+.ico{flex:none;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:20px}
+.card .body{min-width:0;flex:1}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name{font-weight:700}
+.ver{font-size:13px;background:var(--brand-soft);color:var(--brand);padding:0 8px;border-radius:6px}
+.sum{font-size:14px;color:var(--ink2);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dev{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:0 7px;color:var(--ink2);background:#fafbfd}
+.st{font-size:12px;border-radius:6px;padding:0 7px;font-weight:600}
+.st.ok{background:var(--ok-soft);color:var(--ok)}
+.st.warn{background:var(--warn-soft);color:var(--warn)}
+.st.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* 详情 */
+.hero{display:flex;gap:14px;align-items:center}
+.hero .ico{width:64px;height:64px;font-size:28px;border-radius:16px}
+.hero h1{font-size:22px;line-height:1.25}
+.seg{display:flex;background:#E8EDF6;border-radius:12px;padding:4px;margin:16px 0 12px}
+.seg button{flex:1;min-height:42px;border-radius:9px;font-size:15px}
+.seg button[aria-selected=true]{background:#fff;font-weight:700;box-shadow:0 1px 3px rgba(20,30,60,.12)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.panel h3{font-size:15px;margin-bottom:8px}
+.panel ul{padding-left:20px;font-size:15px}
+.panel li{margin:3px 0}
+.alert{background:var(--warn-soft);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--warn);margin-bottom:10px}
+.link{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+.link .l{flex:1;min-width:0}.link small{color:var(--ink2);display:block;font-size:13px}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.p{background:var(--brand);color:#fff}.btn.s{background:var(--brand-soft);color:var(--brand)}
+.hist{border-left:2px solid var(--line);margin-left:6px;padding-left:16px}
+.hist div{position:relative;padding:6px 0 10px}
+.hist div:before{content:"";position:absolute;left:-23px;top:13px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--brand)}
+.hist div:first-child:before{background:var(--brand)}
+.hist small{color:var(--ink2)}
+.faq summary{min-height:40px;display:flex;align-items:center;cursor:pointer;font-weight:600;font-size:15px}
+.faq p{font-size:14px;color:var(--ink2);padding-bottom:8px}
+
+/* 公告详情 */
+.article h1{font-size:22px;line-height:1.35;text-wrap:balance;margin:6px 0 8px}
+.article p{margin:10px 0;font-size:16px}
+.imp{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;background:var(--bad-soft);color:var(--bad)}
+.related{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;width:100%;text-align:left}
+
+/* 底部 */
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar button{min-height:60px;font-size:12px;color:var(--ink2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabbar button span{font-size:20px;line-height:1}
+.tabbar button[aria-current=page]{color:var(--brand);font-weight:700}
+.getbar{position:absolute;left:0;right:0;bottom:60px;background:#fff;border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;z-index:4}
+.getbar .btn{flex:1}
+
+.toast{position:absolute;left:50%;bottom:140px;transform:translateX(-50%) translateY(20px);background:#18243B;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.empty{text-align:center;color:var(--ink2);padding:40px 16px}
+.note{font-size:12px;color:var(--ink2);text-align:center;padding:18px 16px}
+.hidden{display:none!important}
+:focus-visible{outline:3px solid #7aa2ff;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* 群聊预览 */
+.chat{background:#fff;border-radius:var(--r);border:1px solid var(--line);padding:14px;margin-top:14px}
+.chat .m{background:#F2F4F8;border-radius:10px;padding:10px 12px;font-size:14px;white-space:pre-line;margin-top:6px}
+.chat small{color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="side">
+    <h1>更新小站 · 设计稿</h1>
+    <p>解决的问题：软件更新通知在小红书群里被刷屏、找不到。<br>做法：群里只发一条链接，点进来看清楚「更新了什么、该不该升级、去哪里下载」。</p>
+    <div class="flow">
+      <ol>
+        <li><b>管理员</b>在后台发布版本或公告，点「复制群通知」</li>
+        <li><b>群里</b>粘贴短消息和链接，不再刷长文</li>
+        <li><b>群友</b>点开链接，直达这条更新，选自己的设备，拿到官方入口</li>
+        <li><b>以后</b>想回看，随时在站里按软件或设备查</li>
+      </ol>
+    </div>
+    <div class="jump">
+      <button onclick="go('home')">首页：最新更新</button>
+      <button onclick="openSoft('guangmu')">软件详情（多设备）</button>
+      <button onclick="openAnn('a1')">公告详情</button>
+      <button onclick="go('soft')">软件目录</button>
+      <button onclick="showChat()">群里长这样</button>
+    </div>
+    <div class="chat hidden" id="chatDemo">
+      <small>管理员点「复制群通知」后，粘贴到群里的内容：</small>
+      <div class="m">【光幕影视 电视版 3.2.1 已更新】
+修复卡顿，新增倍速播放。
+建议：电视版用户可以升级，旧版仍能用。
+查看详情与官方入口 👇
+https://example.com/software/guangmu?d=tv</div>
+    </div>
+    <p style="font-size:13px;margin-top:16px">示例软件均为虚构，没有真实下载地址。点击页面里的按钮可以体验交互。</p>
+  </aside>
+
+  <div class="phone" id="phone">
+    <div class="screen" id="screen"></div>
+    <div class="getbar hidden" id="getbar"></div>
+    <nav class="tabbar" aria-label="主导航">
+      <button data-t="home" onclick="go('home')"><span>🏠</span>最新</button>
+      <button data-t="soft" onclick="go('soft')"><span>📦</span>软件</button>
+      <button data-t="ann" onclick="go('ann')"><span>📢</span>公告</button>
+    </nav>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+</div>
+
+<script>
+const COLORS={guangmu:'#E5484D',cloud:'#2F6FED',note:'#16A34A',clean:'#F59E0B',player:'#8B5CF6',tool:'#0EA5A4'};
+const SOFT=[
+ {id:'guangmu',name:'光幕影视',c:'guangmu',g:'光',desc:'手机、电视、电脑都能用的影视播放器',
+  devices:{tv:'电视版',android:'安卓',ios:'iPhone',win:'Windows'},
+  steps:['下载后在电视遥控器上选择“允许安装未知来源”','用U盘或手机投送安装包','首次打开选择线路，稍等加载'],
+  faq:[['打开黑屏怎么办','先清除缓存，再重启电视；仍然黑屏请换线路。'],['要不要登录','不用登录，登录只为同步记录。']],
+  rel:[
+   {d:'tv',v:'3.2.1',date:'10-16',st:'ok',stt:'推荐升级',sum:'修复启动卡顿，新增倍速播放',notes:['修复部分电视启动卡顿','新增 0.5x–2x 倍速','优化遥控器焦点'],tip:'电视版用户建议升级，旧版仍然能用。',links:[['官方网站','https://guangmu.example','主入口',''],['网盘备用','https://pan.example/xx','','提取码 k3m9']]},
+   {d:'tv',v:'3.2.0',date:'09-30',st:'ok',stt:'旧版',sum:'新增线路切换',notes:['新增线路切换'],tip:'',links:[]},
+   {d:'android',v:'5.8.0',date:'10-15',st:'warn',stt:'先观望',sum:'界面改版，部分机型闪退，官方正在修复',notes:['全新界面','新增下载管理'],tip:'已有部分机型反馈闪退，建议等 5.8.1 再升级。',links:[['官方网站','https://guangmu.example','主入口','']]},
+   {d:'android',v:'5.7.4',date:'09-28',st:'ok',stt:'稳定',sum:'修复缓存占用',notes:['修复缓存占用过大'],tip:'目前最稳定的版本。',links:[['官方网站','https://guangmu.example','主入口','']]},
+   {d:'ios',v:'2.9.0',date:'10-10',st:'ok',stt:'推荐升级',sum:'适配新系统，修复投屏',notes:['适配新系统','修复投屏'],tip:'',links:[['App Store','https://apps.example','主入口','']]},
+   {d:'win',v:'1.14.2',date:'10-12',st:'ok',stt:'推荐升级',sum:'修复安装包误报',notes:['修复杀毒软件误报'],tip:'',links:[['官方网站','https://guangmu.example','主入口','']]}]},
+ {id:'cloud',name:'云盘助手',c:'cloud',g:'云',desc:'网盘批量下载与转存工具',devices:{win:'Windows',android:'安卓'},steps:['下载安装包','登录网盘账号','在设置里开启批量下载'],faq:[['会封号吗','官方说明为正常使用，请勿超大并发。']],
+  rel:[{d:'win',v:'4.1.0',date:'10-14',st:'bad',stt:'暂不要升级',sum:'登录异常，官方已确认，暂停升级',notes:['新增转存队列'],tip:'登录异常问题官方已确认，暂不要升级。',links:[['官方网站','https://cloud.example','主入口','']]},{d:'win',v:'4.0.6',date:'09-20',st:'ok',stt:'稳定',sum:'稳定版本',notes:['修复崩溃'],tip:'建议停留在此版本。',links:[['官方网站','https://cloud.example','主入口','']]},{d:'android',v:'3.3.2',date:'10-08',st:'ok',stt:'推荐升级',sum:'适配新系统',notes:['适配新系统'],tip:'',links:[['官方网站','https://cloud.example','主入口','']]}]},
+ {id:'note',name:'墨记笔记',c:'note',g:'墨',desc:'跨设备同步的 Markdown 笔记',devices:{ios:'iPhone',android:'安卓',win:'Windows'},steps:['下载安装','注册账号同步'],faq:[],
+  rel:[{d:'ios',v:'6.0.0',date:'10-13',st:'ok',stt:'推荐升级',sum:'大版本：新增知识图谱',notes:['新增知识图谱','编辑器重写'],tip:'升级前建议先导出备份。',links:[['App Store','https://apps.example','主入口','']]},{d:'win',v:'5.9.3',date:'10-01',st:'ok',stt:'稳定',sum:'修复同步冲突',notes:['修复同步冲突'],tip:'',links:[['官方网站','https://note.example','主入口','']]}]},
+ {id:'clean',name:'快清',c:'clean',g:'清',desc:'手机清理与省电',devices:{android:'安卓'},steps:['下载安装','授予必要权限'],faq:[],
+  rel:[{d:'android',v:'2.2.0',date:'10-09',st:'ok',stt:'推荐升级',sum:'新增省电模式',notes:['新增省电模式'],tip:'',links:[['官方网站','https://clean.example','主入口','']]}]},
+ {id:'player',name:'听海音乐',c:'player',g:'听',desc:'无损音乐播放器',devices:{ios:'iPhone',android:'安卓',win:'Windows'},steps:['下载安装','导入本地音乐或登录'],faq:[],
+  rel:[{d:'android',v:'7.1.1',date:'10-05',st:'ok',stt:'推荐升级',sum:'修复蓝牙断连',notes:['修复蓝牙断连'],tip:'',links:[['官方网站','https://player.example','主入口','']]}]},
+ {id:'tool',name:'截图大师',c:'tool',g:'截',desc:'滚动截图与标注',devices:{win:'Windows'},steps:['下载安装','设置快捷键'],faq:[],
+  rel:[{d:'win',v:'3.0.4',date:'09-25',st:'ok',stt:'稳定',sum:'修复多屏截图错位',notes:['修复多屏错位'],tip:'',links:[['官方网站','https://tool.example','主入口','']]}]}
+];
+const ANN=[
+ {id:'a1',title:'云盘助手 4.1.0 出现登录异常，请先不要升级',imp:'重要',date:'10-14',pin:true,
+  body:['官方已确认 Windows 4.1.0 存在登录异常，部分用户无法登录。','建议已升级的用户先使用网页版，未升级的用户暂时停留在 4.0.6。','官方预计本周内发布修复版，我们会在站里更新。'],soft:['cloud']},
+ {id:'a2',title:'本周群内更新整理：光幕影视安卓 5.8.0 先观望',imp:'提醒',date:'10-16',pin:false,
+  body:['安卓 5.8.0 有机型闪退反馈，建议等 5.8.1。','电视版 3.2.1 已确认稳定，可以升级。'],soft:['guangmu']},
+ {id:'a3',title:'站点使用说明：怎么按设备查找更新',imp:'说明',date:'10-01',pin:false,
+  body:['在首页点击你的设备，只看自己设备的更新。','点进软件，可以切换设备并查看历史版本。'],soft:[]}
+];
+const DEV={all:'全部',tv:'电视',android:'安卓',ios:'iPhone',win:'Windows'};
+const ST={ok:'✓ ',warn:'⚠ ',bad:'✕ '};
+
+let state={tab:'home',dev:'all',q:'',soft:null,sdev:null,ann:null,hist:[]};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sw=id=>SOFT.find(s=>s.id===id);
+
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+function copy(t,msg){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(msg||'已复制'),()=>toast('无法自动复制，请长按选择'))}
+function showChat(){$('#chatDemo').classList.toggle('hidden')}
+
+function allReleases(){
+  const out=[];SOFT.forEach(s=>s.rel.forEach(r=>out.push({...r,s})));
+  return out.sort((a,b)=>b.date.localeCompare(a.date));
+}
+function icon(s){return `<div class="ico" style="background:${COLORS[s.c]}">${s.g}</div>`}
+
+function render(){
+  const v=state.soft?'detail':state.ann?'anndetail':state.tab;
+  document.querySelectorAll('.tabbar button').forEach(b=>b.setAttribute('aria-current',b.dataset.t===state.tab&&!state.soft&&!state.ann?'page':'false'));
+  const gb=$('#getbar');gb.classList.add('hidden');
+  const el=$('#screen');
+  if(v==='home')el.innerHTML=home();
+  else if(v==='soft')el.innerHTML=softList();
+  else if(v==='ann')el.innerHTML=annList();
+  else if(v==='detail')el.innerHTML=detail();
+  else el.innerHTML=annDetail();
+  if(v==='detail')renderGetbar();
+  if(v!=='detail'&&v!=='anndetail')el.scrollTop=el.scrollTop;
+}
+function go(t){state.tab=t;state.soft=null;state.ann=null;state.hist=[];render();$('#screen').scrollTop=0}
+function openSoft(id,dev){const s=sw(id);state.soft=id;state.ann=null;state.sdev=dev||Object.keys(s.devices)[0];state.seg='ver';render();$('#screen').scrollTop=0}
+function openAnn(id){state.ann=id;state.soft=null;render();$('#screen').scrollTop=0}
+function back(){state.soft=null;state.ann=null;render()}
+
+function topbar(title,sub,withBack){
+  return `<header class="top">${withBack?`<button class="back" aria-label="返回" onclick="back()">‹</button>`:`<div class="logo">更</div>`}<div><h2>${esc(title)}</h2>${sub?`<small>${esc(sub)}</small>`:''}</div></header>`;
+}
+
+function home(){
+  const pin=ANN.find(a=>a.pin);
+  let rel=allReleases().filter(r=>(state.dev==='all'||r.d===state.dev)&&(!state.q||(r.s.name+r.v).toLowerCase().includes(state.q.toLowerCase())));
+  let html=topbar('更新小站','软件更新与群公告，一眼看懂');
+  html+=`<div class="pad">`;
+  if(pin)html+=`<button class="pin" onclick="openAnn('${pin.id}')"><span class="tag">置顶</span><div><b>${esc(pin.title)}</b><span>${esc(pin.body[0])}</span></div></button>`;
+  html+=`<label class="search"><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="搜索软件名，如 光幕" value="${esc(state.q)}" oninput="state.q=this.value;list()"></label>`;
+  html+=`<div class="chips" role="group" aria-label="按设备筛选">${Object.entries(DEV).map(([k,n])=>`<button class="chip" aria-pressed="${state.dev===k}" onclick="state.dev='${k}';render()">${n}</button>`).join('')}</div>`;
+  html+=`<div id="list">${relList(rel)}</div></div><p class="note">示例内容均为虚构，没有真实下载地址</p>`;
+  return html;
+}
+function relList(rel){
+  if(!rel.length)return `<div class="empty">没有找到匹配的更新<br><button class="btn s" style="margin-top:12px" onclick="state.q='';state.dev='all';render()">清除筛选</button></div>`;
+  let out='',last='';
+  rel.forEach(r=>{
+    if(r.date!==last){last=r.date;out+=`<div class="day">${r.date.replace('-','月')}日</div>`}
+    out+=`<button class="card" onclick="openSoft('${r.s.id}','${r.d}')">${icon(r.s)}<div class="body"><div class="row"><span class="name">${esc(r.s.name)}</span><span class="ver mono">${esc(r.v)}</span></div><div class="sum">${esc(r.sum)}</div><div class="meta"><span class="dev">${r.s.devices[r.d]}</span><span class="st ${r.st}">${ST[r.st]}${r.stt}</span></div></div></button>`;
+  });
+  return out;
+}
+function list(){
+  const rel=allReleases().filter(r=>(state.dev==='all'||r.d===state.dev)&&(!state.q||(r.s.name+r.v).toLowerCase().includes(state.q.toLowerCase())));
+  $('#list').innerHTML=relList(rel);
+}
+
+function softList(){
+  return topbar('软件目录',SOFT.length+' 款软件')+`<div class="pad">`+SOFT.map(s=>`<button class="card" onclick="openSoft('${s.id}')">${icon(s)}<div class="body"><div class="name">${esc(s.name)}</div><div class="sum">${esc(s.desc)}</div><div class="meta">${Object.values(s.devices).map(d=>`<span class="dev">${d}</span>`).join('')}</div></div></button>`).join('')+`</div>`;
+}
+
+function annList(){
+  return topbar('群公告','重要通知与使用说明')+`<div class="pad">`+ANN.map(a=>`<button class="card" onclick="openAnn('${a.id}')" style="flex-direction:column;gap:6px"><div class="row">${a.pin?'<span class="tag" style="background:#F5B93B;color:#4a3000;font-size:12px;font-weight:700;border-radius:6px;padding:0 7px">置顶</span>':''}<span class="imp" ${a.imp==='说明'?'style="background:var(--brand-soft);color:var(--brand)"':''}>${a.imp}</span><small style="color:var(--ink2)">${a.date.replace('-','月')}日</small></div><div class="name" style="line-height:1.4">${esc(a.title)}</div><div class="sum">${esc(a.body[0])}</div></button>`).join('')+`</div>`;
+}
+
+function annDetail(){
+  const a=ANN.find(x=>x.id===state.ann);
+  const msg=`【${a.imp}】${a.title}\n${a.body[0]}\n查看详情 👇\nhttps://example.com/announcements/${a.id}`;
+  window.__msg=msg;
+  return topbar('公告详情','',true)+`<div class="pad article"><span class="imp" ${a.imp==='说明'?'style="background:var(--brand-soft);color:var(--brand)"':''}>${a.imp}</span> <small style="color:var(--ink2)">${a.date.replace('-','月')}日发布</small><h1>${esc(a.title)}</h1>${a.body.map(p=>`<p>${esc(p)}</p>`).join('')}
+  ${a.soft.length?`<div class="day">相关软件</div>${a.soft.map(id=>{const s=sw(id);return `<button class="related" onclick="openSoft('${id}')">${icon(s)}<div><div class="name">${s.name}</div><small style="color:var(--ink2)">查看版本与官方入口</small></div></button>`}).join('')}`:''}
+  <div class="day">管理员工具（访客看不到）</div>
+  <button class="btn s" style="width:100%" onclick="copy(window.__msg,'群通知已复制，去群里粘贴')">📋 复制群通知</button></div>`;
+}
+
+function detail(){
+  const s=sw(state.soft);const devs=Object.keys(s.devices);
+  const rels=s.rel.filter(r=>r.d===state.sdev);const cur=rels[0];
+  let h=topbar(s.name,'','true'&&true);
+  h+=`<div class="pad"><div class="hero">${icon(s)}<div><h1>${esc(s.name)}</h1><small style="color:var(--ink2)">${esc(s.desc)}</small></div></div>`;
+  h+=`<div class="seg" role="tablist" aria-label="选择设备">${devs.map(d=>`<button role="tab" aria-selected="${d===state.sdev}" onclick="state.sdev='${d}';render()">${s.devices[d]}</button>`).join('')}</div>`;
+  if(!cur)h+=`<div class="empty">该设备暂时没有版本记录</div>`;
+  else{
+    h+=`<div class="panel"><div class="row"><b style="font-size:18px">当前版本</b><span class="ver mono" style="font-size:15px">${cur.v}</span><span class="st ${cur.st}">${ST[cur.st]}${cur.stt}</span></div><small style="color:var(--ink2)">${cur.date.replace('-','月')}日发布</small>`;
+    if(cur.tip)h+=`<div class="${cur.st==='ok'?'':'alert'}" style="${cur.st==='ok'?'margin-top:10px;background:var(--ok-soft);color:var(--ok);padding:10px 12px;border-radius:10px;font-size:14px':'margin-top:10px'}"><b>建议：</b>${esc(cur.tip)}</div>`;
+    h+=`<h3 style="margin-top:12px">更新内容</h3><ul>${cur.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>`;
+    h+=`<div class="panel"><h3>获取入口</h3><small style="color:var(--ink2)">只提供官方或作者提供的入口，本站不托管安装包</small>${cur.links.map(l=>`<div class="link"><div class="l"><b>${l[0]}</b> ${l[2]?`<span class="ver">${l[2]}</span>`:''}<small>${esc(l[1])}</small>${l[3]?`<small>${l[3]}</small>`:''}</div>${l[3]?`<button class="btn s" onclick="copy('${l[3].replace('提取码 ','')}','提取码已复制')">复制码</button>`:''}</div>`).join('')||'<div class="empty">暂未配置入口</div>'}</div>`;
+    h+=`<div class="panel"><h3>历史版本</h3><div class="hist">${rels.map(r=>`<div><b class="mono">${r.v}</b> <span class="st ${r.st}">${r.stt}</span><br><small>${r.date.replace('-','月')}日 · ${esc(r.sum)}</small></div>`).join('')}</div></div>`;
+  }
+  h+=`<div class="panel"><h3>安装说明</h3><ol style="padding-left:20px;font-size:15px">${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`;
+  if(s.faq.length)h+=`<div class="panel faq"><h3>常见问题</h3>${s.faq.map(f=>`<details><summary>${esc(f[0])}</summary><p>${esc(f[1])}</p></details>`).join('')}</div>`;
+  h+=`</div>`;
+  return h;
+}
+function renderGetbar(){
+  const s=sw(state.soft);const cur=s.rel.find(r=>r.d===state.sdev);const gb=$('#getbar');
+  if(!cur){return}
+  gb.classList.remove('hidden');
+  const url=`https://example.com/software/${s.id}?d=${state.sdev}`;
+  const msg=`【${s.name} ${s.devices[state.sdev]} ${cur.v}】${cur.sum}\n建议：${cur.tip||'可按需升级'}\n详情与官方入口 👇\n${url}`;
+  gb.innerHTML=`<button class="btn s" onclick='copy(${JSON.stringify(url)},"链接已复制")'>分享链接</button><button class="btn p" onclick='toast("示例：这里会跳到官方入口")'>去官方入口</button>`;
+}
+render();
+</script>
+</body>
+</html>

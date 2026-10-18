@@ -1,0 +1,2 @@
+const wx = require('../../utils/platform');
+Component({properties:{value:{type:String,value:''},label:{type:String,value:'复制链接'},primary:{type:Boolean,value:false}},data:{manual:false,copied:false},methods:{copy(){if(!this.data.value)return;wx.setClipboardData({data:this.data.value,success:()=>{this.setData({copied:true});wx.showToast({title:'已复制',icon:'success'});},fail:()=>this.setData({manual:true})});},close(){this.setData({manual:false});},stop(){}},observers:{value(){this.setData({copied:false,manual:false});}}});

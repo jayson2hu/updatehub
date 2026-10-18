@@ -1,0 +1,4 @@
+import { Search, ArrowRight } from 'lucide-react';
+export function SearchForm({ value = '', large = false, filters = {} }: { value?: string; large?: boolean; filters?: Record<string,string> }) {
+  return <form action="/software" method="get" role="search" className={`search-form ${large ? 'search-large' : ''}`}><Search size={21} aria-hidden="true"/><label className="sr-only" htmlFor={large ? 'hero-search' : 'software-search'}>搜索软件名称、别名或用途</label><input key={value} id={large ? 'hero-search' : 'software-search'} type="search" name="q" placeholder="名字、用途，或你记得的一点线索…" defaultValue={value} maxLength={100}/>{Object.entries(filters).filter(([,entry])=>entry).map(([key,entry])=><input key={key} type="hidden" name={key} value={entry}/>)}<button type="submit" aria-label="搜索软件">{large ? <><span>找软件</span><ArrowRight size={18}/></> : <span>搜索</span>}</button></form>;
+}

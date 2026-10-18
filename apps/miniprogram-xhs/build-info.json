@@ -1,0 +1,7 @@
+{
+  "platform": "xhs",
+  "environment": "develop",
+  "source": "apps/miniprogram",
+  "format": "XHSML/CSS/JavaScript",
+  "officialGuide": "https://miniapp.xiaohongshu.com/doc/DC451266"
+}

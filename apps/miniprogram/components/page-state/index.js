@@ -1,0 +1,1 @@
+Component({properties:{loading:Boolean,error:String,empty:Boolean,emptyTitle:{type:String,value:'暂时还没有内容'},emptyText:{type:String,value:'稍后再来看看，或下拉刷新。'}},methods:{retry(){this.triggerEvent('retry');}}});

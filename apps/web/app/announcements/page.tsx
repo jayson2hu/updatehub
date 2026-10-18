@@ -1,0 +1,4 @@
+import { getStationData, isExpired } from '@/lib/station';
+import { NoticeRow, EmptyState } from '@/components/station/common';
+export const metadata = { title: '群公告' };
+export default async function AnnouncementsPage() { const data = await getStationData(); const notices = [...data.announcements].sort((a, b) => Number(b.pinned && !isExpired(b)) - Number(a.pinned && !isExpired(a)) || (b.published_at || '').localeCompare(a.published_at || '')); return <div className="st-page st-notices-page"><div className="st-page-heading"><div><h1>群公告</h1><p>重要提醒、使用说明和维护消息，随时回来查看。</p></div><span className="st-content-caption">共 {notices.length} 条公告</span></div><div className="st-notices-list">{notices.length ? notices.map(n => <NoticeRow notice={n} key={n.id}/>) : <EmptyState title="暂时没有公告" description="有新的群消息或使用提醒时，会发布在这里。"/>}</div><p className="st-list-end">已结束的公告会保留，方便查看之前的说明。</p></div>; }

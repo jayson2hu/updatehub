@@ -1,0 +1,70 @@
+# 更新小站验证记录
+
+本文件仅记录此轮实现的实际检查结果，不沿用旧产品的通过结论。
+
+## 环境
+
+- 2026-10-11，Windows；Python 3.14.2、Playwright 1.63.0。
+- 本机安装的 Microsoft Edge 153（Chromium），无头模式可启动。
+- 预览地址为 `http://localhost:3010`，API 为 `http://127.0.0.1:8010`。
+- 使用独立 `runtime/station.db` 与 `runtime/station-uploads`，保留已有项目数据库。
+
+## 实际结果
+
+2026-10-11 11:50（北京时间），完整浏览器验收 **13 组通过，0 组失败**，无未处理的浏览器脚本异常。结果为 `artifacts/station/results.json`。
+
+| 验证项目 | 实际检查 |
+| --- | --- |
+| 示例与关闭广告 | 数据库有 6 款软件、11 条更新、4 条公告；覆盖多设备、不可用、空链接、已结束公告；广告关闭 |
+| 访客权限 | 未登录读取后台、创建软件、修改设置返回 401 |
+| 首页查找 | 390px 首屏可见有效置顶及完整首条更新；别名搜索、电视筛选、无结果与清除恢复通过 |
+| 分享直达 | 软件和公告详情直接打开并刷新成功；不存在的软件提供返回入口 |
+| 管理员登录 | 从真实登录页登录并读取受保护内容 |
+| 软件维护 | 在后台创建软件、上传 PNG、保存草稿、预览、发布；草稿不出现在公开接口，发布后可见 |
+| 发布更新 | 模拟保存 503，错误提示保留输入；再次保存草稿、预览、发布，首页同步显示对应版本 |
+| 设备对应 | 安卓 9.1.0 与电视 8.2.0 切换后，版本、URL、提取码同步变化，刷新保留所选平台 |
+| 公告完整操作 | 后台保存草稿、预览、发布、关联软件、置顶；改为已到期后退顶且历史详情显示已结束；撤回后详情返回 404 |
+| 复制 | 模拟成功有反馈；模拟剪贴板拒绝后提供可选文本，Escape 关闭 |
+| 响应式 | 首页、软件详情、后台发布页检查 390×844、1440×1000、360×800，均无横向溢出；详情获取栏与底部导航不重叠，最后正文可滚动到固定栏上方 |
+| 不可用入口 | 未配置链接与暂不可用页面显示明确文字，不出现伪下载按钮 |
+| 浏览器运行 | 最终完整验收没有未处理的脚本异常 |
+
+后续独立补验通过：剪贴板手动复制弹层自动聚焦、Tab/Shift+Tab 焦点循环、Escape 后回到触发按钮；在减少动画偏好下操作；390px 后台退出按钮可见且点击区域至少 44px，退出后受保护接口返回 401。记录为 `artifacts/station/additional-ui-result.json`。
+
+最终状态一致性窄验收通过：软件整体不可用时首页各设备更新与详情一致；仅电视版不可用时，软件目录「全部」显示需要注意，筛选电视显示暂不可用，筛选安卓显示正常；详情切换也同步。测试结束已恢复示例原状态，没有新增记录。记录为 `artifacts/station/status-consistency-result.json`。
+
+工程检查也已完成：前端代码规范检查、TypeScript 与正式构建通过；API 全套 110 项通过，最终更新后的站点专测 16 项通过（与全套部分重叠，不相加为总数）。API 覆盖权限/CSRF、跨设备链接、版本历史、公告有效期、恶意链接/图片、持久化与广告容错。PowerShell 启动脚本通过语法解析，Python 工具通过语法编译。
+
+## 重启与备份
+
+真实停止原 API 进程，在 11:52 创建 SQLite 与图片完整备份，执行数据库完整性检查为 `ok`，备份清单包含 3 张已上传图片。随后以新的 API 进程重新启动。
+
+重新登录后核对测试软件、两个设备版本、公告和公开示例内容全部保留；同一图片 URL 的 SHA-256 与重启前一致，草稿仍不向访客公开。记录为 `artifacts/station/persistence-result.json`；检查程序为 `scripts/station-verify-persistence.py`。此项实际验证了进程重启，不仅是浏览器刷新。
+
+验证完成后，仅清理本轮创建的 `qa-station-*` 软件、相关版本与验收公告，保留示例、管理员和上传图片证据。当前前台与后台恢复为 6 款软件、11 条更新、4 条公告；重启前备份仍保留完整验证数据。
+
+## 截图复核
+
+最终干净页面截图已实际打开检查：中文换行、设备标签、安装步骤、版本日期、操作入口均清楚。后台截图只填写未保存的演示更新，不创建额外内容。
+
+- `artifacts/station/home-390.png`、`home-1440.png`、`home-360.png`。
+- `artifacts/station/software-390.png`、`software-1440.png`、`software-360.png`。
+- `artifacts/station/admin-release-390.png`、`admin-release-1440.png`、`admin-release-360.png`。
+- 同名 `-viewport.png` 为固定视口截图，便于核对首屏与底部栏；共 18 张最终截图。
+
+## 复现
+
+启动本地站点并创建专用测试管理员。通过 `STATION_ADMIN_EMAIL` 和 `STATION_ADMIN_PASSWORD` 临时环境变量提供凭据，或使用本地已忽略文件 `runtime/station-admin.json`（键为 `email`、`password`）。凭据不会写入报告。
+
+```powershell
+apps/api/.venv/Scripts/python.exe -m pip install -r tests/requirements.txt
+apps/api/.venv/Scripts/python.exe tests/station_e2e.py --base-url http://localhost:3010 --channel msedge
+```
+
+截图和 JSON 结果保存到已忽略的 `artifacts/station/`。未安装 Edge 时，可使用 Playwright 安装的 Chromium，省略 `--channel`。浏览器自动化需要操作系统允许子进程及浏览器启动。
+
+重新验证进程重启：先运行 E2E 生成持久化清单，停止/重新启动 API，再运行 `scripts/station-verify-persistence.py`。清理测试数据库记录后，旧清单不能重新用于检查；请重新运行 E2E 生成新数据。最终截图可通过 `scripts/station-capture.py` 重新生成。
+
+## 范围限制
+
+真实小红书内置浏览器、真实下载来源、正式 PostgreSQL、容器发布、TLS 和公网域名需要在目标设备及部署环境补验。模拟剪贴板拒绝能覆盖网页回退逻辑，不能代表每一个宿主应用的实际权限实现。

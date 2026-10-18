@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="hero"><text class="site-title">{{settings.site_name}}</text><text class="description">{{settings.site_description}}</text></view>
+  <page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/>
+  <block xhs:if="{{!loading && !error}}">
+    <view xhs:if="{{pinned}}" class="notice" bindtap="openNotice" data-slug="{{pinned.slug}}" hover-class="pressed" aria-role="link" aria-label="{{pinned.title}}"><view class="notice-top"><text class="notice-label">置顶提醒</text><text>{{pinned.date}}</text></view><text class="notice-title">{{pinned.title}} ›</text><text class="notice-summary">{{pinned.summary}}</text></view>
+    <view class="search"><text class="search-symbol">⌕</text><input value="{{query}}" placeholder="搜索软件名称或常用别名" bindinput="onSearch" confirm-type="search" aria-label="搜索软件"/><button xhs:if="{{query}}" bindtap="clear" aria-label="清除搜索">清除</button></view>
+    <view class="filters"><button xhs:for="{{platforms}}" xhs:key="id" class="filter {{selectedPlatform === item.id ? 'active' : ''}}" bindtap="onPlatform" data-id="{{item.id}}" hover-class="pressed" aria-label="{{item.label}}">{{item.label}}</button></view>
+    <view class="section-heading"><text class="title">最新更新</text><text class="meta">{{releases.length}} 条 · 按日期排列</text></view>
+    <page-state empty="{{!releases.length}}" empty-title="没有找到对应软件" empty-text="试试软件别名，或清除设备筛选。" bindretry="clear"/>
+    <block xhs:for="{{releases}}" xhs:key="id"><text xhs:if="{{item.groupStart}}" class="date-label">{{item.date}}</text><view class="release" bindtap="openSoftware" data-slug="{{item.slug}}" data-platform="{{item.platform}}" data-release="{{item.id}}" hover-class="pressed" aria-role="link" aria-label="查看{{item.name}}{{item.platformName}}更新"><app-icon name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/><view class="release-main"><view class="release-heading"><view><text class="software-name">{{item.name}}</text><text class="device">{{item.platformName}}</text></view><text class="version">v{{item.version}}</text></view><text class="release-summary">{{item.summary}}</text><view class="release-footer"><text class="status {{item.status}}"><text class="status-dot"/>{{item.statusText}}</text><text class="release-action">查看更新 ›</text></view></view></view><ad-slot xhs:if="{{index === 2}}" enabled="{{settings.ads_enabled}}" promotions="{{promotions}}" placement="home_feed"/></block>
+    <view class="all-notices"><button class="text-button" bindtap="allNotices">查看全部公告 ›</button></view>
+    <text class="footnote">{{hasDemo ? '示例内容 · ' : ''}}未配置真实下载地址时，获取入口保持不可用。下拉可刷新最新内容。</text>
+  </block>
+</view>

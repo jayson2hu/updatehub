@@ -1,0 +1,133 @@
+/* Reading and task controls share a legible scale across public workflows. */
+.library-page .page-heading p,.following-page .page-heading p{font-size:14px;color:#53685c}
+.library-page .search-form input{font-size:14px}.library-page .search-form button{min-height:44px;font-size:13px}
+.library-page .filter-row{font-size:13px}.library-page .filter-row a{display:inline-flex;align-items:center;min-height:40px}
+.library-page .software-name,.following-page .software-name{font-size:16px}
+.library-page .software-summary,.following-page .software-summary{font-size:14px;line-height:1.8;color:#53685c}
+.library-page .category-label,.library-page .platform-line,.library-page .version-label,.following-page .version-label{font-size:12px;color:#53685c}
+.library-page .card-link,.following-page .card-link{font-size:13px;min-height:42px}
+.library-page .follow-compact,.following-page .follow-compact{width:44px;height:44px}
+.following-page .followed-result,.following-page .section-heading p{font-size:13px;color:#53685c}
+.bulletin-workspace,.announcement-workspace,.software-workspace{--reading-muted:#53685c}
+.bulletin-workspace .bulletin-intro{padding:22px 0 26px;border:0;border-radius:0;background:none;margin-bottom:16px;align-items:center}
+.bulletin-workspace .bulletin-heading h1{font-size:32px;margin:0 0 8px}
+.bulletin-workspace .bulletin-heading>p:last-child{font-size:15px;color:var(--reading-muted)}
+.bulletin-entry-actions{display:flex;gap:10px;flex-wrap:wrap}
+.bulletin-entry-actions .button{font-size:14px;min-height:44px}
+.bulletin-workspace .bulletin-search{min-height:56px}
+.bulletin-workspace .bulletin-search input,.bulletin-workspace .bulletin-search button{font-size:14px}
+.bulletin-workspace .bulletin-search button{min-height:42px}
+.bulletin-workspace .announcement-tabs{gap:26px}
+.bulletin-workspace .announcement-tabs>a{font-size:14px;padding:14px 0;min-height:48px}
+.bulletin-workspace .announcement-filters{gap:10px 14px;flex-wrap:wrap;padding:18px 0}
+.bulletin-workspace .announcement-filters>label:not(.history-filter){display:flex;align-items:center;gap:8px}
+.bulletin-workspace .announcement-filters label>span{font-size:12px;color:var(--reading-muted)}
+.bulletin-workspace .announcement-filters select{height:42px;font-size:13px;max-width:200px;padding:7px 22px 7px 10px;border-color:#cfdcd3;color:#3d5647}
+.bulletin-workspace .announcement-filters button{min-height:42px;font-size:13px;padding:8px 16px}
+.bulletin-workspace .history-filter{display:flex;align-items:center;gap:7px;min-height:36px}
+.history-filter input{width:17px;height:17px;accent-color:var(--primary);margin:0}
+.bulletin-workspace .clear-notices{font-size:12px;min-height:36px;margin-left:auto}
+.announcement-results-heading{display:flex;justify-content:space-between;gap:15px;font-size:13px;color:var(--reading-muted);margin:6px 0 14px}
+.announcement-results-heading p{margin:0}.announcement-results-heading span{overflow-wrap:anywhere;text-align:right}
+.announcement-filter-panel{border-bottom:1px solid var(--line);margin-bottom:17px}
+.announcement-filter-panel>summary{min-height:48px;cursor:pointer;font-size:13px;color:#42654f;padding:13px 0;list-style-position:inside}
+.announcement-filter-panel>summary>span{float:right;font-size:12px;color:#5a6c60}
+.announcement-filter-panel[open]>summary{padding-bottom:0}
+.selected-software-context{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:16px 18px;background:#edf5ef;border-left:3px solid var(--primary);margin-bottom:16px}
+.selected-software-context>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 17px;min-width:0}
+.selected-software-context strong{font-size:15px;overflow-wrap:anywhere}.selected-software-context span{font-size:12px;color:var(--reading-muted);overflow-wrap:anywhere}
+.selected-software-context .text-link{font-size:13px;min-height:40px}
+.bulletin-workspace .demo-notices-note{font-size:12px;line-height:1.8;color:#796339;padding:12px 14px}
+.announcement-card{padding:28px 0}
+.announcement-card .announcement-meta .status-badge,.announcement-card .notice-kind,.announcement-card .pin-label,.announcement-card .announcement-demo-label,.announcement-card .history-recorded-label{font-size:11px}
+.announcement-card .announcement-body h2{font-size:20px;line-height:1.65}
+.announcement-card .announcement-summary{font-size:14px;color:#53685c;line-height:1.85;-webkit-line-clamp:2}
+.announcement-card .announcement-action{padding:12px 14px;gap:13px}
+.announcement-card .announcement-action>span{font-size:12px;color:#466750}
+.announcement-card .announcement-action>p{font-size:13px;line-height:1.8;color:#496752}
+.announcement-card .announcement-source,.announcement-card .announcement-version,.announcement-card .announcement-bottom time{font-size:12px;color:#5a6c60}
+.announcement-card .announcement-source{min-height:32px;display:inline-flex;align-items:center;color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.announcement-card .read-announcement{font-size:13px;min-height:42px}
+.bulletin-workspace .bulletin-follow>p,.bulletin-workspace .bulletin-guide>p,.bulletin-workspace .bulletin-trust p{font-size:14px;color:var(--reading-muted);line-height:1.9}
+.bulletin-workspace .bulletin-follow>a{font-size:14px;min-height:44px}
+.bulletin-workspace .bulletin-follow>small{font-size:12px;color:var(--reading-muted)}
+.bulletin-workspace .bulletin-guide .aside-heading h2,.bulletin-workspace .bulletin-follow .aside-heading h2{font-size:17px}
+.bulletin-workspace .bulletin-guide>p{margin-top:17px}
+.bulletin-workspace .bulletin-guide>a{font-size:13px;min-height:44px}
+.bulletin-workspace .bulletin-trust h3{font-size:16px}
+.detail-section-nav{display:flex;gap:30px;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:24px 0 30px}
+.detail-section-nav>a{display:flex;align-items:center;min-height:52px;font-size:14px;color:#42654f}
+.detail-section-nav>a:hover{color:var(--primary);text-decoration:underline;text-underline-offset:5px}
+.software-workspace .detail-hero{margin-bottom:24px;gap:20px}
+.software-workspace .detail-hero h1{font-size:32px;margin-bottom:9px}
+.software-workspace .detail-hero p{font-size:15px;color:var(--reading-muted);margin-bottom:0;line-height:1.8}
+.software-workspace .category-label{font-size:12px;margin-bottom:7px}
+.software-workspace>.notice-demo{margin-bottom:23px;max-width:none}
+.software-workspace .notice-demo p,.announcement-workspace .notice-demo p{font-size:13px;line-height:1.8}
+.software-current{display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:35px;background:#edf5f0;border:1px solid #dce8df;padding:25px 28px;border-radius:12px}
+.software-current-main{min-width:0}
+.software-current h2{font-size:14px;font-weight:500;color:#4b6855;margin:0 0 13px}
+.software-current-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.software-current-version>strong{font-size:28px;line-height:1.35;letter-spacing:-.5px;overflow-wrap:anywhere}
+.software-current-version .status-badge{font-size:12px}
+.software-current-main>p{font-size:15px;line-height:1.9;color:#3e5d49;white-space:pre-line;margin:0 0 12px;overflow-wrap:anywhere}
+.software-current-main>small{font-size:12px;color:#536b5b;line-height:1.8;display:block}
+.software-current-actions{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.software-current-actions>.button{min-height:46px;font-size:14px;padding:11px 13px}
+.software-current-actions>.text-link{align-self:center;min-height:40px;font-size:13px}
+.software-workspace .content-section p{font-size:15px;line-height:1.95;color:var(--reading-muted)}
+.software-workspace .content-section h2{font-size:21px}
+.software-workspace .content-section h3{font-size:16px;margin-top:23px}
+.software-workspace .software-announcement-row{padding:18px 0}
+.software-workspace .software-announcement-row strong{font-size:15px;line-height:1.8}
+.software-workspace .software-announcement-row small,.software-workspace .software-announcement-row time{font-size:12px;color:var(--reading-muted)}
+.software-workspace .official-panel>p,.software-workspace .official-links a,.software-workspace .outbound-notice,.software-workspace .detail-meta p{font-size:13px;color:var(--reading-muted)}
+.software-workspace .official-links a{min-height:46px}
+.software-workspace .detail-layout{grid-template-columns:minmax(0,1fr) 280px;gap:42px}
+.announcement-workspace .announcement-detail-heading{margin-bottom:22px;padding-bottom:22px}
+.announcement-workspace .announcement-detail-heading h1{font-size:30px;line-height:1.6;max-width:1000px;margin:14px 0}
+.announcement-workspace .announcement-detail-heading>p{font-size:15px;line-height:1.95;color:var(--reading-muted)}
+.announcement-workspace .announcement-byline{font-size:12px;color:var(--reading-muted);gap:10px 20px}
+.announcement-workspace .announcement-meta>span{font-size:12px}
+.historical-reading-notice{display:flex;align-items:flex-start;gap:13px;padding:21px 23px;background:#f5f2e9;border:1px solid #e5decb;border-radius:9px;margin:0 0 20px;color:#66583a}
+.historical-reading-notice>svg{flex-shrink:0;margin-top:2px}
+.historical-reading-notice strong{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.historical-reading-notice p{font-size:14px;line-height:1.85;margin:8px 0 14px;overflow-wrap:anywhere}
+.historical-reading-notice .button{min-height:44px;font-size:13px}
+.announcement-quick-actions{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:4px 0}
+.announcement-software-link{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.announcement-software-link>span{font-size:14px;font-weight:600;color:#385b46}
+.announcement-software-link small{display:block;font-size:11px;font-weight:400;color:var(--reading-muted);margin-top:3px}
+.announcement-quick-actions>div{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.announcement-quick-actions .button{min-height:44px;font-size:13px;padding:10px 13px}
+.announcement-quick-actions .copy-announcement>span{font-size:12px}
+.announcement-workspace .announcement-decision{padding:23px 25px}
+.announcement-workspace .announcement-decision>p,.announcement-workspace .announcement-impact>p{font-size:15px;line-height:1.95}
+.announcement-workspace .announcement-decision .status-badge{margin-top:15px;font-size:12px}
+.announcement-workspace .announcement-decision h2,.announcement-workspace .announcement-impact h2{font-size:19px}
+.announcement-workspace .can-wait strong,.announcement-workspace .can-wait p{font-size:13px;color:var(--reading-muted)}
+.announcement-workspace .content-section h2{font-size:21px}
+.announcement-workspace .announcement-article .content-section p,.announcement-workspace .announcement-changes{font-size:15px;line-height:2;color:var(--reading-muted)}
+.announcement-workspace .announcement-sources>p,.announcement-workspace .announcement-sources>small{font-size:13px;color:var(--reading-muted);line-height:1.9}
+.announcement-workspace .announcement-sources>.button{font-size:13px;min-height:46px}
+.announcement-current-aside{padding:22px;border:1px solid var(--line);border-radius:10px}
+.announcement-current-aside h2{font-size:14px;color:#5d7363;margin-bottom:13px}
+.announcement-current-aside>strong{display:block;font-size:23px;margin-bottom:8px;overflow-wrap:anywhere}
+.announcement-current-aside>p{font-size:13px;line-height:1.9;color:var(--reading-muted);margin:14px 0;overflow-wrap:anywhere}
+.announcement-current-aside .text-link{font-size:13px;white-space:normal;min-height:42px}
+.announcement-revised{font-size:12px;color:var(--reading-muted);margin:24px 0}
+.version-history .version-history-eyebrow{display:none}
+.version-history .version-history-heading h2{font-size:22px}
+.version-history .version-history-count,.version-history .version-history-context>span,.version-history .release-timeline-date time,.version-history .version-history-note{font-size:12px}
+.version-history .version-history-intro{font-size:14px;line-height:1.9}
+.version-history .release-timeline-date>span,.version-history .release-timeline-from,.version-history .announcement-demo-label,.version-history .history-recorded-label,.version-history .history-viewing-label,.version-history .release-timeline-footer .status-badge{font-size:11px}
+.version-history .release-timeline-title{font-size:15px;line-height:1.85}
+.version-history .release-timeline-changes,.version-history .release-timeline-summary{font-size:13px;line-height:1.9}
+.version-history .release-timeline-top h3{font-size:20px}
+.version-history .release-timeline-footer .text-link,.version-history .version-history-pagination .button{font-size:13px;min-height:44px}
+.version-history .version-history-empty strong{font-size:15px}.version-history .version-history-empty p{font-size:13px}
+.status-badge.hold{color:#596470}.status-badge.optional{color:#8b590f}
+#software-announcements,#software-about,#official-sources,#announcement-content{scroll-margin-top:24px}
+@media(max-width:1050px){.announcement-quick-actions{align-items:flex-start;flex-direction:column;gap:16px}.software-workspace .detail-layout{gap:28px;grid-template-columns:minmax(0,1fr) 250px}.bulletin-workspace .announcement-filters select{max-width:175px}.bulletin-entry-actions .button{font-size:13px;padding:10px 13px}}
+@media(max-width:767px){.software-current{grid-template-columns:1fr;gap:19px;padding:22px}.software-current-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-start}.software-current-actions>.text-link{padding:0 6px}.software-workspace .detail-layout{display:flex;flex-direction:column;gap:20px}.software-workspace .detail-aside{order:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.software-workspace .detail-hero>.button{margin-left:auto}.bulletin-workspace .bulletin-intro{gap:20px;align-items:flex-start}.bulletin-entry-actions{justify-content:flex-end}.announcement-workspace .announcement-detail-aside{display:grid;grid-template-columns:1fr 1fr}.announcement-workspace .announcement-article-layout{gap:28px}.version-history .release-timeline-date{padding-top:7px}}
+@media(max-width:540px){.bulletin-workspace{padding-top:24px}.bulletin-workspace .bulletin-intro{display:block;padding:0 0 22px;margin-bottom:0}.bulletin-workspace .bulletin-heading h1{font-size:28px;margin:0 0 9px}.bulletin-workspace .bulletin-heading>p:last-child{font-size:14px;max-width:none}.bulletin-entry-actions{justify-content:flex-start;margin-top:17px;gap:10px}.bulletin-entry-actions .button{flex:1;min-height:46px;font-size:13px}.bulletin-workspace .bulletin-search input{font-size:13px}.bulletin-workspace .bulletin-search button{font-size:13px;padding:9px 12px}.bulletin-workspace .announcement-tabs{gap:0;justify-content:space-between;width:100%}.bulletin-workspace .announcement-tabs>a{font-size:13px;padding:13px 2px;min-height:46px}.bulletin-workspace .announcement-filters{gap:10px 8px;padding:15px 0}.bulletin-workspace .announcement-filters>label:not(.history-filter){flex:1;display:block;min-width:0}.bulletin-workspace .announcement-filters label>span{display:block;margin-bottom:5px;font-size:12px}.bulletin-workspace .announcement-filters select,.bulletin-workspace .announcement-filters label:first-of-type select{max-width:100%;width:100%;font-size:13px;height:44px;padding-right:5px}.bulletin-workspace .announcement-filters button{align-self:flex-start;margin-top:25px;padding:8px 12px;min-height:44px}.bulletin-workspace .history-filter{width:100%;min-height:38px}.bulletin-workspace .history-filter>span{margin:0}.bulletin-workspace .clear-notices{margin-left:0;font-size:12px}.selected-software-context{display:block;padding:13px 15px}.selected-software-context .text-link{margin-top:6px}.announcement-results-heading{font-size:12px}.bulletin-workspace .demo-notices-note{font-size:12px;padding:10px 12px}.announcement-card{gap:11px;padding:24px 0}.announcement-card .announcement-symbol{display:none}.announcement-card .announcement-body h2{font-size:18px;line-height:1.75;margin-bottom:10px}.announcement-card .announcement-summary{font-size:14px;-webkit-line-clamp:3}.announcement-card .announcement-action{padding:12px 14px}.announcement-card .announcement-action>p{font-size:13px}.announcement-card .announcement-action>span{font-size:12px;margin-bottom:5px}.announcement-card .announcement-source,.announcement-card .announcement-version,.announcement-card .announcement-bottom time{font-size:12px}.announcement-card .read-announcement{font-size:13px;min-height:44px}.software-workspace .detail-hero{gap:13px}.software-workspace .detail-hero h1{font-size:25px}.software-workspace .detail-hero p{font-size:14px}.software-workspace .detail-hero>.button{margin-left:0;min-height:44px}.software-workspace .notice-demo p,.announcement-workspace .notice-demo p{font-size:12px}.software-current{padding:19px;gap:17px;border-radius:10px}.software-current-version>strong{font-size:26px}.software-current-main>p{font-size:14px;line-height:1.9}.software-current-actions{display:flex;flex-direction:column;gap:9px}.software-current-actions>.button{width:100%;font-size:14px;min-height:46px}.software-current-actions>.text-link{font-size:13px;align-self:flex-start}.detail-section-nav{gap:0;justify-content:space-between;margin:22px 0 27px;flex-wrap:nowrap}.detail-section-nav>a{font-size:13px;min-height:50px}.software-workspace .detail-aside{display:block}.software-workspace .software-announcement-row strong{font-size:14px}.software-workspace .content-section p{font-size:14px}.announcement-workspace .announcement-detail-heading h1{font-size:25px;line-height:1.6}.announcement-workspace .announcement-detail-heading>p{font-size:14px;line-height:1.9}.announcement-workspace .announcement-byline{font-size:12px}.announcement-workspace .announcement-meta>span{font-size:11px}.historical-reading-notice{padding:17px 16px;gap:10px}.historical-reading-notice strong{font-size:15px}.historical-reading-notice p{font-size:13px}.announcement-quick-actions{gap:15px}.announcement-quick-actions>div{width:100%;gap:9px}.announcement-quick-actions .button{font-size:12px;min-height:44px}.announcement-quick-actions .quick-official{width:100%;font-size:14px}.announcement-workspace .announcement-decision{padding:20px}.announcement-workspace .announcement-decision>p,.announcement-workspace .announcement-impact>p{font-size:14px}.announcement-workspace .announcement-article .content-section p,.announcement-workspace .announcement-changes{font-size:14px}.announcement-workspace .content-section h2{font-size:20px}.announcement-workspace .announcement-detail-aside{display:flex}.version-history .version-history-count{font-size:11px}.version-history .version-history-heading h2{font-size:21px}.version-history .version-history-intro{font-size:13px}.version-history .release-timeline-item{column-gap:11px;row-gap:9px}.version-history .release-timeline-date{padding-top:0}.version-history .release-timeline-date time{font-size:12px}.version-history .release-timeline-top h3{font-size:19px}.version-history .release-timeline-title{font-size:14px}.version-history .release-timeline-changes,.version-history .release-timeline-summary{font-size:13px}.version-history .release-timeline-footer{gap:5px}.version-history .release-timeline-footer .text-link{font-size:12px}.version-history .version-history-pagination{gap:8px}.version-history .version-history-pagination .button{font-size:12px;min-height:44px}}

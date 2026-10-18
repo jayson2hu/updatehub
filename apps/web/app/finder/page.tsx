@@ -1,0 +1,28 @@
+import Link from 'next/link';
+import { ArrowRight, ArrowLeft, Search, SearchX, Compass } from 'lucide-react';
+import { api } from '@/lib/server-api';
+import { param, type QueryParams } from '@/lib/public-content';
+import type { Category, Paginated, Software } from '@/lib/types';
+import { SoftwareIcon } from '@/components/software-icon';
+import { FollowButton } from '@/components/follow-button';
+import { SearchTracker } from '@/components/search-tracker';
+import { platformNames } from '@/lib/format';
+export const metadata = { title: '帮我找软件', description: '通过用途、系统、软件别名和记得的线索找到软件及官方入口。', alternates: { canonical: '/finder' } };
+export default async function Finder({ searchParams }: { searchParams: Promise<QueryParams> }) {
+  const p = await searchParams;
+  const q = param(p.q).slice(0, 160), category = param(p.category).slice(0, 100), platform = Object.hasOwn(platformNames, param(p.platform)) ? param(p.platform) : '';
+  const query = new URLSearchParams({ page_size: '12' });
+  if (q) query.set('q', q); if (category) query.set('category', category); if (platform) query.set('platform', platform);
+  const requested = Number(param(p.page)); query.set('page', String(Number.isSafeInteger(requested) && requested > 0 && requested <= 10000 ? requested : 1));
+  const active = Boolean(q || category || platform);
+  const [categories, initial] = await Promise.all([api<Category[]>('/categories'), active ? api<Paginated<Software>>(`/finder?${query}`) : Promise.resolve(null)]);
+  let data = initial;
+  if (data && data.page > Math.max(1, Math.ceil(data.total / data.page_size))) { query.set('page', String(Math.max(1, Math.ceil(data.total / data.page_size)))); data = await api<Paginated<Software>>(`/finder?${query}`); }
+  const href = (key: string, value: string) => { const next = new URLSearchParams(query); next.delete('page_size'); if (key !== 'page') next.delete('page'); if (value) next.set(key, value); else next.delete(key); return `/finder?${next}#finder-results`; };
+  return <div className="page-container help-page finder-page"><header className="help-heading"><h1>记得用途，也能找到软件</h1><p>说说你想完成什么，或者输入名称、别名和你记得的线索。</p></header>
+    <form action="/finder#finder-results" role="search" className="finder-form"><div className="help-search"><Search size={21}/><label className="sr-only" htmlFor="finder-q">描述用途或软件线索</label><input key={q} id="finder-q" name="q" type="search" placeholder="例如：我想写代码、录屏、蓝色代码编辑器" defaultValue={q} maxLength={160}/><button className="button button-primary">帮我找</button></div><div className="content-filter-options"><label>使用系统<select key={platform} name="platform" defaultValue={platform}><option value="">全部系统 / 不确定</option>{Object.entries(platformNames).map(([key, name]) => <option key={key} value={key}>{name}</option>)}</select></label><label>用途分类<select key={category} name="category" defaultValue={category}><option value="">全部用途</option>{categories.map(item => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label><button className="button button-secondary">按条件查找</button>{active && <Link href="/finder" className="text-link">重新选择</Link>}</div></form>
+    {!active && <div className="finder-start"><section><h2>从用途开始</h2><div className="finder-purposes">{categories.map(item => <Link key={item.id} href={href('category', item.slug)}><Compass size={19}/><span>{item.name}</span><ArrowRight size={17}/></Link>)}</div></section><aside><h2>还不知道从哪开始？</h2><p>选择你的系统与使用场景，建立一份适合自己的软件关注清单。</p><Link href="/start" className="button button-primary">新手开始<ArrowRight size={17}/></Link><Link href="/collections" className="text-link">查看场景合集</Link></aside></div>}
+    {data && <section id="finder-results" className="finder-results"><SearchTracker query={q} total={data.total} scope="software"/><div className="section-heading"><div><h2>{data.total ? `找到 ${data.total} 款软件` : '暂时没有找到匹配的软件'}</h2><p>{q ? `线索：“${q}”` : '根据你选择的系统和用途筛选'}。匹配来自已收录的软件资料。</p></div></div>{data.items.length ? <div className="finder-result-list">{data.items.map(item => <article key={item.id} className="finder-result"><SoftwareIcon name={item.name} src={item.icon_url} size={48}/><div><h3><Link href={`/software/${item.slug}`}>{item.name}</Link></h3><p>{item.summary}</p><div className="finder-match-reason"><span>{item.category?.name}</span>{item.purposes.map(purpose => <span key={purpose}>{purpose}</span>)}</div><small>{item.platforms.map(value => platformNames[value] || value).join(' / ')}{item.is_demo && ' · 示例资料'}</small><div className="finder-result-actions"><Link className="button button-primary" href={`/software/${item.slug}`}>查看软件与官方入口<ArrowRight size={16}/></Link><FollowButton id={item.id} name={item.name}/></div></div></article>)}</div> : <div className="empty-state"><SearchX size={36}/><p>试试只保留一个用途，例如“录屏”“笔记”或“写代码”；也可以清除系统和分类条件。</p><div className="button-row"><Link href={q ? `/finder?q=${encodeURIComponent(q)}` : '/finder'} className="button button-secondary">清除系统与分类条件</Link><Link href="/software" className="button button-primary">浏览全部软件</Link></div></div>}{data.total > data.page_size && <nav className="pagination" aria-label="查找结果分页">{data.page > 1 && <Link href={href('page', String(data.page - 1))} className="button button-secondary"><ArrowLeft size={16}/>上一页</Link>}<span>第 {data.page} / {Math.ceil(data.total / data.page_size)} 页</span>{data.page * data.page_size < data.total && <Link href={href('page', String(data.page + 1))} className="button button-secondary">下一页<ArrowRight size={16}/></Link>}</nav>}</section>}
+    <div className="help-bottom-note"><strong>找到软件后，先看版本和更新建议</strong><p>软件档案包含官方入口与历史公告。需要安装时，请在官方页面确认系统与设备架构。</p></div>
+  </div>;
+}

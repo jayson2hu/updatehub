@@ -1,0 +1,1 @@
+Component({properties:{name:{type:String,value:'软件'},color:{type:String,value:'#35664a'},src:{type:String,value:''},large:{type:Boolean,value:false}},data:{failed:false,initials:'软'},observers:{name(value){this.setData({initials:(value || '软件').slice(0,2)});},src(){this.setData({failed:false});}},methods:{onError(){this.setData({failed:true});}}});

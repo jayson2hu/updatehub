@@ -1,0 +1,32 @@
+const { getConfig } = require('../config');
+const platforms = [{ id: 'android', label: '安卓', name: '安卓手机' }, { id: 'ios', label: '苹果', name: '苹果手机' }, { id: 'tv', label: '电视', name: '安卓电视' }, { id: 'desktop', label: '电脑', name: '电脑' }];
+const names = platforms.reduce((result, p) => { result[p.id] = p.name; return result; }, {});
+const labels = platforms.reduce((result, p) => { result[p.id] = p.label; return result; }, {});
+const categories = { group: '群公告', usage: '使用提醒', maintenance: '维护通知' };
+const statusText = { normal: '正常使用', attention: '需要注意', unavailable: '暂时无法使用' };
+function date(value) { if (!value)
+    return '尚未发布'; const timestamp = new Date(value).getTime(); if (!Number.isFinite(timestamp))
+    return '日期待确认'; const d = new Date(timestamp + 8 * 3600000); return `${d.getUTCFullYear()}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${String(d.getUTCDate()).padStart(2, '0')}`; }
+function ended(n, now = Date.now()) { return Boolean(n.expired || (n.expires_at && new Date(n.expires_at).getTime() <= now)); }
+function safeUrl(value) { if (typeof value !== 'string' || !/^https?:\/\//i.test(value) || /[\s<>"\x00-\x1f]/.test(value))
+    return ''; try {
+    const after = value.replace(/^https?:\/\//i, '');
+    if (!after.split('/')[0] || after.split('/')[0].includes('@'))
+        return '';
+}
+catch (_) {
+    return '';
+} return value; }
+function asset(src) { if (!src)
+    return ''; if (safeUrl(src))
+    return src; if (!src.startsWith('/'))
+    return ''; return getConfig().apiBase.replace(/\/api\/v1\/?$/, '') + src; }
+function appItem(s) { return Object.assign(Object.assign({}, s), { icon: asset(s.icon_url), devices: s.platforms.map(p => labels[p]).join(' / '), statusText: statusText[s.status] || statusText.normal }); }
+function releaseState(s, r) { const status = s.status === 'unavailable' || (r === null || r === void 0 ? void 0 : r.status) === 'unavailable' ? 'unavailable' : s.status === 'attention' || (r === null || r === void 0 ? void 0 : r.status) === 'attention' ? 'attention' : 'normal'; return { status, statusText: statusText[status], reason: s.status === status ? s.status_reason : (r === null || r === void 0 ? void 0 : r.status_reason) || '' }; }
+function releaseItem(r, s) { return Object.assign(Object.assign(Object.assign({}, r), { software: s, name: s.name, slug: s.slug, icon: asset(s.icon_url), color: s.color, platformName: names[r.platform], date: date(r.published_at) }), releaseState(s, r)); }
+function announcement(n) { return Object.assign(Object.assign({}, n), { date: date(n.published_at), categoryText: categories[n.category] || '群公告', ended: ended(n), activePinned: n.pinned && !ended(n), paragraphs: (n.body || '').split('\n').filter(Boolean), images: (n.images || []).map(asset), links: (n.links || []).filter(l => safeUrl(l.url)) }); }
+function pinned(data) { return data.announcements.map(announcement).filter(n => n.activePinned).sort((a, b) => ({ urgent: 3, important: 2, normal: 1 }[b.importance] || 0) - ({ urgent: 3, important: 2, normal: 1 }[a.importance] || 0))[0] || null; }
+function filterContent(data, query, platform) { const term = (query || '').trim().toLowerCase(); const software = data.software.filter(s => s.published !== false && (!term || [s.name, ...(s.aliases || [])].some(n => n.toLowerCase().includes(term))) && (platform === 'all' || s.platforms.includes(platform))).map(appItem); let previous = ''; const releases = data.releases.filter(r => r.published !== false && software.some(s => s.id === r.software_id) && (platform === 'all' || r.platform === platform)).sort((a, b) => (b.published_at || '').localeCompare(a.published_at || '')).map(r => { const item = releaseItem(r, software.find(s => s.id === r.software_id)); item.groupStart = item.date !== previous; previous = item.date; return item; }); return { software, releases }; }
+function detailRoute(slug, platform, release) { return '/pages/detail/index?slug=' + encodeURIComponent(slug) + (platform ? '&platform=' + encodeURIComponent(platform) : '') + (release ? '&release=' + encodeURIComponent(release) : ''); }
+function webLink(path) { return getConfig().websiteBase.replace(/\/$/, '') + path; }
+module.exports = { platforms, names, labels, date, ended, safeUrl, asset, appItem, releaseItem, releaseState, announcement, pinned, filterContent, detailRoute, webLink };

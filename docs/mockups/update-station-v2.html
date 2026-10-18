@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>更新小站 v2 · 群通知到下载的完整流程</title>
+<style>
+:root{
+  --bg:#F5F7FB;--card:#fff;--ink:#18243B;--ink2:#626D80;--line:#E3E9F2;
+  --brand:#245BDD;--brand-soft:#EAF0FF;--ok:#17794B;--ok-soft:#E6F6EE;
+  --warn:#9A4A00;--warn-soft:#FFF1DE;--bad:#B3261E;--bad-soft:#FDEBEA;
+  --xhs:#FF2442;--r:14px;
+}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#E4E9F2}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--brand);text-decoration:none}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace}
+:focus-visible{outline:3px solid #7aa2ff;outline-offset:2px}
+
+/* ---------- 页面框架 ---------- */
+.intro{max-width:1240px;margin:0 auto;padding:28px 20px 8px}
+.intro h1{font-size:26px;line-height:1.3}
+.intro p{color:var(--ink2);margin-top:6px;max-width:780px}
+.board{max-width:1240px;margin:0 auto;padding:16px 20px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:28px 24px}
+.step h2{font-size:16px;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.step h2 i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px}
+.step>p{font-size:13px;color:var(--ink2);margin:0 0 10px 34px;min-height:42px}
+.phone{width:360px;height:740px;margin:0 auto;border:9px solid #18202E;border-radius:34px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 16px 40px rgba(20,30,60,.22)}
+.phone.flash{animation:flash 1s}
+@keyframes flash{0%,100%{box-shadow:0 16px 40px rgba(20,30,60,.22)}40%{box-shadow:0 0 0 6px #7aa2ff}}
+.scroll{flex:1;overflow-y:auto}
+.statusbar{height:26px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:12px;font-weight:600;background:inherit}
+.desk{width:100%;max-width:560px;height:740px;margin:0 auto;border-radius:12px;border:1px solid #c9d1df;background:#fff;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 40px rgba(20,30,60,.16)}
+@media(max-width:420px){.phone{width:100%;border-width:6px}}
+
+/* ---------- 通用组件 ---------- */
+.ico{flex:none;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:20px}
+.btn{min-height:46px;padding:0 16px;border-radius:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.p{background:var(--brand);color:#fff}
+.btn.s{background:var(--brand-soft);color:var(--brand)}
+.btn.g{border:1px solid var(--line);background:#fff}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px;border-radius:9px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:0 7px;line-height:20px}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.b{background:var(--brand-soft);color:var(--brand)}
+.tag.gray{background:#EEF1F6;color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.sec{margin:12px 14px}
+.sec h3{font-size:15px;margin-bottom:8px}
+.muted{color:var(--ink2)}
+.small{font-size:13px}
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);background:#18243B;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- ① 小红书群聊 ---------- */
+.xhs-top{height:48px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:600;border-bottom:1px solid #eee;background:#fff;position:relative}
+.xhs-top small{position:absolute;left:14px;font-size:20px}
+.chatbody{background:#F7F7F7;padding:12px}
+.msg{display:flex;gap:8px;margin-bottom:14px}
+.av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700}
+.bubble{background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:14px;max-width:250px;white-space:pre-line;word-break:break-all}
+.bubble a{color:#2F6FED;text-decoration:underline}
+.who{font-size:12px;color:#999;margin-bottom:2px}
+.time{text-align:center;font-size:12px;color:#aaa;margin:6px 0 12px}
+.chat-input{flex:none;height:52px;border-top:1px solid #eee;background:#fff;display:flex;align-items:center;padding:0 12px;gap:8px}
+.chat-input span{flex:1;height:36px;border-radius:18px;background:#F2F2F2}
+
+/* ---------- ② 小红书内置浏览器 ---------- */
+.inapp-top{height:46px;flex:none;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;padding:0 12px;gap:10px;font-size:14px}
+.inapp-top b{flex:1;text-align:center;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dots{font-size:22px;letter-spacing:1px;padding:0 4px;position:relative}
+.dots.pulse:after{content:"";position:absolute;inset:-6px -4px;border:3px solid var(--xhs);border-radius:10px;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.guide{position:absolute;inset:0;background:rgba(10,15,30,.72);z-index:5;display:flex;flex-direction:column;align-items:flex-end;padding:56px 14px 0;color:#fff}
+.guide .arrow{font-size:40px;line-height:1;margin-right:6px}
+.guide .gbox{background:#fff;color:var(--ink);border-radius:16px;padding:16px;margin-top:8px;width:100%}
+.guide ol{padding-left:20px;margin:6px 0 12px}
+.guide li{margin:4px 0}
+.inapp-banner{background:var(--warn-soft);color:var(--warn);font-size:13px;padding:10px 14px;display:flex;gap:10px;align-items:center}
+.inapp-banner b{color:#6b3400}
+
+/* ---------- ③ 更新页（核心） ---------- */
+.site-top{height:48px;flex:none;display:flex;align-items:center;gap:8px;padding:0 14px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#245BDD,#5A8CFF);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700}
+.site-top b{flex:1}
+.urlbar{flex:none;height:38px;background:#F0F2F5;margin:6px 10px;border-radius:10px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#555;gap:6px}
+.head{display:flex;gap:12px;align-items:center;padding:16px 14px 4px}
+.head .ico{width:56px;height:56px;font-size:24px;border-radius:14px}
+.head h1{font-size:20px;line-height:1.25}
+.verdict{border-radius:12px;padding:12px 14px;margin:12px 14px 0;display:flex;gap:10px}
+.verdict.ok{background:var(--ok-soft);color:#0f5534}
+.verdict.warn{background:var(--warn-soft);color:#6b3400}
+.verdict.bad{background:var(--bad-soft);color:#7d1b15}
+.verdict .big{font-size:22px;line-height:1.2}
+.verdict b{display:block;font-size:16px}
+.devs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.dev{min-height:56px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25;position:relative}
+.dev span{font-size:18px}
+.dev[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:700}
+.dev em{position:absolute;top:-8px;right:-4px;font-style:normal;font-size:10px;background:var(--brand);color:#fff;border-radius:6px;padding:0 5px;line-height:16px}
+.dl{margin-top:10px}
+.backup{display:flex;align-items:center;gap:8px;border:1px dashed #C8D2E2;border-radius:12px;padding:10px 12px;margin-top:10px}
+.backup .t{flex:1;min-width:0;font-size:13px}
+.backup .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.code{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:var(--ink);letter-spacing:1px}
+.safe{font-size:12px;color:var(--ink2);margin-top:8px;display:flex;gap:6px}
+.ad{border:1px solid var(--line);border-radius:var(--r);background:#fff;overflow:hidden;position:relative}
+.ad .lbl{position:absolute;top:8px;left:8px;font-size:11px;background:rgba(0,0,0,.55);color:#fff;border-radius:4px;padding:0 6px}
+.ad .img{height:96px;background:linear-gradient(120deg,#FDE68A,#FCA5A5);display:grid;place-items:center;font-weight:700;color:#7a3b00}
+.ad .txt{padding:8px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.ad .x{position:absolute;top:6px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;font-size:13px}
+.changes{padding-left:20px}
+.changes li{margin:3px 0}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;display:flex;gap:10px;margin:8px 0}
+.steps li:before{content:counter(s);flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-size:12px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+details{border-top:1px solid var(--line)}
+details:first-of-type{border-top:0}
+summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600;list-style:none;justify-content:space-between}
+summary:after{content:"+";color:var(--ink2);font-size:18px}
+details[open] summary:after{content:"−"}
+details p{font-size:14px;color:var(--ink2);padding-bottom:10px}
+.hist{font-size:13px}
+.hist div{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line)}
+.hist div:first-child{border-top:0}
+.footer{text-align:center;font-size:12px;color:var(--ink2);padding:16px 14px 90px}
+.sticky{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 12px 14px;display:flex;gap:8px;z-index:3}
+.sticky .btn{flex:1}
+
+/* ---------- ④ 首页 ---------- */
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 12px;min-height:44px}
+.search input{flex:1;border:0;outline:0;background:none;min-width:0}
+.pin{display:flex;gap:10px;background:#FFF7E7;border:1px solid #F2DDAE;border-radius:12px;padding:10px 12px;font-size:14px}
+.pin b{display:block}
+.day{font-size:12px;font-weight:700;color:var(--ink2);margin:14px 0 6px}
+.item{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;width:100%;text-align:left}
+.item .ico{width:42px;height:42px;font-size:17px;border-radius:11px}
+.item .m{flex:1;min-width:0}
+.item .m div{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line);background:#fff}
+.tabs button{min-height:54px;font-size:12px;color:var(--ink2)}
+.tabs button.on{color:var(--brand);font-weight:700}
+
+/* ---------- ⑤ 后台 ---------- */
+.admin-top{flex:none;height:46px;background:#18243B;color:#fff;display:flex;align-items:center;padding:0 16px;gap:10px;font-size:14px}
+.admin-top b{flex:1}
+.form{padding:14px 16px;overflow-y:auto;flex:1}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff;outline:0}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.field textarea{resize:vertical;min-height:58px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.linkrow{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:center;margin-bottom:6px;font-size:13px}
+.radios{display:flex;gap:6px;flex-wrap:wrap}
+.radios label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:400;cursor:pointer;font-size:13px;margin:0}
+.radios input{width:auto}
+.notice{background:#F7F8FA;border:1px solid var(--line);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13px;min-height:120px}
+.actions{flex:none;border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;justify-content:flex-end;background:#fff}
+
+.legend{max-width:1240px;margin:0 auto;padding:0 20px 40px}
+.legend .card{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px 24px}
+.legend h3{font-size:15px;margin-bottom:4px}
+.legend p,.legend li{font-size:13px;color:var(--ink2)}
+.legend ul{padding-left:18px}
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>更新小站 v2：从群通知到下载</h1>
+  <p>群主在后台发布一次 → 生成群通知 → 群友在小红书里点链接 → 打开浏览器 → 选自己的设备 → 官方下载（网盘备用）。下面 5 个画面都可以点击操作。示例软件和链接都是虚构的。</p>
+</header>
+
+<main class="board">
+
+  <!-- ① 群聊 -->
+  <section class="step">
+    <h2><i>1</i>群里收到通知</h2>
+    <p>群主粘贴后台生成的文案，链接直达这一条更新，不跳到首页。<b>点蓝色链接试试。</b></p>
+    <div class="phone" style="background:#fff">
+      <div class="statusbar">9:41<span>●●● 5G</span></div>
+      <div class="xhs-top"><small>‹</small>软件更新交流群 (286)</div>
+      <div class="scroll chatbody" id="chat"></div>
+      <div class="chat-input"><span></span>😊 ⊕</div>
+    </div>
+  </section>
+
+  <!-- ② 小红书内打开 -->
+  <section class="step">
+    <h2><i>2</i>在小红书里打开</h2>
+    <p>小红书内置浏览器通常不能直接下载。页面识别后在顶部提示，点下载按钮时弹出图示引导，并提供“复制链接”。</p>
+    <div class="phone" id="p2">
+      <div class="statusbar" style="background:#fff">9:41<span>●●● 5G</span></div>
+      <div class="inapp-top"><span>✕</span><b>光幕影视 3.2.1 已更新 · 更新小站</b><span class="dots pulse" id="dots">···</span></div>
+      <div class="inapp-banner"><span style="font-size:18px">⚠</span><div><b>当前在小红书里，无法直接下载</b><br>点右上角「···」→「在浏览器打开」</div><button class="btn sm g" onclick="copyLink()">复制链接</button></div>
+      <div class="scroll" style="position:relative">
+        <div class="head"><div class="ico" style="background:#E5484D">光</div><div><h1>光幕影视 3.2.1</h1><span class="muted small">10月16日更新 · 安卓手机</span></div></div>
+        <div class="verdict ok"><span class="big">✓</span><div><b>建议更新</b><span class="small">修复了播放卡顿，旧版也还能用。</span></div></div>
+        <div class="sec"><button class="btn p block" onclick="showGuide()">官方下载 安卓版</button></div>
+        <div class="sec muted small">……页面其余内容与第 3 步相同</div>
+      </div>
+      <div class="guide" id="guide" hidden>
+        <div class="arrow">⤴</div>
+        <div class="gbox">
+          <b style="font-size:16px">请在浏览器中打开后下载</b>
+          <ol><li>点右上角 <b>···</b></li><li>选择 <b>在浏览器打开</b></li><li>在浏览器里再点「官方下载」</li></ol>
+          <p class="small muted" style="margin-bottom:10px">找不到这个选项？复制链接，粘贴到手机自带浏览器。</p>
+          <div style="display:flex;gap:8px"><button class="btn s" style="flex:1" onclick="copyLink()">复制链接</button><button class="btn g" style="flex:1" onclick="hideGuide()">知道了</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 浏览器里的更新页 -->
+  <section class="step">
+    <h2><i>3</i>浏览器里：选设备、下载</h2>
+    <p>核心页面。按顺序回答：<b>要不要更新 → 我的设备 → 下载 → 怎么装 → 遇到问题</b>。切换设备时下载地址和教程一起变。</p>
+    <div class="phone" id="p3">
+      <div class="statusbar">9:41<span>●●● 5G</span></div>
+      <div class="urlbar">🔒 gengxin.example/u/guangmu-321</div>
+      <div class="scroll" id="page" style="position:relative"></div>
+      <div class="sticky" id="sticky"></div>
+    </div>
+  </section>
+
+  <!-- ④ 首页 -->
+  <section class="step">
+    <h2><i>4</i>之前的链接找不到时</h2>
+    <p>首页按日期列出所有更新，可以搜索。群友不用翻聊天记录，也不用在群里问。</p>
+    <div class="phone">
+      <div class="statusbar">9:41<span>●●● 5G</span></div>
+      <div class="site-top"><span class="logo">更</span><b>更新小站</b><span class="small muted">共 6 款软件</span></div>
+      <div class="scroll" style="padding:12px 14px">
+        <div class="pin"><span>📌</span><div><b>云盘助手 4.1.0 登录异常，先别升级</b><span class="small" style="color:#7a5200">已升级的用户请先用网页版，修复后群里会再通知。</span></div></div>
+        <label class="search" style="margin-top:12px"><span>🔍</span><input id="q" placeholder="搜软件名，如“光幕”" oninput="renderHome()"></label>
+        <div id="home"></div>
+      </div>
+      <div class="tabs"><button class="on">🏠<br>最新更新</button><button>📢<br>群公告</button></div>
+    </div>
+  </section>
+
+  <!-- ⑤ 后台 -->
+  <section class="step" style="grid-column:span 2">
+    <h2><i>5</i>群主后台：发布一次，生成群通知</h2>
+    <p>填写版本、更新建议和各设备的官方链接（网盘作为备用）。右侧的群通知文案会实时生成，复制后直接粘贴到群里，就是第 1 步看到的那条消息。</p>
+    <div class="desk" style="max-width:none">
+      <div class="admin-top"><span class="logo">更</span><b>后台 · 发布更新</b><span class="small" style="opacity:.7">群主</span></div>
+      <div style="flex:1;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-height:0">
+        <div class="form">
+          <div class="grid2">
+            <div class="field"><label>软件</label><select id="f-soft" oninput="renderNotice()"><option>光幕影视</option><option>云盘助手</option><option>墨记笔记</option></select></div>
+            <div class="field"><label>新版本号</label><input id="f-ver" value="3.2.1" oninput="renderNotice()"></div>
+          </div>
+          <div class="field"><label>更新建议</label>
+            <div class="radios" id="f-adv">
+              <label><input type="radio" name="adv" value="ok" checked onchange="renderNotice()">建议更新</label>
+              <label><input type="radio" name="adv" value="warn" onchange="renderNotice()">可以等等</label>
+              <label><input type="radio" name="adv" value="bad" onchange="renderNotice()">先别更新</label>
+            </div>
+          </div>
+          <div class="field"><label>一句话说明（会出现在群通知里）</label><input id="f-sum" value="修复了播放卡顿，新增倍速播放" oninput="renderNotice()"></div>
+          <div class="field"><label>更新内容（每行一条）</label><textarea id="f-notes">修复部分机型播放卡顿
+新增 0.5x–2x 倍速播放
+电视版优化遥控器操作</textarea></div>
+          <div class="field"><label>各设备下载链接　<span class="muted" style="font-weight:400">官方链接必填，网盘选填</span></label>
+            <div class="linkrow"><span>📱 安卓</span><input value="https://guangmu.example/android"></div>
+            <div class="linkrow"><span>🍎 苹果</span><input value="https://apps.apple.com/app/xxx"></div>
+            <div class="linkrow"><span>📺 电视</span><input value="https://guangmu.example/tv"></div>
+            <div class="linkrow"><span>💻 电脑</span><input placeholder="这次没有电脑版，留空则不显示"></div>
+            <div class="linkrow"><span class="muted">网盘备用</span><input value="https://pan.example.com/s/1aBcD   提取码 k3m9"></div>
+          </div>
+        </div>
+        <div class="form" style="background:#FAFBFD;border-left:1px solid var(--line)">
+          <div class="field"><label>群通知预览</label><div class="notice" id="notice"></div></div>
+          <button class="btn p block" onclick="copyNotice()">📋 复制群通知</button>
+          <p class="small muted" style="margin-top:10px">链接固定为 <span class="mono">/u/软件-版本</span>，以后在群里发过的链接都不会失效。</p>
+          <div class="field" style="margin-top:14px"><label>发布前检查</label>
+            <div class="small" id="checks"></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions"><button class="btn g">保存草稿</button><button class="btn s">预览页面</button><button class="btn p" onclick="toast('示例：已发布，首页和更新页同步更新')">确认发布</button></div>
+    </div>
+  </section>
+</main>
+
+<section class="legend">
+  <div class="card">
+    <div><h3>这一版解决的问题</h3><ul><li>链接被聊天刷走 → 每条更新一个固定链接，首页可以查到全部</li><li>不知道要不要更新 → 页面最上面直接给出“建议更新 / 可以等等 / 先别更新”</li><li>设备该下哪个 → 自动识别设备，可以手动切换</li><li>小红书里点了没反应 → 识别后引导“在浏览器打开”</li><li>反复答疑 → 每款软件附安装教程和常见问题</li></ul></div>
+    <div><h3>下载规则</h3><ul><li>主按钮只放官方链接（官网 / 应用商店）</li><li>网盘只作为“备用”，放在虚线框里，带提取码一键复制</li><li>本站不存放安装包</li></ul></div>
+    <div><h3>广告规则</h3><ul><li>只出现在下载区之后，标注“广告”，可以关闭</li><li>样式与下载按钮完全不同，不会被误点</li><li>后台有总开关，默认关闭</li></ul></div>
+    <div><h3>这一版不做</h3><ul><li>新人必装清单、帮你找软件</li><li>用户账号、评论</li><li>自动检测新版本（发布仍由群主人工确认）</li></ul></div>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const LINK='https://gengxin.example/u/guangmu-321';
+const DEVICES={
+  android:{n:'安卓手机',i:'📱',btn:'官方下载 安卓版',src:'guangmu.example 官网',size:'apk · 38 MB',
+    steps:['点上方「官方下载」，下载完成后点通知栏打开','提示“禁止安装未知应用”时，点「设置」→ 允许此来源','回到安装界面，点「安装」'],
+    faq:[['提示“解析包出错”','安装包没下完整。删除后用浏览器重新下载，不要在小红书里下载。'],['安装后打开闪退','先卸载旧版再安装；仍然闪退请在群里说一下手机型号。']]},
+  ios:{n:'苹果手机',i:'🍎',btn:'去 App Store 下载',src:'App Store',size:'App Store 直接更新',
+    steps:['点上方按钮，会跳转到 App Store','点「获取」或「更新」','打开后按提示允许网络权限'],
+    faq:[['App Store 搜不到','可能是地区原因，请直接用上方按钮打开。'],['要不要先删除旧版','不需要，直接更新，记录会保留。']]},
+  tv:{n:'电视盒子',i:'📺',btn:'官方下载 电视版',src:'guangmu.example 官网',size:'apk · 26 MB',
+    steps:['在手机上下载电视版安装包','用「当贝助手」或U盘把安装包传到电视','在电视上打开文件管理，点安装包安装'],
+    faq:[['电视提示“禁止安装”','在电视「设置 → 安全」里打开“允许安装未知来源”。'],['遥控器选不中按钮','这是 3.2.0 的问题，升级到 3.2.1 就能解决。']]},
+  pc:{n:'电脑',i:'💻',btn:'',src:'',size:'',steps:[],faq:[]}
+};
+const NOTES=['修复部分机型播放卡顿','新增 0.5x–2x 倍速播放','电视版优化遥控器操作'];
+let dev='android';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+function copy(t,ok){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(ok),()=>toast('复制失败，请长按文字手动复制'))}
+function copyLink(){copy(LINK,'链接已复制，去浏览器粘贴打开')}
+function showGuide(){$('#guide').hidden=false}
+function hideGuide(){$('#guide').hidden=true}
+function flash(id){const p=document.getElementById(id);p.scrollIntoView({behavior:'smooth',block:'center'});p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash')}
+
+/* ① 群聊 */
+function noticeText(){
+  const soft=$('#f-soft')?.value||'光幕影视',ver=$('#f-ver')?.value||'3.2.1',sum=$('#f-sum')?.value||'';
+  const adv=document.querySelector('input[name=adv]:checked')?.value||'ok';
+  const advText={ok:'✅ 建议更新',warn:'⏳ 可以等等，不急',bad:'⛔ 先别更新'}[adv];
+  return `【${soft} ${ver} 更新了】\n${sum}\n${advText}\n\n下载和安装方法 👇\n${LINK}\n（小红书里打不开就点右上角···，选“在浏览器打开”）`;
+}
+function renderChat(){
+  const t=esc(noticeText()).replace(LINK,`<a href="#" onclick="event.preventDefault();flash('p2')">${LINK}</a>`);
+  $('#chat').innerHTML=`<div class="time">昨天 20:15</div>
+  <div class="msg"><div class="av" style="background:#8B5CF6">小</div><div><div class="who">小鹿</div><div class="bubble">之前那个看电视的软件在哪下来着😂</div></div></div>
+  <div class="time">今天 10:02</div>
+  <div class="msg"><div class="av" style="background:#FF2442">群</div><div><div class="who">群主</div><div class="bubble">${t}</div></div></div>
+  <div class="msg"><div class="av" style="background:#0EA5A4">阿</div><div><div class="who">阿杰</div><div class="bubble">收到，电视版也能更新吗</div></div></div>
+  <div class="msg"><div class="av" style="background:#FF2442">群</div><div><div class="who">群主</div><div class="bubble">能，链接里选「电视盒子」，有安装教程</div></div></div>`;
+}
+
+/* ③ 更新页 */
+function renderPage(){
+  const d=DEVICES[dev];
+  let h=`<div class="head"><div class="ico" style="background:#E5484D">光</div><div><h1>光幕影视 3.2.1</h1><span class="muted small">10月16日更新 · 看电视剧电影的播放器</span></div></div>
+  <div class="verdict ok"><span class="big">✓</span><div><b>建议更新</b><span class="small">修复了播放卡顿，旧版也还能用，不着急。</span></div></div>
+  <div class="sec"><h3>你的设备</h3><div class="devs" role="group" aria-label="选择设备">${Object.entries(DEVICES).map(([k,v])=>`<button class="dev" aria-pressed="${k===dev}" onclick="dev='${k}';renderPage()"><span>${v.i}</span>${v.n}${k==='android'?'<em>已识别</em>':''}</button>`).join('')}</div></div>`;
+  if(!d.btn){
+    h+=`<div class="sec card" style="text-align:center"><b>这次没有电脑版更新</b><p class="small muted" style="margin-top:4px">电脑版当前最新是 1.14.2（10月12日），<a href="#" onclick="event.preventDefault();toast('示例：跳到电脑版 1.14.2')">查看电脑版</a></p></div>`;
+  }else{
+    h+=`<div class="sec card dl">
+      <button class="btn p block" onclick="toast('示例：跳转到官方下载页')">⬇ ${d.btn}</button>
+      <div class="safe">✓ 官方来源：${d.src} · ${d.size}</div>
+      <div class="backup"><div class="t"><b>备用：网盘下载</b><div>pan.example.com/s/1aBcD · 提取码 <span class="code">k3m9</span></div></div><button class="btn sm s" onclick="copy('k3m9','提取码已复制')">复制提取码</button></div>
+      <p class="small muted" style="margin-top:8px">官网打不开时再用网盘。</p></div>`;
+  }
+  h+=`<div class="sec ad" id="ad"><span class="lbl">广告</span><button class="x" aria-label="关闭广告" onclick="this.parentNode.remove()">✕</button><div class="img">示例推广位</div><div class="txt"><span>这里展示推广内容</span><span class="muted">了解 ›</span></div></div>`;
+  h+=`<div class="sec card"><h3>这次更新了什么</h3><ul class="changes">${NOTES.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
+  if(d.steps.length)h+=`<div class="sec card"><h3>${d.n}安装教程</h3><ol class="steps">${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>
+    <div class="sec card"><h3>常见问题</h3>${d.faq.map(f=>`<details><summary>${f[0]}</summary><p>${f[1]}</p></details>`).join('')}
+    <details><summary>还是不会？</summary><p>在群里 @群主，说一下手机型号和卡在哪一步。</p></details></div>`;
+  h+=`<div class="sec card"><h3>历史版本</h3><div class="hist"><div><span><b class="mono">3.2.1</b> 当前</span><span class="muted">10月16日</span></div><div><span class="mono">3.2.0</span><span class="muted">9月30日 · <a href="#" onclick="event.preventDefault();toast('示例：打开 3.2.0')">下载旧版</a></span></div><div><span class="mono">3.1.4</span><span class="muted">9月12日 · <a href="#" onclick="event.preventDefault();toast('示例：打开 3.1.4')">下载旧版</a></span></div></div></div>
+  <div class="sec"><button class="btn g block" onclick="flash('home')">查看其他软件的更新 ›</button></div>
+  <div class="footer">本站只整理官方信息，不存放安装包</div>`;
+  $('#page').innerHTML=h;
+  $('#sticky').innerHTML=d.btn?`<button class="btn g" style="flex:0 0 auto" onclick="copyLink()">分享</button><button class="btn p" onclick="toast('示例：跳转到官方下载页')">⬇ ${d.btn}</button>`:`<button class="btn g" onclick="copyLink()">分享这条更新</button>`;
+}
+
+/* ④ 首页 */
+const LIST=[
+  ['10月16日','光幕影视','3.2.1','#E5484D','光','ok','建议更新','修复播放卡顿，新增倍速'],
+  ['10月15日','光幕影视 安卓','5.8.0','#E5484D','光','warn','可以等等','部分机型闪退，等 5.8.1'],
+  ['10月14日','云盘助手','4.1.0','#2F6FED','云','bad','先别更新','登录异常，官方正在修复'],
+  ['10月13日','墨记笔记','6.0.0','#16A34A','墨','ok','建议更新','新增知识图谱，更新前先备份'],
+  ['10月9日','快清','2.2.0','#F59E0B','清','ok','建议更新','新增省电模式'],
+  ['10月5日','听海音乐','7.1.1','#8B5CF6','听','ok','建议更新','修复蓝牙断连'],
+  ['9月25日','截图大师','3.0.4','#0EA5A4','截','gray','可选','修复多屏截图错位']
+];
+function renderHome(){
+  const q=($('#q').value||'').trim();
+  const rows=LIST.filter(r=>!q||r[1].includes(q));
+  if(!rows.length){$('#home').innerHTML=`<p class="muted small" style="text-align:center;padding:30px 0">没找到“${esc(q)}”，换个关键词，或在群里问一下</p>`;return}
+  let h='',last='';
+  rows.forEach(r=>{if(r[0]!==last){last=r[0];h+=`<div class="day">${r[0]}</div>`}
+    h+=`<button class="item" onclick="flash('p3')"><div class="ico" style="background:${r[3]}">${r[4]}</div><div class="m"><b>${r[1]}</b> <span class="mono small muted">${r[2]}</span><div>${r[7]}</div></div><span class="tag ${r[5]}">${r[6]}</span></button>`});
+  $('#home').innerHTML=h;
+}
+
+/* ⑤ 后台 */
+function renderNotice(){
+  $('#notice').textContent=noticeText();
+  const ver=$('#f-ver').value.trim(),sum=$('#f-sum').value.trim();
+  const c=[[!!ver,'已填版本号'],[!!sum,'已填一句话说明'],[true,'安卓 / 苹果 / 电视 官方链接已填'],[true,'电脑版留空，页面会显示“这次没有电脑版”'],[true,'网盘链接带提取码']];
+  $('#checks').innerHTML=c.map(([ok,t])=>`<div style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓':'✕'} ${t}</div>`).join('');
+  renderChat();
+}
+function copyNotice(){copy(noticeText(),'群通知已复制，去群里粘贴')}
+
+renderPage();renderHome();renderNotice();
+</script>
+</body>
+</html>

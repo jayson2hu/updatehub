@@ -1,0 +1,6 @@
+const { safeUrl, asset } = require('../../utils/content');
+Component({ properties: { enabled: Boolean, promotions: { type: Array, value: [] }, placement: { type: String, value: 'home_feed' } }, data: { promotion: null, failed: false }, observers: { 'enabled,promotions,placement'() { this.select(); } }, lifetimes: { detached() { clearTimeout(this._timer); } }, methods: { select() { clearTimeout(this._timer); const now = Date.now(); const items = this.data.promotions || []; const promotion = this.data.enabled ? items.find(p => p.published && p.placements.includes(this.data.placement) && safeUrl(p.target_url) && (!p.starts_at || new Date(p.starts_at).getTime() <= now) && (!p.ends_at || new Date(p.ends_at).getTime() > now)) : null; this.setData({ promotion: promotion ? Object.assign(Object.assign({}, promotion), { cover: asset(promotion.cover_url) }) : null, failed: false }); if (this.data.enabled) {
+            const boundaries = items.reduce((a, p) => a.concat([p.starts_at, p.ends_at]), []).filter(Boolean).map(v => new Date(v).getTime()).filter(t => t > now).sort((a, b) => a - b);
+            if (boundaries[0])
+                this._timer = setTimeout(() => this.select(), Math.min(boundaries[0] - now + 30, 2147483647));
+        } }, onError() { this.setData({ failed: true }); } } });

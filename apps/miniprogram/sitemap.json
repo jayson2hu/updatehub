@@ -1,0 +1,1 @@
+{ "desc": "公开软件和公告详情可被索引", "rules": [{ "action": "allow", "page": "*" }] }

@@ -1,0 +1,7 @@
+{
+  "platform": "wechat",
+  "environment": "develop",
+  "source": "apps/miniprogram",
+  "format": "WXML/WXSS/JavaScript",
+  "officialGuide": "https://developers.weixin.qq.com/miniprogram/dev/framework/"
+}

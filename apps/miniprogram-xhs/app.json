@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/latest/index",
+    "pages/software/index",
+    "pages/announcements/index",
+    "pages/detail/index",
+    "pages/announcement/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "更新小站",
+    "navigationBarBackgroundColor": "#f4f7f3",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f7f3",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#6b7b70",
+    "selectedColor": "#35664a",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/latest/index",
+        "text": "最新",
+        "iconPath": "assets/latest.png",
+        "selectedIconPath": "assets/latest-active.png"
+      },
+      {
+        "pagePath": "pages/software/index",
+        "text": "软件",
+        "iconPath": "assets/software.png",
+        "selectedIconPath": "assets/software-active.png"
+      },
+      {
+        "pagePath": "pages/announcements/index",
+        "text": "公告",
+        "iconPath": "assets/announcements.png",
+        "selectedIconPath": "assets/announcements-active.png"
+      }
+    ]
+  },
+  "usingComponents": {
+    "app-icon": "/components/app-icon/index",
+    "copy-link": "/components/copy-link/index",
+    "page-state": "/components/page-state/index",
+    "ad-slot": "/components/ad-slot/index"
+  }
+}

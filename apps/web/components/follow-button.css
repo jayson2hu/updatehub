@@ -1,0 +1,5 @@
+.follow-feedback{position:fixed;z-index:100;bottom:24px;left:50%;transform:translateX(-50%);width:min(440px,calc(100% - 32px));padding:18px 20px;background:#fff;border:1px solid #aac8bb;border-radius:12px;box-shadow:0 8px 36px #173d3026;color:#243e32}
+.follow-feedback p{font-size:14px;line-height:1.7;margin:0}
+.follow-feedback>div{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:8px}
+.follow-feedback a{display:inline-flex;align-items:center;min-height:44px;color:#126f60;font-size:14px;font-weight:600}
+.follow-feedback button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:8px;background:#edf5f0;color:#345e4b}
