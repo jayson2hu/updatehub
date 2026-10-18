@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
 from app.core.database import build_engine, get_db
-from app.core.security import login_limiter, password_hasher, public_limiter
+from app.core.security import STATION_LIMITERS, login_limiter, password_hasher, public_limiter
 from app.main import app
 from app.models import AdminUser
 
@@ -41,6 +41,8 @@ def client(database):
     app.dependency_overrides[get_db] = override_db
     login_limiter.entries.clear()
     public_limiter.entries.clear()
+    for limiter in STATION_LIMITERS:
+        limiter.entries.clear()
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

@@ -41,10 +41,10 @@ def notice(admin, **overrides):
 
 def test_station_seed_idempotent_fictitious_and_current(client, database):
     with database() as db:
-        assert seed_station(db) == {"software": 6, "releases": 11, "announcements": 4}
+        assert seed_station(db) == {"software": 9, "releases": 17, "announcements": 4}
         assert seed_station(db) == {"software": 0, "releases": 0, "announcements": 0}
     data = client.get(PUBLIC + "/data").json()
-    assert len(data["software"]) == 6 and len(data["releases"]) == 11 and len(data["announcements"]) == 4
+    assert len(data["software"]) == 9 and len(data["releases"]) == 17 and len(data["announcements"]) == 4
     assert all(item["is_demo"] for item in data["software"] + data["announcements"])
     assert all(not item["links"] for item in data["releases"])
     assert not data["settings"]["ads_enabled"] and data["promotions"] == []

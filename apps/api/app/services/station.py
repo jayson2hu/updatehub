@@ -16,6 +16,7 @@ from app.models.station import StationAnnouncement, StationAnnouncementSoftware,
 from app.schemas.catalog import utc_datetime
 from app.schemas.station import AnnouncementRead, AnnouncementWrite, PromotionRead, PromotionWrite, ReleaseRead, ReleaseWrite, SettingsWrite, SoftwareRead, SoftwareWrite, StationData
 from app.services.catalog import CatalogService
+from app.services.station_engagement import StatsService, enrich_releases
 
 logger = logging.getLogger("updatehub.station")
 
@@ -33,6 +34,16 @@ FIELD_LABELS = {
     "ads_enabled": "推广功能开关", "id": "内容标识", "created_at": "创建时间",
     "cover_url": "推广封面", "action_label": "活动按钮文字", "target_url": "活动目标链接",
     "placements": "展示位置", "starts_at": "开始时间", "ends_at": "结束时间",
+    "category": "软件分类", "description": "详细简介", "developer": "开发者", "website_url": "官网",
+    "tags": "标签", "install_guides": "分设备安装步骤", "kind": "类型", "is_active": "入口有效",
+    "advice": "更新建议", "advice_note": "建议说明", "stable_release_id": "推荐稳定版",
+    "changes": "更新内容", "text": "内容", "release_date": "官方发布日期", "package_size": "安装包大小",
+    "requirements": "系统要求", "ad_placements": "广告位开关", "footer_note": "页脚说明",
+    "icp_number": "备案号", "notice_tip": "群通知末尾提示", "inapp_hint": "应用内打开提示",
+    "verdict": "反馈结果", "note": "补充说明", "link_id": "反馈入口", "release_id": "对应版本",
+    "events": "统计事件", "event": "事件类型", "key": "事件内容", "software_ids": "软件",
+    "device": "常用设备", "ids": "所选记录", "hot_searches": "热门搜索词", "about_text": "关于本站",
+    "privacy_text": "隐私说明", "disclaimer_text": "免责声明", "admin_nickname": "管理员昵称",
 }
 
 
@@ -68,7 +79,7 @@ def validation_message(error: dict) -> str:
         explanation = "请填写文字"
     elif kind in {"list_type", "model_type", "model_attributes_type", "dict_type"}:
         explanation = "内容格式不正确，请重新填写或重新选择"
-    elif kind.startswith("datetime"):
+    elif kind.startswith("datetime") or kind.startswith("date"):
         explanation = "时间格式不正确，请重新选择日期和时间"
     elif kind.startswith("bool"):
         explanation = "请选择开启或关闭"
@@ -103,12 +114,22 @@ class StationService:
         valid_promotions = []
         for promotion in promotions:
             try:
-                valid_promotions.append(PromotionRead.model_validate(promotion))
+                read = PromotionRead.model_validate(promotion)
             except ValidationError:
                 # A malformed future advertising configuration cannot prevent
                 # software updates, notices or downloads from being read.
                 logger.warning("Ignoring invalid station promotion id=%s", promotion.id)
-        return StationData(settings=settings, software=list(self.db.scalars(software_query)), releases=list(self.db.scalars(release_query)), announcements=list(self.db.scalars(announcement_query)), promotions=valid_promotions)
+                continue
+            if not admin:
+                # Placements switched off in settings are removed for every client.
+                read.placements = [placement for placement in read.placements if settings.placement_enabled(placement)]
+                if not read.placements:
+                    continue
+            valid_promotions.append(read)
+        software = list(self.db.scalars(software_query))
+        releases = enrich_releases(self.db, self.db.scalars(release_query))
+        stats = StatsService(self.db).public([item.id for item in software], settings.hot_searches)
+        return StationData(settings=settings, software=software, releases=releases, announcements=list(self.db.scalars(announcement_query)), promotions=valid_promotions, stats=stats)
 
     def software(self, slug):
         item = self.db.scalar(select(StationSoftware).where(StationSoftware.slug == slug, StationSoftware.published.is_(True)))
@@ -116,7 +137,7 @@ class StationService:
             raise HTTPException(404, "没有找到这款软件，可能已下架。请返回软件目录查看。")
         releases = list(self.db.scalars(select(StationRelease).where(StationRelease.software_id == item.id, StationRelease.published.is_(True)).order_by(StationRelease.published_at.desc(), StationRelease.created_at.desc(), StationRelease.id)))
         notices = list(self.db.scalars(select(StationAnnouncement).join(StationAnnouncementSoftware).where(StationAnnouncementSoftware.software_id == item.id, StationAnnouncement.published.is_(True)).order_by(StationAnnouncement.published_at.desc())))
-        return {"software": item, "releases": releases, "announcements": notices}
+        return {"software": item, "releases": enrich_releases(self.db, releases), "announcements": notices}
 
     def announcement(self, slug):
         item = self.db.scalar(select(StationAnnouncement).where(StationAnnouncement.slug == slug, StationAnnouncement.published.is_(True)))
@@ -168,6 +189,10 @@ class StationService:
                 raise HTTPException(422, "该软件尚未支持此设备，请先在软件管理中添加设备")
             if item_id and (item.software_id != values["software_id"] or item.platform != values["platform"]):
                 raise HTTPException(422, "版本所属的软件和设备不能更改，请为另一个设备新建版本")
+            if values["stable_release_id"]:
+                stable = self.db.get(StationRelease, values["stable_release_id"])
+                if stable is None or stable.id == item_id or stable.software_id != values["software_id"] or stable.platform != values["platform"] or not stable.published:
+                    raise HTTPException(422, "推荐稳定版必须是同一软件、同一设备下已发布的其他版本")
             old_links = {link.id: link for link in item.links}
             next_links = []
             for index, value in enumerate(values.pop("links")):
@@ -198,6 +223,8 @@ class StationService:
         try:
             self.db.flush()
             after = read_schema.model_validate(item).model_dump(mode="json")
+            if kind == "release":
+                item = enrich_releases(self.db, [item])[0]
             CatalogService(self.db).audit(admin_id, "update" if item_id else "create", "station_" + kind, item.id, before, after)
             self.db.commit()
         except IntegrityError as exc:

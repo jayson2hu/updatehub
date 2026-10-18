@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.database import SessionLocal
 from app.services.analytics import AnalyticsService
+from app.services.station_engagement import StatsService
 
 logger = logging.getLogger("updatehub")
 
@@ -15,6 +16,7 @@ def purge_expired():
     try:
         with SessionLocal() as db:
             AnalyticsService(db).purge()
+            StatsService(db).purge()
     except SQLAlchemyError:
         # /ready separately reports unmigrated databases. Startup and the daily
         # task must not print database URLs or private query text on failure.
