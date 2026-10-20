@@ -4,7 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 WORKDIR /app
 COPY apps/api/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt \
+RUN python -m pip install --no-cache-dir --upgrade pip==26.2 \
+    && pip install --no-cache-dir -r requirements.txt \
     && groupadd --gid 10001 updatehub \
     && useradd --uid 10001 --gid updatehub --no-create-home updatehub \
     && mkdir -p /data/uploads \

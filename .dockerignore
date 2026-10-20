@@ -4,6 +4,13 @@
 !.env.example
 **/node_modules
 **/.next
+**/.station-*
+**/.env
+**/.env.*
+**/*.tsbuildinfo
+**/*.pem
+**/*.key
+**/project.private.config.json
 **/.venv
 **/__pycache__
 **/.pytest_cache

@@ -1,23 +1,28 @@
 # 部署、备份与恢复
 
-本轮提供单机 Docker Compose 配置。2026-09-26 已在隔离的原生 PostgreSQL 17.10 执行数据库与图标恢复演练，结果见 `full-product-test-report.md`。当前开发机器没有 Docker CLI，未执行容器镜像、生产启动或证书签发；原生演练不替代 Docker 脚本与卷权限验收。以下步骤需由部署主机实际执行，不是已上线声明。
+当前为版本喵 v4，网站/后台与双端小程序共用数据库。2026-10-19 的本地 SQLite、实际重启、独立恢复及原生 PostgreSQL 17 证据见 [统一验收](v4/05-测试与验收.md)。本轮 PostgreSQL 在生产 API 配置下完成 6 组检查，pg_dump/pg_restore 后 28 表行数及摘要一致，并由新进程读取；TestClient HTTPS 地址只用于验证 Cookie/应用配置。部署机 PostgreSQL、Docker 镜像、持久卷和真实 TLS 尚未验收。以下是部署步骤，不是已上线声明。
 
 ## 生产准备与启动
 
+当前部署交接入口：[容器部署清单与 Codex 手册](container-deployment-handoff.md)。用户已确定首次正式上线**空内容**；只迁移表结构并创建独立生产管理员，不迁移当前开发库/图片/账号，不导入演示数据。安全状态见 [本次检测报告](security-review-20261020.md)。
+
 要求 Linux、Docker Engine、Compose v2、可解析到服务器的域名，以及可供 Caddy 访问的 80/443 TCP 与可选 443 UDP。数据库和图标写入持久化卷；镜像和代码不能代替数据备份。
 
-1. 将 `.env.example` 复制为仓库根目录 `.env`，限制该文件读取权限。
-2. 生成唯一的 `POSTGRES_PASSWORD`：`python3 -c "import secrets; print(secrets.token_hex(32))"`，不复用其他站点的密码。使用十六进制避免 URL 转义问题。会话使用随机 token，不依赖共享签名密钥。
+1. 将 `.env.production.example` 复制为仓库根目录 `.env`，限制该文件读取权限（Linux 为 0600）。
+2. 分别生成唯一的 `POSTGRES_PASSWORD` 和 `STATION_SIGNING_KEY`：`python3 -c "import secrets; print(secrets.token_hex(32))"`，两次使用独立结果，不复用。数据库密码用十六进制避免 URL 转义；签名密钥用于匿名反馈改投/撤销，必须持久保存且至少 32 个随机字符，所有实例保持一致。管理员会话仍使用独立随机 token。
 3. 设置 `DOMAIN=你的域名`、`ACME_EMAIL=运维邮箱`、`PUBLIC_SITE_URL=https://你的域名`，以及站名、介绍和初始管理员邮箱与密码。`DOMAIN` 只填主机名，不含路径。
 4. 在根目录执行：
 
 ```sh
+python3 scripts/deploy-preflight.py --env-file .env --bootstrap --require-docker
 docker compose -f docker-compose.prod.yml config --quiet
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec api python -m app.cli create-admin
 ```
 
-生产是否导入演示内容由管理员决定；需要样例时显式执行 `docker compose -f docker-compose.prod.yml exec api python -m app.cli seed`，再执行同样前缀的 `python -m app.cli seed-content` 导入指南、FAQ 与合集。演示内容上线前应逐条核对、改写或下线。
+正式环境不执行 `seed`、`seed-updates`、`seed-content` 或 `seed-station`。首次验收确认软件、版本、公告与推广列表为空，之后再由管理员录入。站名与介绍在新版后台「站点设置」持久保存。
+
+`LEGACY_ENABLED=false` 保持旧 API 关闭；旧网页按 v4 路由清单跳转。两端小程序正式接入前配置合法 request/图片域名，并在 API 设置 `MINIAPP_REFERER_PREFIXES` 为平台实际请求中的精确 HTTPS 前缀（末尾 `/`，多项逗号分隔），然后在真机验证匿名写入。没有 AppID 和真实域名时仅交付开发包，不关闭来源校验绕过。
 
 创建管理员后清除 `.env` 中 `ADMIN_INITIAL_PASSWORD`，并重新创建 API 容器，使初始密码不再保留于容器环境：
 
@@ -58,7 +63,7 @@ bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups
 
 默认保留约 14 天，时点恢复能力约为一天；没有 WAL 连续归档。数据库与图标先后备份，不是跨存储原子快照。重要变更前暂停后台写入，执行备份并确认两份文件完整。数据量增长时再评估专用备份方案。
 
-数据库备份包含管理员密码散列、会话与审计信息。备份目录仅运维账号可读，将副本加密保存到不同主机；异地复制、告警与密钥管理尚未自动化。定时任务失败必须由外部运维监控发现，本仓库没有假定已接入告警系统。
+数据库备份包含管理员密码散列、会话与审计信息。备份目录仅运维账号可读，将副本加密保存到不同主机。`STATION_SIGNING_KEY` 从安全密钥库单独备份并与本次数据快照记录关联，Compose 的数据库/图片备份脚本不会自动归档环境密钥。丢失或轮换密钥会让旧反馈修改凭据失效；不会自动清空内容与计数。异地复制、告警与密钥管理尚未自动化。
 
 ## 恢复演练
 
@@ -88,12 +93,12 @@ python3 -c "import tarfile; a=tarfile.open('/srv/updatehub-backups/updatehub-upl
 
 `/health` 表明应用进程可以响应；`/ready` 检查数据库连通性，并要求 `alembic_version` 与镜像中的全部迁移 head 完全一致，版本过旧、缺失或为空会返回 503。Compose 通过 `/ready` 决定 API 健康状态；Web 会检查首页是否响应成功。
 
-API 请求日志记录方法、路径、状态与处理毫秒数，不记录查询串、Cookie 或密码。部署主机应采集容器退出/重启、5xx 比例与延迟、数据库连接与磁盘空间、主机 CPU/内存、备份最近成功时间，并配置超阈值通知。当前仓库没有已连接的外部监控、异地备份或告警账号，不能将这些运维动作写成已完成。
+Uvicorn 访问日志默认关闭；应用日志仅记录方法、脱敏路径、状态与处理时间，隐藏 `/sync-codes/{code}` 中的码，不记录 IP、查询串、Cookie 或密码。Caddy 当前不启用访问日志；若接入其他代理日志，须关闭访客 IP 与同步码明文记录。部署主机另行监控退出/重启、聚合 5xx 与延迟、数据库/磁盘、备份成功时间并设置告警。当前没有外部监控或异地备份账号，不将这些动作写成已完成。
 
 运营工作台的搜索与点击统计不是系统健康监控。定期清理过期运营汇总可运行 `docker compose -f docker-compose.prod.yml exec -T api python -m app.cli purge-analytics`；保留策略以当前隐私说明和 API 配置为准。
 
 ## 持续集成与上线核对
 
-CI 的容器任务只启动独立项目 `updatehub-ci` 的 PostgreSQL、API 与 Web，不为示例域名申请 TLS。`tests/container_restore.sh` 验证生产镜像健康、可写图标卷、备份清单、独立恢复库、拒绝在线库/已有库、清空恢复会话和恢复后的 API 读取；此脚本明确拒绝普通本地/生产运行。CI 结束只清理该临时项目。
+CI 已改为当前 station API、示例、两端隔离逻辑检查及 v4 浏览器脚本，历史 PG 冒烟仅在显式 `LEGACY_ENABLED=true` 下回归保留代码。容器任务提供专用测试签名密钥，仅启动独立 `updatehub-ci`，不为示例域名申请 TLS。恢复脚本检查 station 软件/版本、旧 API 410、上传与会话清理，并拒绝普通本地/生产运行。**本轮只完成流水线配置核对，未推送或执行远程 CI，不能写成 CI 通过。**
 
 正式上线还必须记录实际流水线结果、域名 HTTPS、真实内容审校、管理员登录/退出、备份定时任务与告警、异地副本以及一次部署主机恢复演练。没有部署凭据时不自动发布，也不使用本机截图替代生产证据。

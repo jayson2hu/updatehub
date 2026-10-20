@@ -1,0 +1,41 @@
+'use client';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { MessageSquare, Megaphone, Rocket, Link2, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { DashboardData, Settings } from '@/lib/station-types';
+import { adviceMeta, noticeText, issueKinds } from '@/lib/station-view';
+import { Copy, date, errorText, Flash, Heading, labels, Pending, useStationAdmin } from './common';
+import { changed, openPublisher } from './publishing';
+
+export const slotLabels = { home_feed: '首页信息流', detail_body: '详情页下载区下方', desktop_sidebar: '电脑右侧栏' };
+export function Workbench() {
+  const { data, error, reload } = useStationAdmin();
+  const [stats, setStats] = useState<DashboardData | null>(null); const [failure, setFailure] = useState(''); const [revision, setRevision] = useState(0);
+  useEffect(() => { const listener = () => setRevision(n => n + 1); window.addEventListener('station:admin-changed', listener); return () => window.removeEventListener('station:admin-changed', listener); }, []);
+  useEffect(() => { let active = true; api<DashboardData>('/admin/station/dashboard').then(d => { if (active) { setStats(d); setFailure(''); } }).catch(e => active && setFailure(errorText(e))); return () => { active = false; }; }, [revision]);
+  if (!data || !stats) return <Pending error={error || failure} retry={() => { reload(); setRevision(n => n + 1); }}/>;
+  const current = stats.series.at(-1); const yesterday = stats.series.at(-2);
+  const hour = Number(new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', hour: 'numeric', hour12: false }).format(new Date()));
+  const greeting = hour < 11 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
+  const actionable = stats.hot_releases.filter(r => r.pending_issues >= 10 && r.issues / (r.oks + r.issues) >= .3);
+  const broken = stats.broken_links.filter(l => l.reports >= 3);
+  const tasks = actionable.length + broken.length + (stats.counts.new_wishes ? 1 : 0);
+  const cards = [
+    { label: '今日访问', value: current?.visits || 0, key: 'visits' as const, previous: yesterday?.visits || 0 },
+    { label: '下载点击', value: current?.downloads || 0, key: 'downloads' as const, previous: yesterday?.downloads || 0 },
+    { label: '反馈“有问题”', value: current?.issues || 0, key: 'issues' as const, note: stats.hot_releases[0]?.software_name || '暂无问题反馈' },
+    { label: '收藏总数（约）', value: stats.totals.favorites, key: 'fav_added' as const, note: `本周新增 ${stats.totals.fav_added}` },
+  ];
+  async function toggle(slot: string, enabled: boolean) { try { await api<Settings>('/admin/station/settings', { method: 'PATCH', body: JSON.stringify({ ad_placements: { ...data!.settings.ad_placements, [slot]: enabled } }) }); changed(); } catch (e) { setFailure(errorText(e)); } }
+  return <div className="sa-page"><Heading title={`${greeting}，${data.settings.admin_nickname || '群主'}`} description={tasks ? `今天有 ${tasks} 件事需要处理` : '今天没有需要处理的事，来看看小站的新动态。'} action={<div className="sa-action-row"><button className="sa-button sa-secondary" onClick={() => openPublisher('announcement')}><Megaphone size={17}/>发公告</button><button className="sa-button" onClick={() => openPublisher('release')}><Rocket size={17}/>发布更新</button></div>}/><Flash error={failure}/>
+    <div className="sa-metrics">{cards.map(card => { const trend = card.previous ? Math.round((card.value - card.previous) / card.previous * 100) : null; const max = Math.max(1, ...stats.series.map(d => d[card.key])); return <section className="sa-metric" key={card.key}><p>{card.label}</p><strong className={card.key === 'issues' ? 'sa-negative' : ''}>{card.key === 'fav_added' && <small>约 </small>}{card.value.toLocaleString('zh-CN')}</strong><span className={trend === null ? '' : trend >= 0 ? 'sa-positive' : 'sa-negative'}>{card.note || (trend === null ? '— 较昨天' : `${trend >= 0 ? '↑' : '↓'} ${Math.abs(trend)}% 较昨天`)}</span><div className="sa-spark" aria-label="近七天变化">{stats.series.map((d, i) => <i key={d.date} title={`${d.date}: ${d[card.key]}`} style={{ height: `${Math.max(4, d[card.key] / max * 32)}px` }} className={i === stats.series.length - 1 ? 'is-last' : ''}/>)}</div></section>; })}</div>
+    <div className="sa-workbench-grid"><div><section className="sa-panel"><div className="sa-section-heading"><h2>需要你处理 <span className="sa-count">{tasks}</span></h2><Link href="/admin/station/feedback" className="sa-text-link">全部反馈 ›</Link></div>{tasks === 0 && <div className="sa-calm"><CheckCircle2 size={24}/><div><strong>暂时没有待办</strong><p>问题集中出现、链接失效或有人想要新软件时，会在这里提醒。</p></div></div>}
+      {actionable.map(r => <div className="sa-task" key={r.release_id}><MessageSquare/><div><strong>{r.software_name} {labels[r.platform]}版 {r.version}：{r.pending_issues} 条问题待处理</strong><p>未处理 {Object.entries(r.pending_kinds).map(([k,n]) => `${Object.fromEntries(issueKinds)[k] || k} ${n}`).join(" · ")} · 当前标记：{adviceMeta[r.advice]?.label}</p></div><Link href={`/admin/station/feedback?release=${r.release_id}`} className="sa-button sa-secondary">查看</Link></div>)}
+      {broken.map((l, i) => <div className="sa-task" key={i}><Link2/><div><strong>{l.software_name}：{l.reports} 人反馈链接失效</strong><p>{l.label || '获取入口需要检查'}</p></div><Link href={`/admin/station/releases/${l.release_id}`} className="sa-button sa-secondary">更新链接</Link></div>)}
+      {stats.counts.new_wishes > 0 && <div className="sa-task"><span>🙋</span><div><strong>有 {stats.counts.new_wishes} 条想要的软件待处理</strong><p>看看大家希望收录什么。</p></div><Link href="/admin/station/wishes" className="sa-button sa-secondary">查看</Link></div>}</section>
+      <section className="sa-panel"><div className="sa-section-heading"><h2>最近发布</h2><Link className="sa-text-link" href="/admin/station/releases">全部版本 ›</Link></div><div className="sa-table-wrap"><table className="sa-table"><thead><tr><th>软件 / 版本</th><th>状态</th><th>看过（约）</th><th>操作</th></tr></thead><tbody>{stats.recent_releases.slice(0, 5).map(r => { const software = data.software.find(s => s.id === r.software_id); const release = data.releases.find(v => v.id === r.id); return <tr key={r.id}><td><Link href={`/admin/station/releases/${r.id}`}><strong>{r.software_name}</strong></Link><small>{r.version} · {labels[r.platform]} · {date(r.published_at)}</small></td><td><span className={`sa-tag ${r.published ? 'sa-published' : ''}`}>{!r.published ? '草稿' : r.advice === 'hold' ? '先别更新' : '已发布'}</span></td><td>约 {r.views_7d}</td><td>{software && release && <Copy label="复制群通知" value={noticeText({ siteName: data.settings.site_name, software, release, stable: data.releases.find(x => x.id === release.stable_release_id), url: `${typeof window !== 'undefined' ? window.location.origin : ''}/software/${software.slug}?platform=${r.platform}&release=${r.id}`, tip: data.settings.notice_tip })}/>}</td></tr>; })}</tbody></table></div>{!stats.recent_releases.length && <p className="sa-empty-inline">还没有更新，点击右上角「发布更新」。</p>}</section>
+    </div><aside><section className="sa-panel"><div className="sa-section-heading"><h2>🙋 想要的软件</h2><Link className="sa-text-link" href="/admin/station/wishes">全部 ›</Link></div><p className="sa-muted">按想要人数排序</p>{stats.wishes.slice(0, 5).map(w => <div className="sa-record" key={w.id}><div className="sa-record-copy"><strong>{w.name}</strong><small>{w.votes} 人想要</small></div><Link className="sa-button sa-secondary" href={`/admin/station/software/new?wish=${w.id}&name=${encodeURIComponent(w.name)}`}>收录</Link></div>)}{!stats.wishes.length && <p className="sa-empty-inline">暂时没有新的收录请求。</p>}</section>
+      <section className="sa-panel"><div className="sa-section-heading"><h2>广告位</h2><span className="sa-muted">近 7 天</span></div>{!data.settings.ads_enabled && <p className="sa-alert">总开关已关闭，前台不展示广告。</p>}{stats.ads.map(a => <div className="sa-slot-row" key={a.placement}><div><strong>{slotLabels[a.placement]}</strong><small>{a.impressions} 曝光 · {a.clicks} 点击</small></div><button type="button" className="sa-switch" role="switch" aria-label={`${slotLabels[a.placement]}开关`} aria-checked={data.settings.ad_placements?.[a.placement] !== false} onClick={() => toggle(a.placement, data.settings.ad_placements?.[a.placement] === false)}><i/></button></div>)}<Link href="/admin/station/promotions" className="sa-text-link">管理广告素材和投放 ›</Link></section></aside></div>
+  </div>;
+}

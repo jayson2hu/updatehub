@@ -27,6 +27,9 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-updatehub}:${POSTGRES_PASSWORD:?Set a strong POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-updatehub}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?Set an HTTPS PUBLIC_SITE_URL}
       CORS_ORIGINS: ""
+      STATION_SIGNING_KEY: ${STATION_SIGNING_KEY:?Set a persistent random STATION_SIGNING_KEY of at least 32 characters}
+      MINIAPP_REFERER_PREFIXES: ${MINIAPP_REFERER_PREFIXES:-}
+      LEGACY_ENABLED: "false"
       SITE_NAME: ${SITE_NAME:-UpdateHub}
       SITE_DESCRIPTION: ${SITE_DESCRIPTION:-查看软件更新、使用提醒与维护通知，了解影响和下一步行动。}
       ADMIN_INITIAL_EMAIL: ${ADMIN_INITIAL_EMAIL:-}

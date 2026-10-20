@@ -1,5 +1,7 @@
 # 浏览器与集成检查
 
+当前版本喵 v4 使用 [统一验收说明](../docs/v4/05-测试与验收.md)。入口：API `scripts/test-api.py`、两端 `npm run mini:check`、隔离浏览器 `scripts/verify-station-browser.py --isolated --channel msedge`、PostgreSQL `node tests/portable-postgres.mjs --station`。浏览器写入仅对 3012/8012 隔离环境；日常 3011 只读截图使用 `scripts/capture-station-preview.py`。下文保留旧版浏览器任务，不替代现行验收。
+
 后端单元 / API 测试在 `apps/api/tests`。先按 README 迁移数据库并执行 seed，再启动 API 和 Web。
 
 ```powershell

@@ -2,6 +2,7 @@ import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test-bootstrap.db")
 os.environ.setdefault("ENVIRONMENT", "development")
+os.environ.setdefault("LEGACY_ENABLED", "true")  # Legacy unit tests still exercise retained code.
 
 import pytest
 from alembic import command

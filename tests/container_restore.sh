@@ -5,8 +5,7 @@ set -euo pipefail
 compose=(docker compose -f docker-compose.prod.yml)
 backup_dir="$(mktemp -d /tmp/updatehub-ci-backup.XXXXXX)"
 "${compose[@]}" up -d --wait --wait-timeout 180 postgres api web
-"${compose[@]}" exec -T api python -m app.cli seed
-"${compose[@]}" exec -T api python -m app.cli seed-content
+"${compose[@]}" exec -T api python -m app.cli seed-station
 "${compose[@]}" exec -T api python -m app.cli create-admin
 "${compose[@]}" exec -T api python -c 'from pathlib import Path; from PIL import Image; Image.new("RGB", (16, 16), "teal").save(Path("/data/uploads/restore-ci.png"))'
 "${compose[@]}" exec -T api python -c 'import urllib.request; assert urllib.request.urlopen("http://127.0.0.1:8000/ready").status == 200'
@@ -23,8 +22,8 @@ bash infra/scripts/restore.sh docker-compose.prod.yml "$dump_file" updatehub_res
 if bash infra/scripts/restore.sh docker-compose.prod.yml "$dump_file" updatehub_restore_ci; then
   echo "ERROR: overwriting an existing database should have been rejected" >&2; exit 1
 fi
-"${compose[@]}" exec -T postgres sh -eu -c 'test "$(psql -U "$POSTGRES_USER" -d updatehub_restore_ci -Atc "SELECT count(*) FROM software")" = 12; test "$(psql -U "$POSTGRES_USER" -d updatehub_restore_ci -Atc "SELECT count(*) FROM admin_session")" = 0'
+"${compose[@]}" exec -T postgres sh -eu -c 'test "$(psql -U "$POSTGRES_USER" -d updatehub_restore_ci -Atc "SELECT count(*) FROM station_software")" -ge 6; test "$(psql -U "$POSTGRES_USER" -d updatehub_restore_ci -Atc "SELECT count(*) FROM admin_session")" = 0'
 # Recover images into a separate temporary directory; the online upload volume stays unchanged.
 "${compose[@]}" exec -T api python -c 'import sys, tarfile; from pathlib import Path; out=Path("/tmp/restore-ci"); out.mkdir(); archive=tarfile.open(fileobj=sys.stdin.buffer, mode="r|gz"); archive.extractall(out, filter="data"); assert (out/"restore-ci.png").read_bytes() == Path("/data/uploads/restore-ci.png").read_bytes()' < "$upload_file"
-"${compose[@]}" run --rm --no-deps --entrypoint python -e "DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-updatehub}:${POSTGRES_PASSWORD}@postgres:5432/updatehub_restore_ci" api -c 'from fastapi.testclient import TestClient; from app.main import app; client=TestClient(app); assert client.get("/ready").status_code == 200; assert client.get("/api/v1/software").json()["total"] == 12; assert client.get("/api/v1/software/vscode").status_code == 200'
+"${compose[@]}" run --rm --no-deps --entrypoint python -e "DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-updatehub}:${POSTGRES_PASSWORD}@postgres:5432/updatehub_restore_ci" api -c 'from fastapi.testclient import TestClient; from app.main import app; client=TestClient(app); assert client.get("/ready").status_code == 200; data=client.get("/api/v1/station/data").json(); assert len(data["software"]) >= 6 and len(data["releases"]) >= 8; assert client.get("/api/v1/station/software/guangmu").status_code == 200; assert client.get("/api/v1/software").status_code == 410'
 echo "CONTAINER_BACKUP_RESTORE_PASSED"

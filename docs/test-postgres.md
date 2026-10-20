@@ -1,8 +1,22 @@
 # PostgreSQL 验证与恢复演练
 
-本机验证使用 Windows x64、Python 3.14、PostgreSQL 17.10，独立监听 `127.0.0.1:55439`。不复用业务库、不安装系统服务、不创建操作系统账号；不使用其他工作区的 55432/55433。最新实际结果见 [`full-product-test-report.md`](full-product-test-report.md)，历史报告中的断言数量只代表当时版本。
+本机验证使用 Windows x64、Python 3.14、PostgreSQL 17.10，独立监听 `127.0.0.1:55439`。不复用业务库、不安装系统服务、不创建操作系统账号；不使用其他工作区的 55432/55433。当前 station 结果见 [v4 统一验收](v4/05-测试与验收.md)，`full-product-test-report.md` 等旧报告仅代表历史版本。
 
-## Windows 便携启动器
+## 当前 station 验收（2026-10-19）
+
+准备下文便携服务器和同版本 `pg_dump` / `pg_restore` 后，从仓库根目录执行：
+
+```powershell
+node tests/portable-postgres.mjs --station
+```
+
+启动器创建全新空库及随机凭据，运行 `tests/postgres_station_smoke.py`，结束后停止本次数据库。不要手工将脚本指向日常或生产库。`--station`、`--restore`、`--content` 互斥；无参数与后两者保留用于旧版验证，不是当前 station 完整验收入口。
+
+本轮 **6 组通过**：迁移升/降/升及重复 seed；生产 API 配置和 Secure Cookie/权限/CSRF/旧 API 410；中文软件、草稿发布、真实上传、多设备链接和整批失败回滚；公告关联/置顶/到期；真实 pg_dump/pg_restore 至新库；清除恢复会话后，新进程验证数据、图片、同步码、签名反馈撤销及管理员登录。
+
+28 张表恢复前后的行数与内容 SHA-256 一致，迁移 `e4719f0c2b86`。结果位于 `artifacts/acceptance-20261019/postgres-station.json` 及 `.log`；运行材料在忽略的 `runtime/pg/station-*`，不提交凭据或备份。数据库已经正常停止。HTTPS 为 TestClient 地址，**未验真实 TLS、Docker、生产负载或部署主机恢复**。
+
+## Windows 便携启动器与历史测试模式
 
 先按 README 安装 Python 虚拟环境和 API 依赖，并准备 Node.js 24，在仓库根目录执行：
 

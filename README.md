@@ -1,10 +1,12 @@
-# 更新小站 · 软件更新与群公告
+# 版本喵 v4 · 软件更新与群公告
 
-当前实现以中文手机用户为主：最新更新、软件目录、按设备切换版本与获取入口、安装说明、群公告和管理员工作台。站名与介绍可配置，访客免登录。提供 6 款虚构示例软件、11 条版本、4 条公告；示例没有真实下载地址。广告结构已预留，默认关闭。
+代码仓库：[GitHub · jayson2hu/updatehub](https://github.com/jayson2hu/updatehub)（私有）。默认分支 `main`，开发分支 `feature/v4`；新机器克隆、验证和待配置项见 [仓库接手说明](docs/repository-handoff.md)。
+
+面向中文手机用户的软件更新站：按设备与版本获取、安装图文、群公告、收藏同步、匿名反馈和 v5 管理工作台。站名与介绍可配置，访客免登录。本轮日常库有 9 款示例软件、17 条版本、4 条公告；未配置真实链接时不会模拟下载。广告默认关闭，位置、素材与聚合统计独立管理。
 
 沿用 Next.js、TypeScript、FastAPI、SQLAlchemy、Alembic、Argon2id。新版使用独立 `station_*` 数据表，保留原有代码与数据库；本地运行数据在 `runtime/station.db`，上传图片在 `runtime/station-uploads/`。
 
-新增 [50 套设计审查](http://localhost:3010/designs)，支持手机/桌面实拍预览、搜索分类、收藏与四套对比。页面入口与审查建议见 [设计说明](docs/station-design-50.md)。
+当前沿用已实施的 v4 前台和 v5 后台。50 套探索稿及旧 UpdateHub 代码保留作历史资料，旧入口默认下线；`/designs/*` 统一跳回首页，不再作为现行体验入口。
 
 微信和小红书小程序共用现有后台：执行 `npm run mini:build`，分别将 `apps/miniprogram-wechat` 与 `apps/miniprogram-xhs` 导入对应开发工具。配置、分享、外链和验证范围见 [双平台小程序说明](docs/station-miniprograms.md)。
 
@@ -23,12 +25,33 @@ apps/api/.venv/Scripts/python.exe -m pip install -r apps/api/requirements.txt
 
 ```powershell
 ./scripts/station-dev.ps1 -Component api
-./scripts/station-dev.ps1 -Component web
+./scripts/station-preview.ps1 -Rebuild
 ```
 
-前台：[http://localhost:3010](http://localhost:3010)；后台：[http://localhost:3010/admin](http://localhost:3010/admin)。当前工作区验收使用的本地账号保存在已忽略的 `runtime/station-admin.json`，不要提交或用于正式部署。
+前台：[http://localhost:3011](http://localhost:3011)；后台：[http://localhost:3011/admin](http://localhost:3011/admin)。需要热更新时改用 `./scripts/station-dev.ps1 -Component web`，默认 3010。现有工作区本地账号在已忽略的 `runtime/station-admin.json`，不输出、不提交、不用于正式部署。
 
-完整说明见 [启动、发布操作、部署与备份](docs/station-operations.md)、[环境变量示例](.env.station.example)、[本轮验收](docs/station-verification.md)。下方保留旧版资料作为迁移背景；新版运营请以上述说明为准。
+完整说明见 [启动、发布操作与备份](docs/station-operations.md)、[环境变量示例](.env.station.example)、[双平台小程序](docs/station-miniprograms.md)、[部署与恢复](docs/deployment.md)。
+
+## 正式部署与安全交接（2026-10-20）
+
+**正式首次上线为空内容**：仅迁移表结构、必要配置并创建独立生产管理员，不导入开发库/图片/账号，不执行 seed。本站只维护软件或独立服务的通知和入口，不接入听书目录、章节、音频或第三方凭据。开发环境可继续录入，与生产分离。
+
+后续交给 Codex 部署时，从 [容器部署交接手册](docs/container-deployment-handoff.md) 开始，使用 [.env.production.example](.env.production.example)。手册包含准备清单、空站部署、备份/恢复、验收和可复制的部署任务。源码打包：`apps/api/.venv/Scripts/python.exe scripts/package-station-release.py`，自动排除运行数据与秘密并生成 SHA-256 清单。
+
+本轮安全修复：5 个受影响 Python 包已升级，npm/pip 扫描未报告已知漏洞；Bandit 无发现；API 全量 169 项及随后新增空站测试所在专项 28 项通过（两组有重叠），部署配置 4 项通过，小程序 7+50 项通过。范围与剩余风险见 [安全检测报告](docs/security-review-20261020.md)。本机未构建/运行生产容器，真实 TLS、镜像/OS 漏洞和服务器验收仍待部署时完成。下方 142 项等为此前产品验收记录。
+
+代码入库前已再次运行 API 全量 **170 passed**、Web lint/类型检查和部署配置检查，详见 [推送前检查](docs/repository-handoff.md#首次推送前检查记录)。
+
+## 当前验证与交付边界
+
+- API **142 通过**；小程序发布配置 **7 通过**、两端构建及逻辑 **50 通过，无跳过**；Web lint、类型检查与正式构建通过。发布脚本支持 `--check` 只读检查，拒绝错误地址/参数并规范化地址尾斜线。
+- 隔离 HTTP 验证创建、草稿、发布、多设备/多版本、公告到期与撤回；实际重启验证数据、图片、同步码及签名凭据保留。备份已恢复到独立目录验证。
+- 浏览器 **17 组通过、29 张截图、0 页面运行错误**；另有日常站点只读截图 6 张。已检查 360/390/768/1440 前台和 1280/1440 后台，修复搜索/返回点击区和辅助文字对比度，并同步两端小程序样式。
+- 首页与详情初始 HTML/CSS/JS gzip 分别约 **173 / 185 KiB**（现代浏览器，含水合依赖）；模拟慢 4G 的 LCP 分别 **984ms / 604ms**，CLS 均 **0**。50 款软件、500 版本的本机 SQLite 接口 P95 **73.7ms**。这些是本地测量，不代表公网或生产负载。
+- 本机真实 PostgreSQL 17 **6 组通过**，覆盖迁移、生产 API 配置、发布与批量回滚、公告、pg_dump/pg_restore；恢复前后 **28 张表**的行数及内容摘要一致，新进程读取数据、图片及签名凭据正常。
+- 浏览器启动限制已通过正常审批解决。微信/小红书原生编译、真机及生产部署验收仍待完成；用户确认暂缺 AppID、HTTPS 域名，两端开发包与配置说明已准备，不据此宣称整体验收完成。
+
+验收证据及复跑命令以 [v4 测试与验收](docs/v4/05-测试与验收.md) 为准，进度见 [开发进度](docs/v4/04-开发进度.md)。网站本地核心验收已通过，可打开上述地址审查；原生与正式上线验收仍有明确待办。下方仅为旧版历史资料，现行启动与运营遵循上述文档。
 
 ---
 
@@ -63,9 +86,9 @@ infra/                镜像、反向代理、备份与恢复脚本
 docs/                 产品原文、实施计划、接口契约与使用文档
 ```
 
-## Docker 启动
+## 旧版 Docker 本地开发启动（非正式部署）
 
-要求 Docker Engine 与 Compose v2。以下命令在仓库根目录执行；`.env` 不应提交到版本库。
+以下仅为旧版本地演示资料，含示例导入命令，**不得用于正式首次上线**。现行生产请用上方容器交接手册。要求 Docker Engine 与 Compose v2；命令在仓库根目录执行，`.env` 不应提交到版本库。
 
 1. 将 `.env.example` 复制为 `.env`。运行 `python -c "import secrets; print(secrets.token_hex(32))"`，将结果填入 `POSTGRES_PASSWORD`。数据库密码使用生成的十六进制内容，避免连接串转义问题。会话使用随机不透明 token 与服务端散列，不需要 `SECRET_KEY`。
 2. 设置 `ADMIN_INITIAL_EMAIL` 与独立的强密码 `ADMIN_INITIAL_PASSWORD`。

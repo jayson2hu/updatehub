@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "sheet": "/components/sheet/index"
+  }
+}

@@ -1,1 +1,24 @@
-<view class="page"><view class="hero"><text class="site-title">找到常用的软件</text><text class="description">先选设备，再查看版本和安装方法。</text></view><page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/><block wx:if="{{!loading && !error}}"><view class="search"><text class="search-symbol">⌕</text><input value="{{query}}" placeholder="软件名称或常用别名" bindinput="onSearch" confirm-type="search" aria-label="搜索软件"/><button wx:if="{{query}}" bindtap="clear">清除</button></view><view class="filters"><button wx:for="{{platforms}}" wx:key="id" class="filter {{selectedPlatform === item.id ? 'active' : ''}}" bindtap="onPlatform" data-id="{{item.id}}" hover-class="pressed">{{item.label}}</button></view><view class="section-heading"><text class="title">软件目录</text><text class="meta">{{software.length}} 款软件</text></view><page-state empty="{{!software.length}}" empty-title="没有找到对应软件" empty-text="换个关键词，或清除设备筛选。" bindretry="clear"/><view wx:for="{{software}}" wx:key="id" class="directory-card" bindtap="openSoftware" data-slug="{{item.slug}}" data-platform="{{selectedPlatform === 'all' ? '' : selectedPlatform}}" aria-role="link" hover-class="pressed"><app-icon name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/><view class="directory-content"><text class="software-name">{{item.name}} ›</text><text class="directory-summary">{{item.summary}}</text><view class="directory-bottom"><text class="directory-devices">{{item.devices}}</text><text class="status {{item.status}}"><text class="status-dot"/>{{item.statusText}}</text></view></view></view><text class="footnote">{{hasDemo ? '示例软件 · ' : ''}}获取入口由管理员维护，同一软件的新旧版本保留在详情页。</text></block></view>
+<view class="sv-page">
+  <view class="sv-sec search-entry"><view class="sv-search" bindtap="openSearch" hover-class="sv-pressed" aria-role="button" aria-label="搜索软件"><text>🔍</text><text>搜软件名、用途或公告</text></view></view>
+  <page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/>
+  <block wx:if="{{!loading && !error}}">
+    <scroll-view scroll-x class="sv-chips" enhanced show-scrollbar="{{false}}"><view class="sv-chips__row">
+      <view wx:for="{{chips}}" wx:key="id" class="sv-chip {{category === item.id ? 'sv-chip--on' : ''}}" bindtap="onCategory" data-id="{{item.id}}" aria-role="button" aria-label="{{item.label}}" aria-selected="{{category === item.id}}"><text class="sv-chip__in">{{item.text}}</text></view>
+    </view></scroll-view>
+    <view class="sv-sec count-row"><text class="sv-small sv-muted">{{software.length}} 款软件</text><view class="sorts"><text class="sv-small sv-muted">排序：</text><view wx:for="{{sorts}}" wx:key="id" class="sort" bindtap="onSort" data-id="{{item.id}}" aria-role="button" aria-selected="{{sort === item.id}}"><text class="sv-tag {{sort === item.id ? 'sv-tag--brand' : 'sv-tag--gray'}}">{{item.text}}</text></view></view></view>
+    <view wx:if="{{!software.length}}" class="sv-empty"><text class="sv-empty__e">📭</text><text>这个分类还没有软件</text><button class="sv-btn sv-btn--soft want" bindtap="openWish" hover-class="sv-pressed">＋ 我想要这个软件</button></view>
+    <view class="sv-sec lib">
+      <view wx:for="{{software}}" wx:key="id" class="lc" bindtap="openSoftware" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link" aria-label="{{item.name}}">
+        <view class="lc__star {{item.favorite ? 'lc__star--on' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}" aria-role="button" aria-label="收藏" aria-checked="{{item.favorite}}"><text>{{item.favorite ? '★' : '☆'}}</text></view>
+        <app-icon name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/>
+        <text class="lc__name sv-ell">{{item.name}}</text><text wx:if="{{item.isDemo}}" class="sv-tag sv-tag--gray">示例</text>
+        <text class="lc__desc">{{item.summary}}</text>
+        <text class="lc__dev" aria-label="支持{{item.devices}}">{{item.deviceIcons}}</text>
+        <view wx:if="{{item.version}}" class="lc__ver"><text class="sv-mono sv-small">{{item.version}}</text><text class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text></view>
+        <text wx:else class="sv-xs sv-muted">暂未发布版本</text>
+      </view>
+    </view>
+    <view class="sv-foot"><text>{{siteName}} · 群友整理的软件更新</text><text>只整理官方信息，不存放安装包{{hasDemo ? ' · 当前为示例内容' : ''}}</text></view>
+  </block>
+  <wish-sheet show="{{wishOpen}}" bindclose="closeWish"/>
+</view>

@@ -14,9 +14,9 @@ from app.core.database import build_engine
 
 def test_alembic_roundtrip_and_schema_alignment(tmp_path):
     url = "sqlite:///" + str(tmp_path / "roundtrip.db").replace("\\", "/")
-    env = {**os.environ, "DATABASE_URL": url, "ENVIRONMENT": "development"}
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "DATABASE_URL": url, "ENVIRONMENT": "development"}
     for args in [("upgrade", "head"), ("check",), ("downgrade", "base"), ("upgrade", "head")]:
-        result = subprocess.run([sys.executable, "-m", "alembic", *args], env=env, capture_output=True, text=True)
+        result = subprocess.run([sys.executable, "-m", "alembic", *args], env=env, capture_output=True, text=True, encoding="utf-8")
         assert result.returncode == 0, result.stdout + result.stderr
     engine = build_engine(url)
     names = inspect(engine).get_table_names()
@@ -27,8 +27,8 @@ def test_alembic_roundtrip_and_schema_alignment(tmp_path):
 
 
 def test_postgresql_migration_compiles_without_connection():
-    env = {**os.environ, "DATABASE_URL": "postgresql+psycopg://updatehub@localhost/updatehub_test", "ENVIRONMENT": "development"}
-    result = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head", "--sql"], env=env, capture_output=True, text=True)
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "DATABASE_URL": "postgresql+psycopg://updatehub@localhost/updatehub_test", "ENVIRONMENT": "development"}
+    result = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head", "--sql"], env=env, capture_output=True, text=True, encoding="utf-8")
     assert result.returncode == 0, result.stderr
     assert "CREATE TABLE software" in result.stdout
     assert "TIMESTAMP WITH TIME ZONE" in result.stdout
@@ -42,15 +42,17 @@ def test_production_configuration_requires_postgres_and_https(monkeypatch):
         Settings(environment="production", database_url="sqlite:///local.db", public_site_url="https://example.com", _env_file=None)
     with pytest.raises(ValidationError):
         Settings(environment="production", database_url="postgresql+psycopg://app@db/app", public_site_url="http://example.com", _env_file=None)
-    assert Settings(environment="production", database_url="postgresql+psycopg://app@db/app", public_site_url="https://example.com", cors_origins="", _env_file=None).allowed_origins == ["https://example.com"]
+    with pytest.raises(ValidationError):
+        Settings(environment="production", database_url="postgresql+psycopg://app@db/app", public_site_url="https://example.com", _env_file=None)
+    assert Settings(environment="production", database_url="postgresql+psycopg://app@db/app", public_site_url="https://example.com", cors_origins="", station_signing_key="test-signing-key-is-32-characters-minimum", _env_file=None).allowed_origins == ["https://example.com"]
 
 
 def test_current_release_migration_backfills_only_unambiguous_matching_facts(tmp_path):
     url = "sqlite:///" + str(tmp_path / "backfill.db").replace("\\", "/")
-    env = {**os.environ, "DATABASE_URL": url, "ENVIRONMENT": "development"}
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "DATABASE_URL": url, "ENVIRONMENT": "development"}
 
     def migrate(revision):
-        result = subprocess.run([sys.executable, "-m", "alembic", "upgrade", revision], env=env, capture_output=True, text=True)
+        result = subprocess.run([sys.executable, "-m", "alembic", "upgrade", revision], env=env, capture_output=True, text=True, encoding="utf-8")
         assert result.returncode == 0, result.stdout + result.stderr
 
     migrate("d9e4582f723c")

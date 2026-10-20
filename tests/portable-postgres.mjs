@@ -24,7 +24,8 @@ const pwfile = path.join(runtime, `.password-${Date.now()}`);
 const python = path.join(root, 'apps/api/.venv/Scripts/python.exe');
 const restoreOnly = process.argv.includes('--restore');
 const contentOnly = process.argv.includes('--content');
-if (process.argv.slice(2).some(arg => !['--restore', '--content'].includes(arg)) || restoreOnly && contentOnly) throw new Error('Usage: node tests/portable-postgres.mjs [--restore | --content]');
+const stationOnly = process.argv.includes('--station');
+if (process.argv.slice(2).some(arg => !['--restore', '--content', '--station'].includes(arg)) || [restoreOnly, contentOnly, stationOnly].filter(Boolean).length > 1) throw new Error('Usage: node tests/portable-postgres.mjs [--restore | --content | --station]');
 const env = {
   ...process.env,
   DATABASE_URL: `postgresql+psycopg://updatehub_smoke:${password}@127.0.0.1:${port}/updatehub_test_smoke`,
@@ -56,7 +57,7 @@ try {
   } finally {
     await client.end();
   }
-  await run(python, [path.join(root, restoreOnly ? 'tests/postgres_restore.py' : contentOnly ? 'apps/api/tests/postgres_content_smoke.py' : 'tests/postgres_smoke.py')], root);
+  await run(python, [path.join(root, stationOnly ? 'tests/postgres_station_smoke.py' : restoreOnly ? 'tests/postgres_restore.py' : contentOnly ? 'apps/api/tests/postgres_content_smoke.py' : 'tests/postgres_smoke.py')], root);
   console.log('POSTGRESQL_17_VERIFICATION_PASSED');
 } finally {
   await unlink(pwfile).catch(() => {});

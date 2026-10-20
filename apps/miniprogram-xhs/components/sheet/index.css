@@ -1,0 +1,13 @@
+.sheet-root{position:fixed;top:0;right:0;bottom:0;left:0;z-index:200}
+.sheet-mask{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(15,22,38,.55);animation:sheet-fade .2s}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;background:#fff;border-radius:44rpx 44rpx 0 0;padding:16rpx 36rpx calc(44rpx + env(safe-area-inset-bottom));animation:sheet-up .25s}
+.sheet__grip{width:80rpx;height:10rpx;border-radius:6rpx;background:#D5DCE7;margin:8rpx auto 16rpx;flex-shrink:0}
+.sheet__head{display:flex;align-items:center;justify-content:space-between;gap:16rpx;flex-shrink:0}
+.sheet__title{font-size:36rpx;font-weight:700;color:#141F33;line-height:1.4}
+.sheet__close{width:88rpx!important;height:88rpx;min-height:88rpx;margin:0 -20rpx 0 0;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;color:#5F6B80;font-size:30rpx;line-height:1}
+.sheet__close::after{border:none}
+.sheet__pressed{opacity:.6}
+.sheet__desc{display:block;font-size:26rpx;color:#5F6B80;line-height:1.6;margin-bottom:8rpx;flex-shrink:0}
+.sheet__body{flex:1;min-height:0;max-height:70vh}
+@keyframes sheet-fade{from{opacity:0}to{opacity:1}}
+@keyframes sheet-up{from{transform:translateY(80rpx)}to{transform:translateY(0)}}

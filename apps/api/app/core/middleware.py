@@ -14,7 +14,10 @@ class BodySizeLimitMiddleware:
         length = headers.get(b"content-length")
         if length:
             try:
-                too_large = int(length) > maximum
+                size = int(length)
+                if size < 0:
+                    raise ValueError()
+                too_large = size > maximum
             except ValueError:
                 return await JSONResponse({"detail": "请求长度无效"}, status_code=400)(scope, receive, send)
             if too_large:

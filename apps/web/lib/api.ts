@@ -9,7 +9,8 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const headers = new Headers(options.headers);
   if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
   const mutate = options.method && !['GET', 'HEAD'].includes(options.method.toUpperCase());
-  if (!isServer && mutate && path !== '/admin/auth/login') {
+  // Anonymous station writes (feedback, wishes, sync codes, events) carry no session.
+  if (!isServer && mutate && path !== '/admin/auth/login' && !path.startsWith('/station/')) {
     if (!csrfToken) {
       const session = await api<{ csrf_token: string }>('/admin/auth/me');
       csrfToken = session.csrf_token;

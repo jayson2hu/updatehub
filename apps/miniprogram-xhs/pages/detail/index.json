@@ -5,6 +5,8 @@
     "app-icon": "/components/app-icon/index",
     "copy-link": "/components/copy-link/index",
     "page-state": "/components/page-state/index",
-    "ad-slot": "/components/ad-slot/index"
+    "ad-slot": "/components/ad-slot/index",
+    "sheet": "/components/sheet/index",
+    "wish-sheet": "/components/wish-sheet/index"
   }
 }

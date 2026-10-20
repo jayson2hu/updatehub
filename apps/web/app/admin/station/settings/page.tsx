@@ -1,2 +1,2 @@
-import { SettingsPage } from "@/components/station-admin/settings";
-export default function Page(){return <SettingsPage/>;}
+import { SiteSettings } from "@/components/station-admin/site-settings";
+export default function Page(){return <SiteSettings/>;}

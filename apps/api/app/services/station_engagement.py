@@ -2,11 +2,12 @@
 sync codes and aggregate statistics. See docs/v4/adr/0005 for the privacy rules:
 only daily counters and short, filtered text are stored; never IPs or visitor IDs."""
 import logging
+import hashlib
 import re
 import secrets
 import unicodedata
 from collections import defaultdict
-from datetime import timedelta, timezone
+from datetime import date, timedelta, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import delete, func, select, update
@@ -18,14 +19,15 @@ from sqlalchemy.orm import Session
 from app.models.entities import utcnow
 from app.models.station import (
     StationAnnouncement, StationFeedbackDaily, StationFeedbackIssue, StationPromotion, StationRelease,
-    StationReleaseLink, StationSoftware, StationStatsDaily, StationSyncCode, StationWish,
+    StationReleaseLink, StationSoftware, StationStatsDaily, StationSyncCode, StationWish, StationFeedbackSpent,
 )
 from app.schemas.catalog import utc_datetime
 from app.schemas.station import (
     AdPlacementStats, BrokenLink, DailyPoint, DashboardCounts, DashboardTotals, FeedbackIssueRead, FeedbackList,
     PromotionStats, RecentRelease, ReleaseFeedback, ReleaseRead, StationDashboard, StationStats, SoftwareStats,
-    SyncRead, WishRead, WishReceipt,
+    SyncRead, WishRead, WishReceipt, VoteRead,
 )
+from app.services.station_receipts import encode_receipt, decode_receipt
 from app.services.analytics import HIDDEN_QUERY, safe_query
 from app.services.catalog import CatalogService
 
@@ -63,7 +65,8 @@ def today():
 
 def normalize_name(name: str) -> str:
     name = unicodedata.normalize("NFKC", name).casefold()
-    return "".join(char for char in name if char.isalnum())[:120]
+    name = "".join(char for char in name if char.isalnum())
+    return re.sub(r"(?:电视版|tv版|软件|app)$", "", name)[:120]
 
 
 def _insert(db):
@@ -127,8 +130,12 @@ class StatsService:
                         favourites[key] += amount if event == "fav_add" else -amount
                 elif event == "dl_copy" and key in published_releases:
                     self.add(event, key, amount)
+                elif event == "release_view" and key in published_releases:
+                    self.add(event, key, amount)
+                    self.db.execute(update(StationRelease).where(StationRelease.id == key).values(view_count=StationRelease.view_count + amount))
                 elif event == "ann_view" and key in announcements:
                     self.add(event, key, amount)
+                    self.db.execute(update(StationAnnouncement).where(StationAnnouncement.id == key).values(view_count=StationAnnouncement.view_count + amount))
                 elif event in {"ad_imp", "ad_click"} and ":" in key:
                     placement, promotion_id = key.split(":", 1)
                     if placement in PLACEMENTS and promotion_id in promotions:
@@ -166,6 +173,7 @@ class StatsService:
         self.db.execute(delete(StationStatsDaily).where(StationStatsDaily.day < today() - timedelta(days=STATS_RETENTION_DAYS - 1)))
         self.db.execute(delete(StationSyncCode).where(StationSyncCode.expires_at <= now))
         self.db.execute(delete(StationFeedbackIssue).where(StationFeedbackIssue.created_at < now - timedelta(days=ISSUE_RETENTION_DAYS)))
+        self.db.execute(delete(StationFeedbackSpent).where(StationFeedbackSpent.expires_at <= now))
         self.db.commit()
 
 
@@ -188,6 +196,57 @@ class FeedbackService:
             self.db.add(StationFeedbackIssue(release_id=release.id, link_id=body.link_id, kind=body.kind, note=redact(body.note)))
         self.db.commit()
 
+    def vote(self, body):
+        release = self.db.get(StationRelease, body.release_id)
+        if not release or not release.published or not self.db.get(StationSoftware, release.software_id).published:
+            raise HTTPException(404, "这个版本已下架，请刷新页面后重试")
+        prior = decode_receipt(body.receipt) if body.receipt else None
+        day = today()
+        if prior:
+            if prior.get("release") != release.id:
+                raise HTTPException(422, "反馈凭据与当前版本不符")
+            day = date.fromisoformat(prior["day"])
+            if day < today() - timedelta(days=STATS_RETENTION_DAYS - 1):
+                raise HTTPException(410, "这条反馈已超出修改期限，请清除本机旧反馈后重新提交")
+            # The unique digest makes repeated/replayed corrections atomic,
+            # including across restarts and concurrent API workers.
+            self.db.add(StationFeedbackSpent(digest=hashlib.sha256(body.receipt.encode()).hexdigest(), expires_at=utcnow() + timedelta(days=STATS_RETENTION_DAYS)))
+            try:
+                self.db.flush()
+            except IntegrityError:
+                self.db.rollback()
+                raise HTTPException(409, "这条反馈已在另一页面修改，请刷新后再试") from None
+        if body.action == "details":
+            if not prior or prior["verdict"] != "issue" or not body.kind:
+                raise HTTPException(422, "请先选择有问题，再补充问题类型")
+            issue = self.db.get(StationFeedbackIssue, prior.get("issue"))
+            if not issue:
+                raise HTTPException(404, "这条反馈已经撤销，请重新反馈")
+            issue.kind, issue.note = body.kind, redact(body.note)
+            payload = {k: v for k, v in prior.items() if k != "nonce"}
+        else:
+            if prior:
+                column = StationFeedbackDaily.ok_count if prior["verdict"] == "ok" else StationFeedbackDaily.issue_count
+                self.db.execute(update(StationFeedbackDaily).where(StationFeedbackDaily.release_id == release.id, StationFeedbackDaily.day == day).values({column: column - 1}).where(column > 0))
+                if prior.get("issue"):
+                    self.db.execute(delete(StationFeedbackIssue).where(StationFeedbackIssue.id == prior["issue"]))
+            payload = None
+            if body.verdict != "none":
+                ok, issue_count = (1, 0) if body.verdict == "ok" else (0, 1)
+                statement = _insert(self.db)(StationFeedbackDaily).values(release_id=release.id, day=today(), ok_count=ok, issue_count=issue_count)
+                self.db.execute(statement.on_conflict_do_update(index_elements=["release_id", "day"], set_={"ok_count": StationFeedbackDaily.ok_count + ok, "issue_count": StationFeedbackDaily.issue_count + issue_count}))
+                issue_id = None
+                if body.verdict == "issue":
+                    issue = StationFeedbackIssue(release_id=release.id, kind=body.kind or "other", note=redact(body.note), channel=body.channel)
+                    self.db.add(issue)
+                    self.db.flush()
+                    issue_id = issue.id
+                payload = {"release": release.id, "verdict": body.verdict, "day": today().isoformat(), "issue": issue_id}
+        receipt = encode_receipt(payload) if payload else ""
+        self.db.commit()
+        ok, issues = self.db.execute(select(func.coalesce(func.sum(StationFeedbackDaily.ok_count), 0), func.coalesce(func.sum(StationFeedbackDaily.issue_count), 0)).where(StationFeedbackDaily.release_id == release.id)).one()
+        return VoteRead(receipt=receipt, oks=ok, issues=issues)
+
     def release_summary(self, days, release_ids=None):
         since = today() - timedelta(days=days - 1)
         statement = select(StationFeedbackDaily.release_id, func.sum(StationFeedbackDaily.ok_count), func.sum(StationFeedbackDaily.issue_count)).where(StationFeedbackDaily.day >= since).group_by(StationFeedbackDaily.release_id)
@@ -195,11 +254,14 @@ class FeedbackService:
             statement = statement.where(StationFeedbackDaily.release_id.in_(release_ids))
         counts = {release_id: (ok, issue) for release_id, ok, issue in self.db.execute(statement)}
         kinds = defaultdict(dict)
+        pending = defaultdict(dict)
         moment = utcnow() - timedelta(days=days)
         for release_id, kind, count in self.db.execute(select(StationFeedbackIssue.release_id, StationFeedbackIssue.kind, func.count()).where(StationFeedbackIssue.created_at >= moment, StationFeedbackIssue.release_id.in_(counts)).group_by(StationFeedbackIssue.release_id, StationFeedbackIssue.kind)):
             kinds[release_id][kind] = count
+        for release_id, kind, count in self.db.execute(select(StationFeedbackIssue.release_id, StationFeedbackIssue.kind, func.count()).where(StationFeedbackIssue.created_at >= moment, StationFeedbackIssue.status == "new", StationFeedbackIssue.release_id.in_(counts)).group_by(StationFeedbackIssue.release_id, StationFeedbackIssue.kind)):
+            pending[release_id][kind] = count
         rows = self.db.execute(select(StationRelease, StationSoftware).join(StationSoftware, StationSoftware.id == StationRelease.software_id).where(StationRelease.id.in_(counts)))
-        result = [ReleaseFeedback(release_id=release.id, software_id=software.id, software_name=software.name, version=release.version, platform=release.platform, advice=release.advice, oks=counts[release.id][0], issues=counts[release.id][1], kinds=kinds.get(release.id, {})) for release, software in rows]
+        result = [ReleaseFeedback(release_id=release.id, software_id=software.id, software_name=software.name, version=release.version, platform=release.platform, advice=release.advice, oks=counts[release.id][0], issues=counts[release.id][1], kinds=kinds.get(release.id, {}), pending_issues=sum(pending[release.id].values()), pending_kinds=pending[release.id]) for release, software in rows]
         return sorted(result, key=lambda item: (-item.issues, -item.oks, item.software_name))
 
     def issues(self, status=None, kind=None, software_id=None, limit=200):
@@ -215,7 +277,7 @@ class FeedbackService:
         for issue, release, software in self.db.execute(statement):
             if issue.link_id and issue.link_id not in labels:
                 labels.update({link.id: link.label for link in release.links})
-            items.append(FeedbackIssueRead(id=issue.id, release_id=issue.release_id, link_id=issue.link_id, kind=issue.kind, note=issue.note, status=issue.status, created_at=issue.created_at, handled_at=issue.handled_at, software_id=software.id, software_name=software.name, version=release.version, platform=release.platform, link_label=labels.get(issue.link_id, "") if issue.link_id else ""))
+            items.append(FeedbackIssueRead(id=issue.id, release_id=issue.release_id, link_id=issue.link_id, kind=issue.kind, note=issue.note, status=issue.status, created_at=issue.created_at, handled_at=issue.handled_at, software_id=software.id, software_name=software.name, version=release.version, platform=release.platform, link_label=labels.get(issue.link_id, "") if issue.link_id else "", channel=issue.channel))
         return FeedbackList(items=items, releases=self.release_summary(7))
 
     def update(self, body, admin_id):
@@ -235,6 +297,20 @@ class WishService:
     def __init__(self, db: Session):
         self.db = db
 
+    def resolve(self, wish_id):
+        item = self.db.get(StationWish, wish_id)
+        seen = set()
+        while item and item.merged_into_id and item.id not in seen:
+            seen.add(item.id)
+            item = self.db.get(StationWish, item.merged_into_id)
+        if not item:
+            raise HTTPException(404, "这条请求已不存在")
+        return item
+
+    def receipt(self, item):
+        software = self.db.get(StationSoftware, item.software_id) if item.software_id else None
+        return WishReceipt(id=item.id, votes=item.votes, status=item.status, software_slug=software.slug if software and software.published else None)
+
     def submit(self, body):
         normalized = normalize_name(body.name)
         if not normalized:
@@ -244,41 +320,58 @@ class WishService:
         now = utcnow()
         item = self.db.scalar(select(StationWish).where(StationWish.normalized == normalized))
         if item is None:
-            item = StationWish(normalized=normalized, name=name, platforms=list(dict.fromkeys(body.platforms)), note=note, votes=1, created_at=now, updated_at=now)
+            item = StationWish(normalized=normalized, name=name, platforms=list(dict.fromkeys(body.platforms)), platform_votes={p: 1 for p in set(body.platforms)}, notes=[note] if note else [], note=note, votes=1, created_at=now, updated_at=now)
             self.db.add(item)
             try:
                 self.db.commit()
-                return WishReceipt(votes=1, status=item.status or "new")
+                return self.receipt(item)
             except IntegrityError:
                 # A concurrent request created the same wish; count this one as a vote.
                 self.db.rollback()
                 item = self.db.scalar(select(StationWish).where(StationWish.normalized == normalized))
+        item = self.resolve(item.id)
         item.votes += 1
         item.platforms = list(dict.fromkeys([*item.platforms, *body.platforms]))
+        item.platform_votes = {p: item.platform_votes.get(p, 0) + (1 if p in body.platforms else 0) for p in item.platforms}
         if note:
             item.note = note
+            item.notes = [note, *item.notes][:3]
         item.updated_at = now
         self.db.commit()
-        return WishReceipt(votes=item.votes, status=item.status)
+        return self.receipt(item)
 
     def list(self, status=None):
-        statement = select(StationWish).order_by(StationWish.votes.desc(), StationWish.updated_at.desc(), StationWish.id).limit(300)
+        statement = select(StationWish).where(StationWish.merged_into_id.is_(None)).order_by(StationWish.votes.desc(), StationWish.updated_at.desc(), StationWish.id).limit(300)
         if status:
             statement = statement.where(StationWish.status == status)
         return [WishRead.model_validate(item) for item in self.db.scalars(statement)]
 
     def update(self, wish_id, body, admin_id):
-        item = self.db.get(StationWish, wish_id)
-        if item is None:
-            raise HTTPException(404, "这条想要的软件已不存在，请刷新列表后重试")
-        if body.software_id and self.db.get(StationSoftware, body.software_id) is None:
+        item = self.resolve(wish_id)
+        before = WishRead.model_validate(item).model_dump(mode="json")
+        if body.merge_into_id:
+            target = self.resolve(body.merge_into_id)
+            if target.id == item.id:
+                raise HTTPException(422, "不能合并到自己或已合并的同一条请求")
+            target.votes += item.votes
+            target.platforms = list(dict.fromkeys([*target.platforms, *item.platforms]))
+            target.platform_votes = {p: target.platform_votes.get(p, 0) + item.platform_votes.get(p, 0) for p in target.platforms}
+            target.notes = [*item.notes, *target.notes][:3]
+            target.updated_at = utcnow()
+            item.merged_into_id = target.id
+        if body.name:
+            item.name = body.name
+        software = self.db.get(StationSoftware, body.software_id) if body.software_id else None
+        if body.software_id and software is None:
             raise HTTPException(422, "关联的软件不存在，请重新选择")
         if body.status == "added" and not body.software_id:
             raise HTTPException(422, "标记为已收录时，请选择对应的软件")
-        before = WishRead.model_validate(item).model_dump(mode="json")
-        item.status = body.status
-        item.software_id = body.software_id if body.status == "added" else None
-        item.handled_at = None if body.status == "new" else utcnow()
+        if body.status == "added" and software and not software.published:
+            raise HTTPException(422, "这款软件尚未上架，请先上架再标记为已收录")
+        if body.status:
+            item.status = body.status
+            item.software_id = body.software_id if body.status == "added" else None
+            item.handled_at = None if body.status == "new" else utcnow()
         self.db.flush()
         after = WishRead.model_validate(item)
         CatalogService(self.db).audit(admin_id, "update", "station_wish", item.id, before, after.model_dump(mode="json"))
@@ -296,24 +389,30 @@ class SyncService:
 
     def create(self, body):
         ids = list(dict.fromkeys(body.software_ids))
-        published = set(self.db.scalars(select(StationSoftware.id).where(StationSoftware.id.in_(ids), StationSoftware.published.is_(True)))) if ids else set()
+        published = {item.id: item.slug for item in self.db.scalars(select(StationSoftware).where(StationSoftware.id.in_(ids), StationSoftware.published.is_(True)))} if ids else {}
         now = utcnow()
         for _ in range(5):
-            item = StationSyncCode(code="".join(secrets.choice(SYNC_ALPHABET) for _ in range(SYNC_LENGTH)), software_ids=[i for i in ids if i in published], device=body.device, created_at=now, expires_at=now + timedelta(days=SYNC_DAYS))
+            code = "".join(secrets.choice(SYNC_ALPHABET) for _ in range(SYNC_LENGTH))
+            item = StationSyncCode(code=hashlib.sha256(code.encode()).hexdigest(), software_ids=[published[i] for i in ids if i in published], device=body.device, created_at=now, expires_at=now + timedelta(days=SYNC_DAYS))
             self.db.add(item)
             try:
+                if body.previous_code:
+                    self.db.execute(delete(StationSyncCode).where(StationSyncCode.code == hashlib.sha256(self.clean(body.previous_code).encode()).hexdigest()))
                 self.db.commit()
-                return SyncRead.model_validate(item)
+                return SyncRead(code=code, software_ids=[i for i in ids if i in published], device=item.device, expires_at=item.expires_at)
             except IntegrityError:
                 self.db.rollback()
         raise HTTPException(503, "暂时无法生成同步码，请稍后重试")
 
     def restore(self, code):
-        item = self.db.get(StationSyncCode, self.clean(code)[:SYNC_LENGTH])
+        code = self.clean(code)
+        if not re.fullmatch(f"[{SYNC_ALPHABET}]{{{SYNC_LENGTH}}}", code):
+            raise HTTPException(404, "同步码不对，请检查后重试")
+        item = self.db.get(StationSyncCode, hashlib.sha256(code.encode()).hexdigest())
         if item is None or utc_datetime(item.expires_at) <= utcnow():
             raise HTTPException(404, "同步码不存在或已过期，请在原设备上重新生成")
-        published = set(self.db.scalars(select(StationSoftware.id).where(StationSoftware.id.in_(item.software_ids), StationSoftware.published.is_(True)))) if item.software_ids else set()
-        return SyncRead(code=item.code, software_ids=[i for i in item.software_ids if i in published], device=item.device, expires_at=item.expires_at)
+        published = list(self.db.scalars(select(StationSoftware).where((StationSoftware.id.in_(item.software_ids) | StationSoftware.slug.in_(item.software_ids)), StationSoftware.published.is_(True)))) if item.software_ids else []
+        return SyncRead(code=code, software_ids=[s.id for s in published], device=item.device, expires_at=item.expires_at)
 
 
 class StationDashboardService:
@@ -340,8 +439,8 @@ class StationDashboardService:
             previous_visits=sum(count for day, count in visits.items() if day < since), previous_downloads=sum(count for day, count in downloads.items() if day < since),
         )
         count = lambda model, *conditions: self.db.scalar(select(func.count()).select_from(model).where(*conditions))
-        counts = DashboardCounts(software=count(StationSoftware), published_software=count(StationSoftware, StationSoftware.published.is_(True)), draft_releases=count(StationRelease, StationRelease.published.is_(False)), new_issues=count(StationFeedbackIssue, StationFeedbackIssue.status == "new"), new_wishes=count(StationWish, StationWish.status == "new"))
-        hot = [item for item in FeedbackService(self.db).release_summary(days) if item.issues > 0][:5]
+        counts = DashboardCounts(software=count(StationSoftware), published_software=count(StationSoftware, StationSoftware.published.is_(True)), draft_releases=count(StationRelease, StationRelease.published.is_(False)), new_issues=count(StationFeedbackIssue, StationFeedbackIssue.status == "new"), new_wishes=count(StationWish, StationWish.status == "new", StationWish.merged_into_id.is_(None)))
+        hot = [item for item in FeedbackService(self.db).release_summary(days) if item.pending_issues > 0][:5]
         broken = []
         statement = (select(StationFeedbackIssue.release_id, StationFeedbackIssue.link_id, func.count(), func.max(StationFeedbackIssue.created_at))
                      .where(StationFeedbackIssue.kind == "link", StationFeedbackIssue.status == "new").group_by(StationFeedbackIssue.release_id, StationFeedbackIssue.link_id)
@@ -351,11 +450,10 @@ class StationDashboardService:
             software = self.db.get(StationSoftware, release.software_id)
             link = self.db.get(StationReleaseLink, link_id) if link_id else None
             broken.append(BrokenLink(release_id=release_id, link_id=link_id, software_id=software.id, software_name=software.name, version=release.version, platform=release.platform, label=link.label if link else "未指定入口", reports=reports, last_reported_at=last))
-        wishes = [WishRead.model_validate(item) for item in self.db.scalars(select(StationWish).where(StationWish.status.in_(["new", "planned"])).order_by(StationWish.votes.desc(), StationWish.updated_at.desc()).limit(5))]
-        views = StatsService(self.db).totals("sw_view", 7)
+        wishes = [WishRead.model_validate(item) for item in self.db.scalars(select(StationWish).where(StationWish.status == "new", StationWish.merged_into_id.is_(None)).order_by(StationWish.votes.desc(), StationWish.updated_at.desc()).limit(5))]
         recent = []
         for release, software in self.db.execute(select(StationRelease, StationSoftware).join(StationSoftware, StationSoftware.id == StationRelease.software_id).order_by(StationRelease.published_at.desc().nulls_first(), StationRelease.created_at.desc()).limit(8)):
-            recent.append(RecentRelease(id=release.id, software_id=software.id, software_name=software.name, software_slug=software.slug, version=release.version, platform=release.platform, summary=release.summary, advice=release.advice, published=release.published, published_at=release.published_at, views_7d=views.get(software.id, 0)))
+            recent.append(RecentRelease(id=release.id, software_id=software.id, software_name=software.name, software_slug=software.slug, version=release.version, platform=release.platform, summary=release.summary, advice=release.advice, published=release.published, published_at=release.published_at, views_7d=release.view_count))
         stats = StatsService(self.db)
         impressions, clicks = stats.totals("ad_imp", days), stats.totals("ad_click", days)
         ads = [AdPlacementStats(placement=placement, enabled=settings.ad_placements.get(placement, True), impressions=sum(v for k, v in impressions.items() if k.startswith(placement + ":")), clicks=sum(v for k, v in clicks.items() if k.startswith(placement + ":"))) for placement in PLACEMENTS]

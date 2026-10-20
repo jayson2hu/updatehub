@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument('--database', type=Path, default=root / 'runtime' / 'station.db')
     parser.add_argument('--uploads', type=Path, default=root / 'runtime' / 'station-uploads')
     parser.add_argument('--output', type=Path, default=root / 'runtime' / 'station-backups')
+    parser.add_argument('--signing-key', type=Path, help='Local persisted key; defaults to the uploads parent / station-signing.key')
     args = parser.parse_args()
     if not args.database.is_file():
         parser.error(f'Database not found: {args.database}')
@@ -35,11 +36,15 @@ def main() -> None:
                 raise RuntimeError(f'Backup integrity check failed: {integrity}')
     if args.uploads.is_dir():
         shutil.copytree(args.uploads, target / 'station-uploads')
+    signing_key = args.signing_key or args.uploads.parent / 'station-signing.key'
+    if signing_key.is_file():
+        shutil.copy2(signing_key, target / 'station-signing.key')
     manifest = {
         'created_at_utc': timestamp,
         'database': str(args.database.resolve()),
         'database_sha256': hashlib.sha256(db_copy.read_bytes()).hexdigest(),
         'integrity_check': 'ok',
+        'local_signing_key_included': (target / 'station-signing.key').is_file(),
         'uploaded_files': sum(1 for item in (target / 'station-uploads').rglob('*') if item.is_file()),
     }
     (target / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')

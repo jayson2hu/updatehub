@@ -1,4 +1,16 @@
-import { getStationData, isExpired } from '@/lib/station';
-import { NoticeRow, EmptyState } from '@/components/station/common';
-export const metadata = { title: '群公告' };
-export default async function AnnouncementsPage() { const data = await getStationData(); const notices = [...data.announcements].sort((a, b) => Number(b.pinned && !isExpired(b)) - Number(a.pinned && !isExpired(a)) || (b.published_at || '').localeCompare(a.published_at || '')); return <div className="st-page st-notices-page"><div className="st-page-heading"><div><h1>群公告</h1><p>重要提醒、使用说明和维护消息，随时回来查看。</p></div><span className="st-content-caption">共 {notices.length} 条公告</span></div><div className="st-notices-list">{notices.length ? notices.map(n => <NoticeRow notice={n} key={n.id}/>) : <EmptyState title="暂时没有公告" description="有新的群消息或使用提醒时，会发布在这里。"/>}</div><p className="st-list-end">已结束的公告会保留，方便查看之前的说明。</p></div>; }
+import type { Metadata } from 'next';
+import { getStationData, requestNow } from '@/lib/station';
+import { AnnouncementsView } from '@/components/station/listing';
+import { PageView } from '@/components/station/page-view';
+
+type Query = { type?: string | string[] };
+const TYPES = ['group', 'usage', 'maintenance'] as const;
+export const metadata: Metadata = { title: '群公告', description: '重要通知、使用提醒和维护安排。', alternates: { canonical: '/announcements' }, openGraph: { title: '群公告', description: '重要通知、使用提醒和维护安排。' } };
+
+export default async function AnnouncementsPage({ searchParams }: { searchParams: Promise<Query> }) {
+  const raw = (await searchParams).type;
+  const type = (Array.isArray(raw) ? raw[0] : raw) as (typeof TYPES)[number] | undefined;
+  const data = await getStationData();
+  const initial = type && TYPES.includes(type) ? type : 'all';
+  return <><PageView name="announcements"/><AnnouncementsView key={initial} announcements={data.announcements} software={data.software} initialType={initial} now={requestNow()}/></>;
+}

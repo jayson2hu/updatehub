@@ -1,0 +1,38 @@
+<view class="sv-page">
+  <view class="search-bar"><view class="search-box"><text>🔍</text><input class="search-input" value="{{query}}" focus="{{true}}" placeholder="搜软件名、用途或公告" confirm-type="search" maxlength="30" bindinput="onInput" bindconfirm="onConfirm" aria-label="搜索"/><view wx:if="{{query}}" class="search-clear" bindtap="clearQuery" aria-role="button" aria-label="清除"><text>✕</text></view></view></view>
+  <page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/>
+  <block wx:if="{{!loading && !error}}">
+    <!-- 空查询：大家在搜 / 搜索历史 / 最近看过（R-SEARCH-02） -->
+    <block wx:if="{{!result}}">
+      <view wx:if="{{hot.length}}" class="sv-sec"><view class="sv-sh"><text class="sv-sh__title">大家在搜</text></view><view class="sv-chips--wrap"><view wx:for="{{hot}}" wx:key="word" class="sv-chip" bindtap="useWord" data-word="{{item.word}}" aria-role="button"><text class="sv-chip__in">{{item.text}}</text></view></view></view>
+      <view wx:if="{{history.length}}" class="sv-sec"><view class="sv-sh"><text class="sv-sh__title">搜索历史</text><text class="sv-sh__more" bindtap="clearHistory" aria-role="button">清空</text></view><view class="sv-chips--wrap"><view wx:for="{{history}}" wx:key="*this" class="sv-chip" bindtap="useWord" data-word="{{item}}" aria-role="button"><text class="sv-chip__in">{{item}}</text></view></view></view>
+      <view class="sv-sec sv-card">
+        <view class="sv-sh"><text class="sv-sh__title">最近看过</text><text wx:if="{{recent.length}}" class="sv-sh__more" bindtap="clearRecent" aria-role="button">清空</text></view>
+        <text wx:if="{{!recent.length}}" class="sv-small sv-muted">还没有看过的软件</text>
+        <view wx:for="{{recent}}" wx:key="id" class="sv-rank {{index === 0 ? 'sv-rank--first' : ''}}" bindtap="openSoftware" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link"><app-icon size="sm" name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/><view class="sv-grow"><text class="row-name sv-ell">{{item.name}}</text><text class="row-sum sv-ell">{{item.summary}}</text></view><text class="sv-arr">›</text></view>
+      </view>
+    </block>
+
+    <!-- 结果（R-SEARCH-04）：软件组在前，命中文字高亮 -->
+    <block wx:elif="{{result.total}}">
+      <view wx:if="{{result.software.length}}" class="sv-sec">
+        <view class="sv-sh"><text class="sv-sh__title">软件 · {{result.software.length}}</text></view>
+        <view wx:for="{{result.software}}" wx:key="id" class="sv-rc res" bindtap="openSoftware" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link" aria-label="{{item.name}}">
+          <view class="sv-rc__top"><app-icon size="sm" name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/>
+            <view class="sv-grow"><text class="row-name sv-ell"><text wx:for="{{item.nameParts}}" wx:for-item="p" wx:key="key" class="{{p.hit ? 'sv-mark' : ''}}">{{p.text}}</text></text>
+              <text class="row-sum sv-ell"><text wx:for="{{item.summaryParts}}" wx:for-item="p" wx:key="key" class="{{p.hit ? 'sv-mark' : ''}}">{{p.text}}</text></text>
+              <text wx:if="{{item.aliasParts.length}}" class="row-sum"><text wx:for="{{item.aliasParts}}" wx:for-item="p" wx:key="key" class="{{p.hit ? 'sv-mark' : ''}}">{{p.text}}</text></text></view>
+            <text wx:if="{{item.tag}}" class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text></view>
+        </view>
+      </view>
+      <view wx:if="{{result.notices.length}}" class="sv-sec">
+        <view class="sv-sh"><text class="sv-sh__title">公告 · {{result.notices.length}}</text></view>
+        <view wx:for="{{result.notices}}" wx:key="id" class="sv-ac sv-ac--{{item.tone}}" bindtap="openNotice" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link"><view class="sv-ac__bar"/><text class="sv-ac__title"><text wx:for="{{item.titleParts}}" wx:for-item="p" wx:key="key" class="{{p.hit ? 'sv-mark' : ''}}">{{p.text}}</text></text><text class="sv-xs sv-muted">{{item.categoryText}} · {{item.date}}{{item.ended ? ' · 已结束' : ''}}</text></view>
+      </view>
+    </block>
+
+    <!-- 无结果（R-SEARCH-05） -->
+    <view wx:else class="sv-empty"><text class="sv-empty__e">🔍</text><text>没找到“{{query}}”</text><text class="sv-empty__sub">换个关键词试试，或者告诉群主你想要什么软件</text><button class="sv-btn sv-btn--soft want" bindtap="openWish" hover-class="sv-pressed">＋ 我想要这个软件</button></view>
+  </block>
+  <wish-sheet show="{{wishOpen}}" name="{{query}}" bindclose="closeWish"/>
+</view>

@@ -1,12 +1,157 @@
-<view class="page detail-page"><page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/><block wx:if="{{software && !loading && !error}}">
-  <view class="detail-hero"><app-icon large name="{{software.name}}" color="{{software.color}}" src="{{software.icon}}"/><view><text class="site-title">{{software.name}}</text><text class="description">{{software.summary}}</text><text wx:if="{{software.is_demo}}" class="demo">示例软件</text></view></view>
-  <copy-link value="{{websiteLink}}" label="复制网站详情链接"/>
-  <view wx:for="{{notices}}" wx:key="id" class="related-notice" data-slug="{{item.slug}}" bindtap="openNotice" hover-class="pressed"><text>重要提醒</text><text>{{item.title}} ›</text></view>
-  <view class="panel version-panel" id="version"><text class="panel-title">选择你的设备</text><view class="devices"><button wx:for="{{platforms}}" wx:key="id" class="device-button {{platform === item.id ? 'active' : ''}}" bindtap="onPlatform" data-id="{{item.id}}" hover-class="pressed">{{item.name}}</button></view><text class="small muted">选择版本</text><picker wx:if="{{releases.length}}" mode="selector" range="{{releases}}" range-key="label" value="{{selectedIndex}}" bindchange="onVersion"><view class="version-picker" aria-role="button" aria-label="选择版本">{{release.label}} <text>⌄</text></view></picker><view wx:else class="no-version">这个设备暂未发布版本，可以查看其他设备。</view><block wx:if="{{release}}"><view class="version-header"><view><text class="device">{{platformName}}</text><view class="version-number">v{{release.version}}<text>{{release.latest ? '最新版本' : '历史版本'}}</text></view></view><text class="status {{release.status}}"><text class="status-dot"/>{{release.statusText}}</text></view><text class="release-date">更新日期 {{release.date}}</text><text class="panel-title">本次更新</text><text class="summary-lead">{{release.summary}}</text><view class="body"><text wx:for="{{release.paragraphs}}" wx:key="*this" class="paragraph">{{item}}</text></view></block></view>
-  <view class="panel"><text class="panel-title">获取{{platformName}}版本</text><view wx:if="{{release.install_notice}}" class="install-notice">{{release.install_notice}}</view><block wx:if="{{primary}}"><text class="source">来源：{{primary.source}}</text><copy-link primary value="{{primary.url}}" label="{{copyLabel}}"/><view wx:if="{{primary.code}}" class="code-row"><text>提取码 <text class="code">{{primary.code}}</text></text><copy-link value="{{primary.code}}" label="复制提取码"/></view><view wx:for="{{backups}}" wx:key="url" class="backup"><text class="source">备用入口：{{item.source}}</text><copy-link value="{{item.url}}" label="复制备用获取链接"/><view wx:if="{{item.code}}" class="code-row"><text>提取码 {{item.code}}</text><copy-link value="{{item.code}}" label="复制提取码"/></view></view></block><view wx:else class="unavailable"><text class="unavailable-title">{{release.status === 'unavailable' ? '暂时无法使用' : '暂不可获取'}}</text><text>{{noLink}}</text><button disabled>暂未配置获取链接</button></view><view class="get-help"><text>小程序不能直接打开任意外部下载页面。</text><text>复制获取链接后，在常用浏览器中粘贴打开，再按来源网站的提示操作。</text></view></view>
-  <ad-slot enabled="{{adsEnabled}}" promotions="{{promotions}}" placement="detail_body"/>
-  <view class="panel"><text class="panel-title">安装方法</text><view wx:if="{{!software.installation.length}}" class="body">管理员尚未补充安装方法，请先阅读版本提醒。</view><view wx:for="{{software.installation}}" wx:key="*this" class="step"><text class="step-number">{{index + 1}}</text><text class="step-content">{{item}}</text></view><image wx:for="{{screenshots}}" wx:key="*this" class="content-image" src="{{item}}" mode="widthFix" lazy-load bindtap="preview" data-src="{{item}}"/></view>
-  <view class="panel"><text class="panel-title">常见问题</text><view wx:if="{{!faqs.length}}" class="body">暂无常见问题，安装前请留意重要公告。</view><view wx:for="{{faqs}}" wx:key="question" class="faq"><button class="faq-title" data-index="{{index}}" bindtap="toggleFaq">{{item.question}}<text>{{item.open ? '−' : '+'}}</text></button><text wx:if="{{item.open}}" class="faq-answer">{{item.answer}}</text></view></view>
-  <view class="panel history-panel"><button bindtap="toggleHistory" class="history-title">历史版本记录 <text>{{history.length}} 个版本 {{historyOpen ? '⌃' : '⌄'}}</text></button><view wx:if="{{historyOpen}}"><view wx:if="{{!history.length}}" class="small muted">暂无历史版本。后续更新会保留在这里。</view><view wx:for="{{history}}" wx:key="id" class="history-row" bindtap="selectHistory" data-id="{{item.id}}" hover-class="pressed"><text>v{{item.version}}</text><text>{{item.label}}</text><text>查看 ›</text></view></view></view>
-  <text class="footnote">获取入口由管理员维护。请确认设备与版本，本站不托管安装包。</text>
-</block></view><view wx:if="{{software && !error && !loading}}" class="fixed-get"><view class="fixed-meta"><text>{{platformName}} {{release ? 'v' + release.version : ''}}</text><text>{{primary ? primary.source : '暂未配置获取链接'}}</text></view><copy-link wx:if="{{primary}}" primary value="{{primary.url}}" label="复制获取链接"/><button wx:else disabled>暂不可获取</button></view>
+<view class="sv-page detail">
+  <page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/>
+  <block wx:if="{{software && !loading && !error}}">
+    <!-- 头部 + 收藏 / 分享（R-DETAIL-01；手机顶栏的收藏与分享放在这里，UI 规范 §9.3） -->
+    <view class="sv-sec head">
+      <app-icon size="lg" name="{{software.name}}" color="{{software.color}}" src="{{software.icon}}"/>
+      <view class="sv-grow">
+        <text class="sv-xs sv-muted">{{software.categoryLine}}</text>
+        <text class="head__name">{{software.name}}</text>
+        <text class="head__sum">{{software.summary}}</text>
+        <text wx:if="{{software.is_demo}}" class="sv-tag sv-tag--gray">示例软件</text>
+      </view>
+      <view class="head__ops">
+        <view class="op {{favorite ? 'op--on' : ''}}" bindtap="toggleFavorite" hover-class="sv-pressed" aria-role="button" aria-label="收藏" aria-checked="{{favorite}}"><text>{{favorite ? '★' : '☆'}}</text><text class="op__t">{{favorite ? '已收藏' : '收藏'}}</text></view>
+        <view class="op" bindtap="openShare" hover-class="sv-pressed" aria-role="button" aria-label="分享"><text>↗</text><text class="op__t">分享</text></view>
+      </view>
+    </view>
+
+    <!-- 关键数字（R-DETAIL-02） -->
+    <view class="sv-sec kpis"><view wx:for="{{kpis}}" wx:key="label" class="kpi"><text class="kpi__v {{item.tone ? 'kpi__v--' + item.tone : ''}}">{{item.value}}</text><text class="kpi__l">{{item.label}}</text></view></view>
+
+    <!-- 结论条（R-DETAIL-03）：图标 + 文字，不只靠颜色 -->
+    <view wx:if="{{verdict}}" class="sv-sec verdict verdict--{{verdict.tone}}" aria-label="{{verdict.title}}"><text class="verdict__i">{{verdict.icon}}</text><view class="sv-grow"><text class="verdict__t">{{verdict.title}}</text><text wx:if="{{verdict.note}}" class="verdict__n">{{verdict.note}}</text></view></view>
+
+    <!-- 下载卡（R-DETAIL-04~09/11/21，R-MINI-04） -->
+    <view class="sv-sec sv-card" id="download">
+      <view class="sv-sh"><text class="sv-sh__title">选择你的设备</text><text wx:if="{{autoDetected}}" class="sv-xs sv-muted">已自动识别</text></view>
+      <view class="devpick">
+        <view wx:for="{{devices}}" wx:key="id" class="dev {{item.selected ? 'dev--on' : ''}} {{item.disabled ? 'dev--off' : ''}}" bindtap="onDevice" data-id="{{item.id}}" data-disabled="{{item.disabled}}" aria-role="button" aria-selected="{{item.selected}}" aria-disabled="{{item.disabled}}" aria-label="{{item.label}}{{item.disabled ? '，暂无此设备版本' : ''}}"><text class="dev__e">{{item.emoji}}</text><text>{{item.label}}</text><text wx:if="{{item.local}}" class="dev__local">本机</text></view>
+      </view>
+      <scroll-view wx:if="{{versions.length}}" scroll-x class="vsel" enhanced show-scrollbar="{{false}}"><view class="vsel__row">
+        <view wx:for="{{versions}}" wx:key="id" class="vsel__item {{item.selected ? 'vsel__item--on' : ''}}" bindtap="onVersion" data-id="{{item.id}}" aria-role="button" aria-selected="{{item.selected}}"><text class="vsel__v sv-mono">{{item.version}}</text><text class="vsel__m">{{item.tag}} · {{item.date}}</text></view>
+      </view></scroll-view>
+      <view wx:else class="vsel-gap"/>
+      <view wx:if="{{!release}}" class="sv-oldnote">这个设备暂未发布版本，可以看看其他设备。</view>
+      <block wx:if="{{release}}">
+        <view wx:for="{{plan.notes}}" wx:key="text" class="{{item.tone === 'old' ? 'sv-oldnote' : item.tone === 'warn' ? 'sv-alert sv-alert--warn' : 'sv-alert'}}">{{item.text}}</view>
+        <view wx:if="{{plan.installNotice}}" class="sv-alert sv-alert--info">{{plan.installNotice}}</view>
+        <copy-link wx:if="{{plan.primary}}" primary block large value="{{plan.primary.value}}" label="{{plan.primary.label}}" toast="{{plan.primary.toast}}" data-release="{{plan.primary.releaseId}}" bindcopied="onCopied"/>
+        <button wx:elif="{{plan.selectStable}}" class="sv-btn sv-btn--primary sv-btn--lg sv-btn--block" bindtap="onVersion" data-id="{{plan.selectStable.releaseId}}" hover-class="sv-pressed">{{plan.selectStable.label}}</button>
+        <button wx:else class="sv-btn sv-btn--lg sv-btn--block sv-btn--off" disabled>{{plan.disabledText}}</button>
+        <!-- 提取码单独复制（链接与提取码分开，避免粘贴到浏览器时带上多余文字） -->
+        <view wx:if="{{plan.primary.code}}" class="code-row"><text class="sv-small">提取码 <text class="code sv-mono">{{plan.primary.code}}</text></text><copy-link small soft value="{{plan.primary.code}}" label="复制提取码" toast="提取码已复制" data-release="{{plan.primary.releaseId}}" bindcopied="onCopied"/></view>
+        <view wx:if="{{plan.secondary}}" class="secondary"><copy-link block value="{{plan.secondary.value}}" label="{{plan.secondary.label}}" toast="{{plan.secondary.toast}}" data-release="{{plan.secondary.releaseId}}" bindcopied="onCopied"/></view>
+        <view wx:if="{{plan.secondary.code}}" class="code-row"><text class="sv-small">当前版本提取码 <text class="code sv-mono">{{plan.secondary.code}}</text></text><copy-link small soft value="{{plan.secondary.code}}" label="复制当前版提取码" toast="提取码已复制" data-release="{{plan.secondary.releaseId}}" bindcopied="onCopied"/></view>
+        <view wx:if="{{plan.meta.length}}" class="meta2"><text wx:for="{{plan.meta}}" wx:key="*this">{{item}}</text></view>
+        <text wx:if="{{plan.iosHint}}" class="hint">{{plan.iosHint}}</text>
+        <view wx:for="{{plan.backups}}" wx:key="id" class="backup">
+          <text class="backup__t">{{item.title}} <text class="sv-xs sv-muted">官网打不开时用</text></text><text class="backup__s sv-ell">{{item.source}}</text><text wx:if="{{item.code}}" class="backup__s">提取码 <text class="code sv-mono">{{item.code}}</text></text>
+          <view class="backup__ops"><view class="sv-grow"><copy-link small soft block value="{{item.value}}" label="{{item.label}}" toast="{{item.toast}}" data-release="{{item.releaseId}}" bindcopied="onCopied"/></view><view wx:if="{{item.code}}" class="sv-grow"><copy-link small block value="{{item.code}}" label="复制提取码" toast="提取码已复制" data-release="{{item.releaseId}}" bindcopied="onCopied"/></view></view>
+        </view>
+        <view wx:if="{{plan.desktopTip}}" class="sv-tip pc-tip"><text>💡 这是电脑版，建议到电脑上打开。</text><copy-link small soft value="{{websiteLink}}" label="复制链接" toast="链接已复制，发到电脑上打开"/></view>
+        <text class="hint">小程序里不能直接打开下载页面，复制链接后到手机浏览器粘贴打开。</text>
+      </block>
+    </view>
+
+    <!-- 详情页下载区下方广告（R-AD-01 detail_body），与下载卡分开 -->
+    <view class="sv-sec ad-wrap"><ad-slot enabled="{{adsEnabled}}" promotions="{{promotions}}" placement="detail_body"/></view>
+
+    <!-- 分段标签（R-DETAIL-13~17），吸顶 -->
+    <view class="dtabs-wrap"><scroll-view scroll-x class="dtabs" enhanced show-scrollbar="{{false}}"><view class="dtabs__row">
+      <view wx:for="{{tabs}}" wx:key="id" class="dtab {{tab === item.id ? 'dtab--on' : ''}}" bindtap="onTab" data-id="{{item.id}}" aria-role="tab" aria-selected="{{tab === item.id}}"><text>{{item.label}}</text></view>
+    </view></scroll-view></view>
+
+    <view class="sv-sec sv-card tab-body">
+      <!-- 更新内容 -->
+      <block wx:if="{{tab === 'changes'}}">
+        <view wx:if="{{diff}}" class="diff"><text wx:if="{{diff.previous}}" class="diff__v sv-mono">{{diff.previous}}</text><text wx:if="{{diff.previous}}">→</text><text class="diff__v diff__v--new sv-mono">{{diff.version}}</text><text class="sv-small sv-muted">{{diff.label}}</text></view>
+        <view wx:for="{{changes}}" wx:key="index" class="nl"><text class="k k--{{item.cls}}">{{item.label}}</text><text class="nl__t">{{item.text}}</text></view>
+        <text wx:for="{{notes}}" wx:key="*this" class="note">{{item}}</text>
+        <text wx:if="{{!changes.length && !notes.length}}" class="sv-muted sv-small">这个版本没有填写更新内容</text>
+        <scroll-view wx:if="{{screenshots.length}}" scroll-x class="shots" enhanced show-scrollbar="{{false}}"><view class="shots__row"><image wx:for="{{screenshots}}" wx:key="*this" class="shot" src="{{item}}" mode="aspectFill" lazy-load bindtap="preview" data-src="{{item}}" aria-label="截图"/></view></scroll-view>
+      </block>
+      <!-- 安装教程：install_guides 优先，退回 installation -->
+      <block wx:elif="{{tab === 'guide'}}">
+        <view class="sv-sh"><text class="sv-sh__title">{{guide.title}}</text><text wx:if="{{guide.minutes}}" class="sv-xs sv-muted">{{guide.minutes}}</text></view>
+        <text wx:if="{{!guide.steps.length}}" class="sv-muted sv-small">群主还没有补充安装教程，先看看下载区的提示。</text>
+        <view wx:for="{{guide.steps}}" wx:key="index" class="step {{index === 0 ? 'step--first' : ''}}"><text class="step__n">{{index + 1}}</text><view class="step__t"><text>{{item}}</text><image wx:if="{{guide.illustrations[index]}}" class="step__image" src="{{guide.illustrations[index]}}" mode="widthFix" lazy-load bindtap="preview" data-src="{{guide.illustrations[index]}}" aria-label="安装步骤配图"/></view></view>
+        <view wx:if="{{guide.tip}}" class="sv-tip">💡 {{guide.tip}}</view>
+      </block>
+      <!-- 常见问题：按设备过滤，默认全部收起 -->
+      <block wx:elif="{{tab === 'faq'}}">
+        <view wx:for="{{faqs}}" wx:key="question" class="faq {{index === 0 ? 'faq--first' : ''}}"><view class="faq__q" data-index="{{index}}" bindtap="toggleFaq" aria-role="button" aria-expanded="{{item.open}}"><text class="sv-grow">{{item.question}}</text><text class="faq__s">{{item.open ? '−' : '+'}}</text></view><text wx:if="{{item.open}}" class="faq__a">{{item.answer}}</text></view>
+      </block>
+      <!-- 版本记录：当前版本实心蓝点，hold 红圈 -->
+      <block wx:elif="{{tab === 'history'}}">
+        <view class="tl">
+          <view wx:for="{{timeline}}" wx:key="id" class="tl__n {{item.current ? 'tl__n--cur' : ''}} {{item.bad ? 'tl__n--bad' : ''}}">
+            <view class="sv-row"><text class="tl__v sv-mono">{{item.version}}</text><text class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text><text class="sv-xs sv-muted">{{item.date}}{{item.selected ? ' · 正在看' : ''}}</text></view>
+            <text wx:if="{{item.summary}}" class="tl__s">{{item.summary}}</text>
+            <view wx:if="{{item.canSelect}}" class="tl__go" bindtap="selectTimeline" data-id="{{item.id}}" aria-role="button"><text>查看这个版本的下载 ›</text></view>
+          </view>
+        </view>
+        <text wx:if="{{timeline.length <= 1}}" class="sv-muted sv-small">暂无更早的版本记录</text>
+      </block>
+      <!-- 软件信息 -->
+      <block wx:else>
+        <view wx:for="{{info}}" wx:key="label" class="info {{index === 0 ? 'info--first' : ''}}"><text class="info__l">{{item.label}}</text><text class="info__v" user-select>{{item.value}}</text><copy-link wx:if="{{item.copy}}" small soft value="{{item.copy}}" label="复制" toast="官网链接已复制"/></view>
+        <text wx:if="{{!info.length}}" class="sv-muted sv-small">暂无更多信息</text>
+        <text wx:if="{{software.description}}" class="desc" user-select>{{software.description}}</text>
+      </block>
+    </view>
+
+    <!-- 反馈（R-DETAIL-18） -->
+    <view wx:if="{{feedback}}" class="sv-sec sv-card">
+      <view class="sv-sh"><text class="sv-sh__title">{{feedbackTitle}}</text><text class="sv-xs sv-muted">{{feedback.total}} 人反馈</text></view>
+      <view class="fb">
+        <view class="fb__b {{myVerdict === 'ok' ? 'fb__b--on' : ''}}" bindtap="voteOk" hover-class="sv-pressed" aria-role="button" aria-selected="{{myVerdict === 'ok'}}">👍 能正常用 · {{feedback.ok}}</view>
+        <view class="fb__b {{myVerdict === 'issue' ? 'fb__b--on' : ''}}" bindtap="openIssue" hover-class="sv-pressed" aria-role="button" aria-selected="{{myVerdict === 'issue'}}">👎 有问题 · {{feedback.issue}}</view>
+      </view>
+      <view wx:if="{{feedback.total}}" class="bar"><view class="bar__i" style="width:{{feedback.bar}}%"/></view>
+      <text class="sv-xs sv-muted fb__text">{{feedback.total ? feedback.percent + '% 的群友反馈能正常使用' : '还没有人反馈，用过的话说一声吧'}}<text wx:if="{{feedback.warn}}" class="fb__warn"> · 问题较多，建议先等等</text></text>
+    </view>
+
+    <!-- 相关公告（R-DETAIL-19） -->
+    <view wx:if="{{notices.length}}" class="sv-sec">
+      <view class="sv-sh"><text class="sv-sh__title">相关公告</text></view>
+      <view wx:for="{{notices}}" wx:key="id" class="sv-ac sv-ac--{{item.tone}}" bindtap="openNotice" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link">
+        <view class="sv-ac__bar"/>
+        <view class="sv-ac__tags"><text wx:if="{{item.activePinned}}" class="sv-tag sv-tag--gold">📌 置顶</text><text class="sv-tag sv-tag--{{item.typeTone}}">{{item.categoryText}}</text><text wx:if="{{item.ended}}" class="sv-tag sv-tag--gray">已结束</text><text class="sv-ac__date">{{item.shortDate}}</text></view>
+        <text class="sv-ac__title">{{item.title}}</text><text class="sv-ac__sum">{{item.summary}}</text>
+      </view>
+    </view>
+
+    <!-- 大家还在看（R-DETAIL-20） -->
+    <view wx:if="{{similar.length}}" class="sv-sec">
+      <view class="sv-sh"><text class="sv-sh__title">大家还在看</text></view>
+      <scroll-view scroll-x class="sv-hs hs-bleed" enhanced show-scrollbar="{{false}}"><view class="sv-hs__row">
+        <view wx:for="{{similar}}" wx:key="id" class="sim" bindtap="openSoftware" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link"><app-icon size="sm" name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/><text class="sim__n sv-ell">{{item.name}}</text><text class="sv-xs sv-muted sv-mono">{{item.version}}</text></view>
+      </view></scroll-view>
+    </view>
+
+    <view class="sv-foot"><text>{{siteName}} · 群友整理的软件更新</text><text>只整理官方信息，不存放安装包</text></view>
+  </block>
+</view>
+
+<!-- 底部固定操作条（R-DETAIL-12） -->
+<view wx:if="{{software && !error && !loading}}" class="sticky">
+  <button class="sv-btn sv-btn--ghost sticky__fb" bindtap="openIssue" hover-class="sv-pressed">👎 有问题</button>
+  <view class="sv-grow"><copy-link wx:if="{{plan.primary}}" primary block value="{{plan.primary.value}}" label="{{plan.primary.short}}" toast="{{plan.primary.toast}}" data-release="{{plan.primary.releaseId}}" bindcopied="onCopied"/><button wx:elif="{{plan.selectStable}}" class="sv-btn sv-btn--primary sv-btn--block" bindtap="onVersion" data-id="{{plan.selectStable.releaseId}}" hover-class="sv-pressed">{{plan.selectStable.short}}</button><button wx:else class="sv-btn sv-btn--block sv-btn--off" disabled>{{plan.disabledText || '暂无下载链接'}}</button></view>
+</view>
+
+<!-- 反馈问题弹层（R-SHEET-04） -->
+<sheet show="{{issueOpen}}" title="遇到了什么问题？" desc="{{software.name}} · {{platformName}}　匿名提交，群主会看到" bindclose="closeIssue">
+  <view class="sv-chips--wrap issue-kinds"><view wx:for="{{issueKinds}}" wx:key="id" class="sv-chip {{issueKind === item.id ? 'sv-chip--on' : ''}}" bindtap="chooseIssueKind" data-id="{{item.id}}" aria-role="radio" aria-checked="{{issueKind === item.id}}"><text class="sv-chip__in">{{item.label}}</text></view></view>
+  <view class="sv-field"><text class="sv-label">补充说明（选填）</text><textarea class="sv-textarea" value="{{issueNote}}" maxlength="300" placeholder="比如：手机型号、卡在哪一步" bindinput="onIssueNote" fixed show-confirm-bar="{{false}}" disable-default-padding aria-label="补充说明"/><text class="sv-count">{{issueNote.length}}/300</text></view>
+  <button class="sv-btn sv-btn--primary sv-btn--block sheet-btn" disabled="{{!issueKind || issueSubmitting}}" bindtap="submitIssue" hover-class="sv-pressed">{{issueSubmitting ? '提交中…' : '提交反馈'}}</button>
+  <button class="sv-btn sv-btn--ghost sv-btn--block sheet-btn2" bindtap="closeIssue" hover-class="sv-pressed">关闭</button>
+</sheet>
+
+<!-- 分享弹层（R-MINI-08 / R-SHEET-03，海报为 P2 未做） -->
+<sheet show="{{shareOpen}}" title="分享这个软件" desc="分享的设备和版本就是当前页面所选的。" bindclose="closeShare">
+  <text class="share-preview">{{shareText}}</text>
+  <button class="sv-btn sv-btn--primary sv-btn--block sheet-btn" open-type="share" hover-class="sv-pressed">💬 分享给群友</button>
+  <view class="sv-actions"><view><copy-link block soft value="{{websiteLink}}" label="🔗 复制链接" toast="链接已复制"/></view><view><copy-link block soft value="{{shareText}}" label="💬 复制群文案" toast="群通知文案已复制"/></view></view>
+  <button class="sv-btn sv-btn--ghost sv-btn--block sheet-btn2" bindtap="closeShare" hover-class="sv-pressed">关闭</button>
+</sheet>

@@ -1,0 +1,29 @@
+/* 我的（UI 规范 §5.8 手机） */
+.me-head{display:flex;align-items:center;gap:24rpx;background:linear-gradient(135deg,#1F4FD8,#5B8CFF);color:#fff;padding:40rpx 32rpx 64rpx}
+.me-av{width:108rpx;height:108rpx;border-radius:50%;background:rgba(255,255,255,.22);border:4rpx solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:52rpx;flex-shrink:0}
+.me-name{display:block;font-size:34rpx;font-weight:700}
+.me-sub{display:block;font-size:24rpx;opacity:.9;margin-top:4rpx}
+.me-sync{flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0 28rpx;border-radius:24rpx;background:rgba(255,255,255,.2);color:#fff;font-size:26rpx;font-weight:600}
+.me-stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;margin:-32rpx 28rpx 0;border-radius:32rpx;box-shadow:0 2rpx 4rpx rgba(20,31,51,.04),0 8rpx 28rpx rgba(20,31,51,.05)}
+.me-stat{display:flex;flex-direction:column;align-items:center;padding:24rpx 0}
+.me-stat__v{font-size:38rpx;font-weight:700}
+.me-stat__l{font-size:24rpx;color:#5F6B80}
+.small-empty{padding:24rpx 0}
+.go{display:inline-flex;margin-top:20rpx}
+.look{flex-shrink:0;min-height:64rpx}
+.sync-card{background:linear-gradient(180deg,#F5F8FF,#fff);border-color:#D3DFFB}
+.sync-desc{display:block;margin-top:8rpx}
+.sync-now{margin-top:16rpx;color:#141F33}
+.sync-now__c{font-weight:800;letter-spacing:2rpx}
+.device-chips{margin-top:12rpx}
+.block-text{display:block;margin-top:12rpx;line-height:1.6}
+.hs-bleed{margin:0 -28rpx;width:auto}
+.sim{display:inline-flex;flex-direction:column;gap:8rpx;vertical-align:top;white-space:normal;width:260rpx;background:#fff;border:1px solid #E4E9F2;border-radius:28rpx;padding:24rpx}
+.sim__n{font-size:27rpx;font-weight:700;max-width:100%}
+.bigcode{display:block;text-align:center;font-size:56rpx;font-weight:800;letter-spacing:6rpx;background:#F1F4F9;border-radius:28rpx;padding:32rpx 0;margin:28rpx 0 16rpx;white-space:nowrap;overflow:hidden}
+.center{display:block;text-align:center}
+.code-input{width:100%;min-height:104rpx;border:1px solid #E4E9F2;border-radius:24rpx;text-align:center;font-size:40rpx;letter-spacing:4rpx;background:#fff}
+.sheet-gap{margin-top:28rpx}
+.sheet-gap2{margin-top:20rpx}
+.sync-error{display:block;color:#B42318;font-size:26rpx;margin-top:16rpx}
+.text-p{display:block;font-size:29rpx;line-height:1.8;margin:16rpx 0;color:#141F33}

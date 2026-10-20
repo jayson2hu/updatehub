@@ -1,4 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { WifiOff } from 'lucide-react';
-export default function ErrorPage({ reset }: { error: Error; reset: () => void }) { return <div className="st-page st-empty st-error"><WifiOff size={38}/><h1>内容暂时没有加载出来</h1><p>网络或服务可能暂时繁忙。请检查网络，然后重新加载。</p><div className="st-error-actions"><button className="st-button st-primary" onClick={reset}>重新加载</button><Link href="/" className="st-button st-secondary">回到最新更新</Link></div></div>; }
+
+export default function ErrorPage({ reset }: { error: Error; reset: () => void }) {
+  return <div className="sv-container sv-state" role="alert">
+    <span className="sv-empty__icon" aria-hidden="true">😵</span>
+    <h1>加载失败了</h1>
+    <p>请检查网络后重试。</p>
+    <div className="sv-u-row sv-u-center-row"><button type="button" className="sv-btn sv-btn--soft" onClick={reset}>重试</button><Link href="/" className="sv-btn sv-btn--ghost">回首页</Link></div>
+  </div>;
+}

@@ -19,6 +19,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npx next typegen
+        working-directory: apps/web
       - run: npm run typecheck
       - run: npm run build
         env:
@@ -68,6 +70,8 @@ jobs:
           python -m app.cli seed
           python -m app.cli seed-content
           python -m app.cli seed-content
+          python -m app.cli seed-station
+          python -m app.cli seed-station
           python -m app.cli create-admin
       - name: PostgreSQL migration, catalog, content and analytics regression
         run: |
@@ -81,13 +85,17 @@ jobs:
               connection.execute(text('CREATE DATABASE updatehub_test_content'))
           engine.dispose()
           PY
-          DATABASE_URL="${DATABASE_URL%/*}/updatehub_test_core" python ../../tests/postgres_smoke.py
-          DATABASE_URL="${DATABASE_URL%/*}/updatehub_test_content" python tests/postgres_content_smoke.py
+          LEGACY_ENABLED=true DATABASE_URL="${DATABASE_URL%/*}/updatehub_test_core" python ../../tests/postgres_smoke.py
+          LEGACY_ENABLED=true DATABASE_URL="${DATABASE_URL%/*}/updatehub_test_content" python tests/postgres_content_smoke.py
       - name: API tests
         run: python -m pytest -q
+      - name: Deployment configuration and source secret checks
+        run: |
+          python -m unittest discover -s ../../tests -p test_deploy_preflight.py -v
+          python ../../scripts/audit-security-files.py
       - name: PostgreSQL application smoke
         run: |
-          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/updatehub-api.log 2>&1 &
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log > /tmp/updatehub-api.log 2>&1 &
           api_pid=$!
           trap 'kill "$api_pid" 2>/dev/null || true' EXIT
           for attempt in $(seq 1 30); do
@@ -95,10 +103,27 @@ jobs:
             sleep 1
           done
           curl --fail http://127.0.0.1:8000/ready
-          curl --fail http://127.0.0.1:8000/api/v1/software
+          curl --fail http://127.0.0.1:8000/api/v1/station/data
       - name: Logs on failure
         if: failure()
         run: cat /tmp/updatehub-api.log 2>/dev/null || true
+
+  miniprograms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - run: python -m venv apps/api/.venv
+      - run: apps/api/.venv/bin/python -m pip install -r apps/api/requirements.txt
+      - run: npm run mini:check
 
   browser:
     runs-on: ubuntu-latest
@@ -106,8 +131,8 @@ jobs:
     needs: [web, api]
     env:
       DATABASE_URL: sqlite:////tmp/updatehub-browser-ci.db
-      PUBLIC_SITE_URL: http://localhost:3000
-      API_INTERNAL_URL: http://127.0.0.1:8000
+      PUBLIC_SITE_URL: http://localhost:3012
+      API_INTERNAL_URL: http://127.0.0.1:8012
       UPLOAD_DIR: /tmp/updatehub-browser-uploads
       ADMIN_INITIAL_EMAIL: browser@example.test
       ADMIN_INITIAL_PASSWORD: CI-only-browser-password-9x!
@@ -129,20 +154,20 @@ jobs:
       - run: npm run build
       - name: Browser task acceptance
         run: |
-          (cd apps/api && python -m alembic upgrade head && python -m app.cli seed && python -m app.cli seed-content && python -m app.cli create-admin)
-          (cd apps/api && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000) > /tmp/updatehub-api.log 2>&1 &
+          (cd apps/api && python -m alembic upgrade head && python -m app.cli seed-station && python -m app.cli create-admin)
+          (cd apps/api && python -m uvicorn app.main:app --host 127.0.0.1 --port 8012 --no-access-log) > /tmp/updatehub-api.log 2>&1 &
           api_pid=$!
-          npm run start > /tmp/updatehub-web.log 2>&1 &
+          npm run start --workspace @updatehub/web -- --port 3012 > /tmp/updatehub-web.log 2>&1 &
           web_pid=$!
           trap 'kill "$api_pid" "$web_pid" 2>/dev/null || true' EXIT
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://localhost:3000/api/v1/ready > /dev/null; then break; fi
+            if curl --fail --silent http://localhost:3012/api/v1/ready > /dev/null; then break; fi
             sleep 1
           done
-          curl --fail http://localhost:3000/api/v1/ready
-          python tests/admin_e2e.py
-          python tests/product_workflow_e2e.py
-          python tests/content_discovery_e2e.py
+          curl --fail http://localhost:3012/api/v1/ready
+          python scripts/audit-station-http.py --base http://127.0.0.1:3012
+          python scripts/audit-station-hints.py --isolated
+          python scripts/verify-station-browser.py --isolated --channel chromium
       - name: Browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -160,6 +185,7 @@ jobs:
     needs: [web, api]
     env:
       POSTGRES_PASSWORD: ci-compose-validation-only
+      STATION_SIGNING_KEY: ci-only-persistent-station-signing-key-32-chars
       PUBLIC_SITE_URL: https://example.com
       DOMAIN: example.com
       ACME_EMAIL: ops@example.com

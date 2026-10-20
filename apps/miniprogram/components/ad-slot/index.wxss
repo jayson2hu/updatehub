@@ -1,1 +1,17 @@
-.promo{background:white;border:1rpx solid #d6e3d7;border-radius:18rpx;padding:26rpx;margin:30rpx 0}.label{display:block;font-size:21rpx;color:#76847a;margin-bottom:15rpx}.cover{display:block;width:100%;height:340rpx;border-radius:10rpx;margin-bottom:20rpx}.title{display:block;font-size:30rpx;font-weight:550;color:#354736;margin-bottom:12rpx}.summary{display:block;font-size:26rpx;line-height:1.8;color:#718074;margin-bottom:22rpx}
+.ad{position:relative;overflow:hidden;background:#fff;border:1px solid #E4E9F2;border-radius:32rpx;margin:0 0 20rpx}
+.ad__pressed{opacity:.8}
+.ad--feed .ad__main{display:flex;align-items:stretch;min-height:176rpx}
+.ad--feed .ad__img{width:232rpx;flex-shrink:0;height:auto;min-height:176rpx;background:linear-gradient(135deg,#FFE7B3,#FFC9C9 60%,#E9D5FF)}
+.ad--feed .ad__text{flex:1;min-width:0;padding:24rpx 72rpx 24rpx 24rpx;display:flex;flex-direction:column;justify-content:center}
+.ad--feed .ad__img+.ad__text{padding-left:24rpx}
+.ad--wide .ad__img{display:block;width:100%;height:224rpx;background:linear-gradient(135deg,#FFE7B3,#FFC9C9 60%,#E9D5FF)}
+.ad--wide .ad__text{display:flex;justify-content:space-between;align-items:center;gap:16rpx;padding:18rpx 24rpx}
+.ad--wide .ad__text{padding-right:72rpx}
+.ad--wide .ad__img+.ad__text{padding-right:24rpx}
+.ad__title{display:block;font-size:28rpx;font-weight:700;color:#141F33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ad__desc{display:block;font-size:24rpx;color:#5F6B80;margin-top:6rpx;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad--wide .ad__desc{margin-top:0;flex-shrink:0}
+.ad__label{position:absolute;left:16rpx;top:16rpx;font-size:22rpx;line-height:36rpx;padding:0 12rpx;border-radius:8rpx;background:rgba(0,0,0,.5);color:#fff}
+.ad__text:first-child{padding-top:64rpx}
+.ad__close{position:absolute;right:0;top:0;width:88rpx;height:88rpx;display:flex;align-items:center;justify-content:center}
+.ad__close text{width:52rpx;height:52rpx;border-radius:50%;background:rgba(0,0,0,.38);color:#fff;font-size:24rpx;display:flex;align-items:center;justify-content:center}

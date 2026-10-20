@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   outputFileTracingRoot: path.resolve(process.cwd(), '../..'),
   poweredByHeader: false,
+  // Optional for managed Windows workspaces that permit threads but cannot fork
+  // compiler processes. Normal deployment keeps the framework defaults.
+  experimental: process.env.STATION_WORKER_THREADS === 'true' ? { workerThreads: true, webpackBuildWorker: false, useTypeScriptCli: false } : undefined,
   async rewrites() {
     return [
       { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },

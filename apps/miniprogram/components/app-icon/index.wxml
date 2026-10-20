@@ -1,1 +1,1 @@
-<view class="app-icon {{large ? 'large' : ''}}" style="background:{{color || '#35664a'}}"><image wx:if="{{src && !failed}}" src="{{src}}" mode="aspectFill" binderror="onError"/><text wx:else>{{initials}}</text></view>
+<view class="ico ico--{{sizeClass}}" style="background-color:{{color || '#2457E6'}}" aria-hidden="true"><image wx:if="{{src && !failed}}" src="{{src}}" mode="aspectFill" lazy-load binderror="onError"/><text wx:else>{{initials}}</text></view>

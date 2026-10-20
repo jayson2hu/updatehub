@@ -1,1 +1,3 @@
-.category-filters{padding-top:0;gap:5rpx}.category-filters .filter{padding:18rpx 16rpx;font-size:25rpx}.notice-card{padding:30rpx;background:white;border:1rpx solid #d6e3d7;border-radius:22rpx;margin-bottom:25rpx}.category{font-size:23rpx;color:#35664a;border:1rpx solid #d6e3d7;padding:4rpx 12rpx;border-radius:5rpx}.state-label{font-size:23rpx;color:#35664a}.state-label.ended{color:#7c897f}.notice-body-summary{font-size:29rpx;color:#65796b;line-height:1.8;margin:17rpx 0 20rpx;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.notice-footer{display:flex;justify-content:space-between;align-items:center;font-size:23rpx;color:#65796b}.footnote{display:block}
+/* 公告列表（UI 规范 §5.5 手机） */
+.types{margin-top:16rpx}
+.list{margin-top:12rpx}

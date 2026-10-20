@@ -1,0 +1,9 @@
+/* 搜索（UI 规范 §5.7 手机）：搜索页不是底栏页，原生导航栏显示「搜索」 */
+.search-bar{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #E4E9F2;padding:16rpx 24rpx}
+.search-box{display:flex;align-items:center;gap:16rpx;min-height:44px;padding:0 0 0 24rpx;border-radius:24rpx;background:#F1F4F9;color:#626F84}
+.search-input{flex:1;min-width:0;height:88rpx;min-height:44px;font-size:32rpx;color:#141F33}
+.search-clear{width:88rpx;min-width:44px;height:88rpx;min-height:44px;display:flex;align-items:center;justify-content:center;color:#5F6B80;font-size:26rpx}
+.row-name{display:block;font-size:28rpx;font-weight:700}
+.row-sum{display:block;font-size:25rpx;color:#5F6B80;margin-top:2rpx}
+.res{padding:24rpx 28rpx}
+.want{display:inline-flex;margin-top:24rpx}

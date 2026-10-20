@@ -67,10 +67,15 @@ login_limiter = WindowRateLimiter()
 public_limiter = WindowRateLimiter(limit=180, seconds=60)
 # Anonymous station writes (docs/v4/adr/0005). IPs live only in memory as keys.
 station_feedback_limiter = WindowRateLimiter(limit=20, seconds=3600)
-station_events_limiter = WindowRateLimiter(limit=240, seconds=60)
+station_events_limiter = WindowRateLimiter(limit=120, seconds=60)
 station_sync_create_limiter = WindowRateLimiter(limit=10, seconds=3600)
 station_sync_restore_limiter = WindowRateLimiter(limit=30, seconds=3600)
-STATION_LIMITERS = (station_feedback_limiter, station_events_limiter, station_sync_create_limiter, station_sync_restore_limiter)
+station_vote_limiter = WindowRateLimiter(limit=10, seconds=60)
+station_wish_limiter = WindowRateLimiter(limit=5, seconds=60)
+station_detail_limiter = WindowRateLimiter(limit=1, seconds=60)
+station_restore_minute_limiter = WindowRateLimiter(limit=5, seconds=60)
+station_restore_day_limiter = WindowRateLimiter(limit=30, seconds=86400)
+STATION_LIMITERS = (station_feedback_limiter, station_events_limiter, station_sync_create_limiter, station_sync_restore_limiter, station_vote_limiter, station_wish_limiter, station_detail_limiter, station_restore_minute_limiter, station_restore_day_limiter)
 
 
 def request_client_key(request: Request) -> str:

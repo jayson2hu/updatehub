@@ -2,23 +2,33 @@ import io
 import logging
 import uuid
 import warnings
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.entities import utcnow
-from app.models.station import StationAnnouncement, StationAnnouncementSoftware, StationPromotion, StationRelease, StationReleaseLink, StationSettings, StationSoftware
+from app.models.station import StationAnnouncement, StationAnnouncementSoftware, StationFeedbackIssue, StationPromotion, StationRelease, StationReleaseLink, StationSettings, StationSoftware
 from app.schemas.catalog import utc_datetime
 from app.schemas.station import AnnouncementRead, AnnouncementWrite, PromotionRead, PromotionWrite, ReleaseRead, ReleaseWrite, SettingsWrite, SoftwareRead, SoftwareWrite, StationData
 from app.services.catalog import CatalogService
 from app.services.station_engagement import StatsService, enrich_releases
 
 logger = logging.getLogger("updatehub.station")
+
+
+def public_releases(releases, software):
+    demos = {s.id for s in software if s.is_demo}
+    for release in releases:
+        if release.software_id in demos:
+            # Placeholder hosts are examples, never usable download buttons.
+            release.links = [link for link in release.links if not any((urlsplit(link.url).hostname or "").lower() == domain or (urlsplit(link.url).hostname or "").lower().endswith("." + domain) for domain in ("example.com", "example.org", "example.net", "invalid", "test")) and not ("apps.apple.com" in link.url and "/id000" in link.url)]
+    return releases
 
 FIELD_LABELS = {
     "slug": "分享链接标识", "name": "软件名称", "aliases": "常用别名", "summary": "一句话说明",
@@ -31,7 +41,7 @@ FIELD_LABELS = {
     "title": "公告标题", "body": "正文", "category": "公告分类", "importance": "重要程度",
     "pinned": "置顶状态", "expires_at": "到期时间", "software_ids": "关联软件", "images": "配图",
     "site_name": "站点名称", "site_description": "站点简介", "instructions": "基础使用说明",
-    "ads_enabled": "推广功能开关", "id": "内容标识", "created_at": "创建时间",
+    "install_illustrations": "安装步骤配图", "install_tips": "安装提示", "pricing": "收费说明", "listed_at": "收录日期", "ads_enabled": "推广功能开关", "id": "内容标识", "created_at": "创建时间",
     "cover_url": "推广封面", "action_label": "活动按钮文字", "target_url": "活动目标链接",
     "placements": "展示位置", "starts_at": "开始时间", "ends_at": "结束时间",
     "category": "软件分类", "description": "详细简介", "developer": "开发者", "website_url": "官网",
@@ -128,6 +138,8 @@ class StationService:
             valid_promotions.append(read)
         software = list(self.db.scalars(software_query))
         releases = enrich_releases(self.db, self.db.scalars(release_query))
+        if not admin:
+            releases = public_releases(releases, software)
         stats = StatsService(self.db).public([item.id for item in software], settings.hot_searches)
         return StationData(settings=settings, software=software, releases=releases, announcements=list(self.db.scalars(announcement_query)), promotions=valid_promotions, stats=stats)
 
@@ -137,7 +149,7 @@ class StationService:
             raise HTTPException(404, "没有找到这款软件，可能已下架。请返回软件目录查看。")
         releases = list(self.db.scalars(select(StationRelease).where(StationRelease.software_id == item.id, StationRelease.published.is_(True)).order_by(StationRelease.published_at.desc(), StationRelease.created_at.desc(), StationRelease.id)))
         notices = list(self.db.scalars(select(StationAnnouncement).join(StationAnnouncementSoftware).where(StationAnnouncementSoftware.software_id == item.id, StationAnnouncement.published.is_(True)).order_by(StationAnnouncement.published_at.desc())))
-        return {"software": item, "releases": enrich_releases(self.db, releases), "announcements": notices}
+        return {"software": item, "releases": public_releases(enrich_releases(self.db, releases), [item]), "announcements": notices}
 
     def announcement(self, slug):
         item = self.db.scalar(select(StationAnnouncement).where(StationAnnouncement.slug == slug, StationAnnouncement.published.is_(True)))
@@ -161,7 +173,7 @@ class StationService:
             messages = [validation_message(error) for error in exc.errors()]
             raise HTTPException(422, "；".join(messages)) from exc
 
-    def save(self, kind, payload, admin_id, item_id=None):
+    def save(self, kind, payload, admin_id, item_id=None, commit=True):
         model, write_schema, read_schema = {
             "software": (StationSoftware, SoftwareWrite, SoftwareRead),
             "release": (StationRelease, ReleaseWrite, ReleaseRead),
@@ -189,9 +201,13 @@ class StationService:
                 raise HTTPException(422, "该软件尚未支持此设备，请先在软件管理中添加设备")
             if item_id and (item.software_id != values["software_id"] or item.platform != values["platform"]):
                 raise HTTPException(422, "版本所属的软件和设备不能更改，请为另一个设备新建版本")
+            if item_id and (not values["published"] or values["status"] == "unavailable" or values["advice"] == "hold"):
+                dependent = self.db.scalar(select(StationRelease.id).where(StationRelease.stable_release_id == item_id, StationRelease.published.is_(True)))
+                if dependent:
+                    raise HTTPException(422, "此版本正在被推荐为稳定版。请先修改引用它的版本，重新选择稳定版或撤回，再停用此版本。")
             if values["stable_release_id"]:
                 stable = self.db.get(StationRelease, values["stable_release_id"])
-                if stable is None or stable.id == item_id or stable.software_id != values["software_id"] or stable.platform != values["platform"] or not stable.published:
+                if stable is None or stable.id == item_id or stable.software_id != values["software_id"] or stable.platform != values["platform"] or not stable.published or stable.status == "unavailable" or stable.advice == "hold":
                     raise HTTPException(422, "推荐稳定版必须是同一软件、同一设备下已发布的其他版本")
             old_links = {link.id: link for link in item.links}
             next_links = []
@@ -205,6 +221,11 @@ class StationService:
                 link.sort_order = index
                 next_links.append(link)
             item.links = next_links
+            if before:
+                current_urls = {link.id: link.url for link in next_links if link.id}
+                changed_links = {link["id"] for link in before["links"] if current_urls.get(link["id"]) != link["url"]}
+                if changed_links:
+                    self.db.execute(update(StationFeedbackIssue).where(StationFeedbackIssue.release_id == item_id, StationFeedbackIssue.status == "new", StationFeedbackIssue.kind == "link", (StationFeedbackIssue.link_id.in_(changed_links) | StationFeedbackIssue.link_id.is_(None))).values(status="handled", handled_at=utcnow()))
         if kind == "announcement":
             ids = values.pop("software_ids")
             found = set(self.db.scalars(select(StationSoftware.id).where(StationSoftware.id.in_(ids)))) if ids else set()
@@ -226,7 +247,8 @@ class StationService:
             if kind == "release":
                 item = enrich_releases(self.db, [item])[0]
             CatalogService(self.db).audit(admin_id, "update" if item_id else "create", "station_" + kind, item.id, before, after)
-            self.db.commit()
+            if commit:
+                self.db.commit()
         except IntegrityError as exc:
             self.db.rollback()
             raise HTTPException(409, "分享链接标识已被使用，请更换标识后重试；已填写的内容可以保留。") from exc
@@ -235,6 +257,10 @@ class StationService:
     def save_settings(self, payload, admin_id):
         before = self.settings().model_dump()
         values = self.validate(SettingsWrite, {**before, **payload}).model_dump()
+        # Existing one-character names were allowed by earlier versions. Keep
+        # them readable and permit unrelated settings until explicitly renamed.
+        if "site_name" in payload and len(values["site_name"]) < 2:
+            raise HTTPException(422, "站名：至少填写 2 个字")
         item = self.db.get(StationSettings, "site") or StationSettings(id="site")
         for key, value in values.items():
             setattr(item, key, value)
@@ -254,7 +280,7 @@ def save_station_image(file: UploadFile, db: Session, admin_id: str):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(data)) as source:
+            with Image.open(io.BytesIO(data), formats=["PNG", "JPEG", "WEBP"]) as source:
                 if source.format not in {"PNG", "JPEG", "WEBP"} or source.width > 8000 or source.height > 8000 or source.width * source.height > 24_000_000:
                     raise ValueError("unsupported image or dimensions")
                 source.load()

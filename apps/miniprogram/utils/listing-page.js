@@ -1,19 +1,81 @@
+// 底栏页面（首页 / 软件库 / 公告 / 我的）共用逻辑：读取站点数据、站名标题、下拉刷新、错误重试、
+// 统计 page_view、刷新「我的」角标。各页面只提供 render(data) 与自己的事件处理。
 const api = require('./api');
 const content = require('./content');
+const feed = require('./feed');
+const events = require('./events');
+const storage = require('./storage');
 const wx = require('./platform');
-module.exports = function listingPage(mode) { return {
-  data:{loading:true,error:'',settings:{site_name:'更新小站',site_description:'软件更新、安装说明和群公告，都在这里。'},query:'',selectedPlatform:'all',platforms:[],software:[],releases:[],pinned:null,promotions:[],hasDemo:false,mode},
-  onLoad(){this.load(false);},
-  onShow(){if(this._station){this.setData({pinned:content.pinned(this._station)});if(Date.now()-(this._loadedAt || 0)>30000)this.load(true);}},
-  async load(force){this.setData({loading:!this._station,error:''});try{const data=await api.station(force);this._station=data;this._loadedAt=Date.now();this.setData({settings:data.settings,hasDemo:data.software.some(s=>s.is_demo),promotions:data.promotions || [],pinned:content.pinned(data),platforms:[{id:'all',label:'全部'},...content.platforms.filter(p=>data.software.some(s=>s.platforms.includes(p.id)))]});this.applyFilters();wx.setNavigationBarTitle({title:mode === 'directory' ? '软件目录' : data.settings.site_name});}catch(error){this.setData({error:error.message});}finally{this.setData({loading:false});wx.stopPullDownRefresh();}},
-  onPullDownRefresh(){this.load(true);},
-  retry(){this.load(true);},
-  applyFilters(){if(this._station)this.setData(content.filterContent(this._station,this.data.query,this.data.selectedPlatform));},
-  onSearch(event){this.setData({query:event.detail.value});this.applyFilters();},
-  onPlatform(event){this.setData({selectedPlatform:event.currentTarget.dataset.id});this.applyFilters();},
-  clear(){this.setData({query:'',selectedPlatform:'all'});this.applyFilters();},
-  openSoftware(event){const d=event.currentTarget.dataset;wx.navigateTo({url:content.detailRoute(d.slug,d.platform,d.release)});},
-  openNotice(event){wx.navigateTo({url:'/pages/announcement/index?slug='+encodeURIComponent(event.currentTarget.dataset.slug)});},
-  allNotices(){wx.switchTab({url:'/pages/announcements/index'});},
-  onShareAppMessage(){return {title:this.data.settings.site_name+' · 软件更新与群公告',path:mode === 'directory' ? '/pages/software/index' : '/pages/latest/index'};}
-};};
+
+const ME_TAB_INDEX = 3;
+
+/** 「我的」角标 = 有新版的收藏数（R-GLOBAL-02 / R-MINI-01）；不支持角标的宿主静默跳过。 */
+function refreshBadge(data) {
+  const count = data ? feed.updateCount(data) : 0;
+  if (count) wx.setTabBarBadge({ index: ME_TAB_INDEX, text: count > 99 ? '99+' : String(count), fail() {} });
+  else wx.removeTabBarBadge({ index: ME_TAB_INDEX, fail() {} });
+  return count;
+}
+
+/**
+ * options.page：统计用页面名；options.title(siteName)：导航栏标题；options.render(data)：渲染；
+ * options.data / options.methods：页面自己的初始数据与方法；options.onLoad / options.onShow：附加钩子。
+ */
+function tabPage(options) {
+  const siteName = storage.siteName(content.SITE_NAME);
+  const definition = {
+    data: { loading: true, error: '', siteName, settings: { site_name: siteName }, ...(options.data || {}) },
+    onLoad(query) {
+      this._query = query || {};
+      this.applyTitle(this.data.siteName);
+      if (options.onLoad) options.onLoad.call(this, this._query);
+      this.load(false);
+    },
+    onShow() {
+      events.page(options.page);
+      if (options.onShow) options.onShow.call(this);
+      if (!this._station) return;
+      const state = api.shared();
+      // 写操作让缓存失效或超过 30 秒时重新拉取，否则只用本机最新的收藏、已读状态重新渲染。
+      if (state.stationVersion !== this._version || Date.now() - (this._loadedAt || 0) > api.CACHE_MS) this.load(true);
+      else this.render();
+    },
+    applyTitle(name) { wx.setNavigationBarTitle({ title: options.title ? options.title(name) : name }); },
+    async load(force) {
+      this.setData({ loading: !this._station, error: '' });
+      try {
+        const data = await api.station(force);
+        this._station = data;
+        this._loadedAt = Date.now();
+        this._version = api.shared().stationVersion;
+        const name = content.siteName(data.settings);
+        storage.setSiteName(name);
+        this.setData({ settings: { ...data.settings, site_name: name }, siteName: name });
+        this.applyTitle(name);
+        this.render();
+      } catch (error) {
+        this.setData({ error: error.message });
+      } finally {
+        this.setData({ loading: false });
+        wx.stopPullDownRefresh();
+      }
+    },
+    render() {
+      if (!this._station) return;
+      options.render.call(this, this._station);
+      refreshBadge(this._station);
+    },
+    onPullDownRefresh() { this.load(true); },
+    retry() { this.load(true); },
+    openSoftware(event) { const d = event.currentTarget.dataset; if (d.slug) wx.navigateTo({ url: content.detailRoute(d.slug, d.platform, d.release) }); },
+    openNotice(event) { wx.navigateTo({ url: '/pages/announcement/index?slug=' + encodeURIComponent(event.currentTarget.dataset.slug) }); },
+    openSearch() { wx.navigateTo({ url: '/pages/search/index' }); },
+    noop() {},
+    onShareAppMessage() { return { title: this.data.siteName + ' · ' + (options.shareTitle || '软件更新与群公告'), path: options.path }; },
+    ...(options.methods || {})
+  };
+  return definition;
+}
+
+module.exports = tabPage;
+module.exports.refreshBadge = refreshBadge;

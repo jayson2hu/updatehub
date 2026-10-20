@@ -33,3 +33,6 @@ export function getSoftwareState(software: Software, releases: Release[], platfo
   if (new Set(states.map(state => state.status)).size > 1) return { status: 'attention', reason: '各设备状态不同，请查看详情' };
   return states[0];
 }
+
+/** 本次请求的时间：同一请求内的服务端组件共用同一个"现在"，客户端水合时也用这个值。 */
+export const requestNow = cache(() => Date.now());

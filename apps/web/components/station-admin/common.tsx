@@ -10,12 +10,15 @@ export const labels: Record<string, string> = { android: "安卓手机", ios: "�
 export const statuses: Record<Status, string> = { normal: "正常使用", attention: "需要注意", unavailable: "暂时无法使用" };
 export const date = (s?: string | null) => s ? new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(s)) : "尚未发布";
 export const errorText = (e: unknown) => e instanceof Error ? e.message : "未能保存，请检查网络后重试。已填写内容仍然保留。";
-export function writeBody(value: object) { return JSON.stringify(Object.fromEntries(Object.entries(value).filter(([key]) => !["id", "created_at", "expired", "effective_pinned"].includes(key)))); }
+// Derived or server-maintained fields; the API rejects them on write.
+const READ_ONLY = new Set(["id", "created_at", "expired", "effective_pinned", "previous_version", "feedback_ok", "feedback_issue", "favorite_count", "view_count"]);
+export function writeBody(value: object) { return JSON.stringify(Object.fromEntries(Object.entries(value).filter(([key]) => !READ_ONLY.has(key)))); }
 export function newSlug(prefix: string) { return `${prefix}-${crypto.randomUUID().slice(0,8)}`; }
 export function useStationAdmin() {
   const [data, setData] = useState<StationData | null>(null);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
+  useEffect(() => { const changed = () => setRevision(x => x + 1); window.addEventListener('station:admin-changed', changed); return () => window.removeEventListener('station:admin-changed', changed); }, []);
   useEffect(() => { let active = true; api<StationData>("/admin/station/data").then(d => { if (active) { setData(d); setError(""); } }).catch(e => { if (active) setError(errorText(e)); }); return () => { active = false; }; }, [revision]);
   return { data, error, reload: () => setRevision(x => x + 1) };
 }

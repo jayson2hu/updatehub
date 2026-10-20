@@ -71,6 +71,10 @@ class SoftwareWrite(StationModel):
     website_url: str = Field(default="", max_length=2048)
     tags: list[ShortText] = Field(default_factory=list, max_length=20)
     install_guides: dict[Platform, list[Step]] = Field(default_factory=dict)
+    install_illustrations: dict[Platform, dict[str, ImagePath]] = Field(default_factory=dict)
+    install_tips: dict[Platform, Annotated[str, Field(max_length=1000)]] = Field(default_factory=dict)
+    pricing: str = Field(default="", max_length=200)
+    listed_at: date | None = None
     published: bool = False
     is_demo: bool = False
 
@@ -91,6 +95,13 @@ class SoftwareWrite(StationModel):
             raise ValueError("每种设备最多填写 30 个安装步骤")
         return {platform: steps for platform, steps in value.items() if steps}
 
+    @field_validator("install_illustrations")
+    @classmethod
+    def illustration_limits(cls, value):
+        if any(not re.fullmatch(r"(?:[0-9]|[12][0-9])", index) for images in value.values() for index in images):
+            raise ValueError("步骤配图必须对应第 1 至 30 个安装步骤")
+        return value
+
     @model_validator(mode="after")
     def publication_ready(self):
         if self.published and not self.platforms:
@@ -100,6 +111,7 @@ class SoftwareWrite(StationModel):
 
 class SoftwareRead(SoftwareWrite):
     id: str
+    created_at: UtcDatetime
     favorite_count: int = 0
     view_count: int = 0
 
@@ -161,6 +173,17 @@ class ReleaseRead(ReleaseWrite):
     previous_version: str = ""
     feedback_ok: int = 0
     feedback_issue: int = 0
+    view_count: int = 0
+
+
+class ReleaseBatch(StationModel):
+    releases: list[ReleaseWrite] = Field(min_length=1, max_length=4)
+
+    @model_validator(mode="after")
+    def same_update(self):
+        if len({(r.software_id, r.version) for r in self.releases}) != 1 or len({r.platform for r in self.releases}) != len(self.releases):
+            raise ValueError("一次发布请选择同一软件、同一版本号和不同设备")
+        return self
 
 
 class NoticeLink(StationModel):
@@ -195,6 +218,7 @@ class AnnouncementRead(AnnouncementWrite):
     id: str
     expired: bool = False
     effective_pinned: bool = False
+    view_count: int = 0
 
     @model_validator(mode="after")
     def effective_state(self):
@@ -214,11 +238,20 @@ class SettingsWrite(StationModel):
     icp_number: str = Field(default="", max_length=60)
     notice_tip: str = Field(default="", max_length=300)
     inapp_hint: bool = True
+    wechat_inapp_hint: bool = False
     hot_searches: list[ShortText] = Field(default_factory=list, max_length=8)
     about_text: str = Field(default="", max_length=20000)
     privacy_text: str = Field(default="", max_length=20000)
     disclaimer_text: str = Field(default="", max_length=20000)
     admin_nickname: str = Field(default="", max_length=30)
+    logo_text: str = Field(default="喵", min_length=1, max_length=4)
+
+    @field_validator("site_name")
+    @classmethod
+    def brand_length(cls, value):
+        if len(value) > (16 if value.isascii() else 8):
+            raise ValueError("站名最多 8 个字（英文最多 16 个字符）")
+        return value
 
     def placement_enabled(self, placement):
         return self.ads_enabled and self.ad_placements.get(placement, True)
@@ -284,7 +317,7 @@ class SoftwareDetail(StationModel):
 # ---- Anonymous visitor input (no accounts, no identifiers) ----
 
 IssueKind = Literal["crash", "install", "download", "login", "link", "other"]
-StatEvent = Literal["page_view", "sw_view", "dl_copy", "fav_add", "fav_remove", "ad_imp", "ad_click", "ann_view", "search", "search_miss"]
+StatEvent = Literal["page_view", "sw_view", "release_view", "dl_copy", "fav_add", "fav_remove", "ad_imp", "ad_click", "ann_view", "search", "search_miss"]
 
 
 class FeedbackWrite(StationModel):
@@ -310,13 +343,32 @@ class WishWrite(StationModel):
 
 
 class WishReceipt(StationModel):
+    id: str
     votes: int
     status: str
+    software_slug: str | None = None
 
 
 class SyncWrite(StationModel):
     software_ids: list[str] = Field(default_factory=list, max_length=200)
     device: Platform | Literal[""] = ""
+    previous_code: str = Field(default="", max_length=14)
+
+
+class VoteWrite(StationModel):
+    release_id: str = Field(min_length=1, max_length=36)
+    verdict: Literal["ok", "issue", "none"]
+    receipt: str = Field(default="", max_length=1500)
+    action: Literal["vote", "details"] = "vote"
+    kind: IssueKind | None = None
+    note: str = Field(default="", max_length=300)
+    channel: Literal["web", "wechat", "xhs"] = "web"
+
+
+class VoteRead(StationModel):
+    receipt: str = ""
+    oks: int
+    issues: int
 
 
 class SyncRead(StationModel):
@@ -351,6 +403,7 @@ class FeedbackIssueRead(StationModel):
     version: str = ""
     platform: str = ""
     link_label: str = ""
+    channel: str = "web"
 
 
 class FeedbackUpdate(StationModel):
@@ -368,6 +421,8 @@ class ReleaseFeedback(StationModel):
     oks: int = 0
     issues: int = 0
     kinds: dict[str, int] = Field(default_factory=dict)
+    pending_issues: int = 0
+    pending_kinds: dict[str, int] = Field(default_factory=dict)
 
 
 class FeedbackList(StationModel):
@@ -386,11 +441,16 @@ class WishRead(StationModel):
     created_at: UtcDatetime
     updated_at: UtcDatetime
     handled_at: UtcDatetime | None
+    platform_votes: dict[str, int] = Field(default_factory=dict)
+    notes: list[str] = Field(default_factory=list)
+    merged_into_id: str | None = None
 
 
 class WishUpdate(StationModel):
-    status: Literal["new", "planned", "added", "rejected"]
+    status: Literal["new", "planned", "added", "rejected"] | None = None
     software_id: str | None = Field(default=None, max_length=36)
+    name: str | None = Field(default=None, min_length=2, max_length=60)
+    merge_into_id: str | None = Field(default=None, max_length=36)
 
 
 class DailyPoint(StationModel):

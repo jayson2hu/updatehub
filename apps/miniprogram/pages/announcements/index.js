@@ -1,3 +1,26 @@
-const api=require('../../utils/api');const c=require('../../utils/content');
-const wx = require('../../utils/platform');
-Page({data:{loading:true,error:'',category:'all',categories:[{id:'all',label:'全部'},{id:'group',label:'群公告'},{id:'usage',label:'使用提醒'},{id:'maintenance',label:'维护通知'}],notices:[]},onLoad(){this.load(false);},onShow(){if(this._notices)this.filter();},async load(force){this.setData({loading:!this._notices,error:''});try{const data=await api.station(force);this._notices=data.announcements.filter(n=>n.published !== false);this.filter();}catch(error){this.setData({error:error.message});}finally{this.setData({loading:false});wx.stopPullDownRefresh();}},filter(){const items=(this._notices || []).map(c.announcement).filter(n=>this.data.category === 'all' || n.category === this.data.category).sort((a,b)=>Number(b.activePinned)-Number(a.activePinned) || (b.published_at || '').localeCompare(a.published_at || ''));this.setData({notices:items});},onCategory(event){this.setData({category:event.currentTarget.dataset.id});this.filter();},clear(){this.setData({category:'all'});this.filter();},onPullDownRefresh(){this.load(true);},retry(){this.load(true);},openNotice(event){wx.navigateTo({url:'/pages/announcement/index?slug='+encodeURIComponent(event.currentTarget.dataset.slug)});},onShareAppMessage(){return {title:'更新小站 · 群内公告',path:'/pages/announcements/index'};}});
+// 公告列表（R-MINI-05 = R-ANN-01/02/04/05）：类型筛选、重要程度色条、已结束变灰并排在后面、关联软件小标签。
+const tabPage = require('../../utils/listing-page');
+const c = require('../../utils/content');
+
+const TYPES = [{ id: 'all', label: '全部' }, { id: 'group', label: '群公告' }, { id: 'usage', label: '使用提醒' }, { id: 'maintenance', label: '维护通知' }];
+const PAGE_SIZE = 20;
+
+Page(tabPage({
+  page: 'announcements',
+  path: '/pages/announcements/index',
+  title: () => '群公告',
+  shareTitle: '群公告',
+  data: { types: TYPES, category: 'all', notices: [], hasMore: false, limit: PAGE_SIZE },
+  render(data) {
+    const software = c.visibleSoftware(data).reduce((map, s) => { map[s.id] = s; return map; }, {});
+    const list = c.sortAnnouncements((data.announcements || []).filter(n => n.published !== false).map(n => c.announcement(n)))
+      .filter(n => this.data.category === 'all' || n.category === this.data.category)
+      .map(n => ({ ...n, related: (n.software_ids || []).filter(id => software[id]).map(id => ({ id, text: software[id].name })) }));
+    this.setData({ notices: list.slice(0, this.data.limit), hasMore: list.length > this.data.limit });
+  },
+  methods: {
+    onCategory(event) { this.setData({ category: event.currentTarget.dataset.id, limit: PAGE_SIZE }); this.render(); },
+    loadMore() { this.setData({ limit: this.data.limit + PAGE_SIZE }); this.render(); },
+    clear() { this.setData({ category: 'all', limit: PAGE_SIZE }); this.render(); }
+  }
+}));

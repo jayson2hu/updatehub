@@ -6,6 +6,7 @@ from alembic.script import ScriptDirectory
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -17,7 +18,7 @@ from app.schemas.catalog import HealthRead
 from app.services.retention import lifespan
 
 settings = get_settings()
-app = FastAPI(title="UpdateHub API", version="0.1.0", lifespan=lifespan, docs_url=None if settings.production else "/docs", redoc_url=None if settings.production else "/redoc")
+app = FastAPI(title="UpdateHub API", version="0.1.0", lifespan=lifespan, docs_url=None if settings.production else "/docs", redoc_url=None if settings.production else "/redoc", openapi_url=None if settings.production else "/openapi.json")
 app.add_middleware(CORSMiddleware, allow_origins=settings.allowed_origins, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "X-CSRF-Token"])
 app.add_middleware(BodySizeLimitMiddleware)
 logger = logging.getLogger("updatehub")
@@ -27,7 +28,12 @@ schema_heads = frozenset(ScriptDirectory(str(Path(__file__).resolve().parents[1]
 @app.middleware("http")
 async def response_headers(request: Request, call_next):
     start = time.monotonic()
-    response = await call_next(request)
+    path = request.url.path
+    current = ('/api/v1/station/', '/api/v1/admin/station/', '/api/v1/admin/auth/', '/api/v1/admin/audit')
+    if not get_settings().legacy_enabled and path.startswith('/api/v1/') and not path.startswith(current) and path not in ('/api/v1/health', '/api/v1/ready'):
+        response = JSONResponse({'detail': '旧版接口已下线，请使用新版软件更新站。'}, status_code=410)
+    else:
+        response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers["X-Frame-Options"] = "DENY"
@@ -36,7 +42,8 @@ async def response_headers(request: Request, call_next):
     if settings.production:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     # No query strings, passwords, cookies or tokens in application logs.
-    logger.info("request method=%s path=%s status=%s duration_ms=%.1f", request.method, request.url.path, response.status_code, (time.monotonic() - start) * 1000)
+    safe_path = '/api/v1/station/sync-codes/[hidden]' if path.startswith('/api/v1/station/sync-codes/') else path
+    logger.info("request method=%s path=%s status=%s duration_ms=%.1f", request.method, safe_path, response.status_code, (time.monotonic() - start) * 1000)
     return response
 
 

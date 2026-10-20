@@ -1,14 +1,84 @@
-<view class="page">
-  <view class="hero"><text class="site-title">{{settings.site_name}}</text><text class="description">{{settings.site_description}}</text></view>
+<view class="sv-page">
   <page-state loading="{{loading}}" error="{{error}}" bindretry="retry"/>
   <block wx:if="{{!loading && !error}}">
-    <view wx:if="{{pinned}}" class="notice" bindtap="openNotice" data-slug="{{pinned.slug}}" hover-class="pressed" aria-role="link" aria-label="{{pinned.title}}"><view class="notice-top"><text class="notice-label">置顶提醒</text><text>{{pinned.date}}</text></view><text class="notice-title">{{pinned.title}} ›</text><text class="notice-summary">{{pinned.summary}}</text></view>
-    <view class="search"><text class="search-symbol">⌕</text><input value="{{query}}" placeholder="搜索软件名称或常用别名" bindinput="onSearch" confirm-type="search" aria-label="搜索软件"/><button wx:if="{{query}}" bindtap="clear" aria-label="清除搜索">清除</button></view>
-    <view class="filters"><button wx:for="{{platforms}}" wx:key="id" class="filter {{selectedPlatform === item.id ? 'active' : ''}}" bindtap="onPlatform" data-id="{{item.id}}" hover-class="pressed" aria-label="{{item.label}}">{{item.label}}</button></view>
-    <view class="section-heading"><text class="title">最新更新</text><text class="meta">{{releases.length}} 条 · 按日期排列</text></view>
-    <page-state empty="{{!releases.length}}" empty-title="没有找到对应软件" empty-text="试试软件别名，或清除设备筛选。" bindretry="clear"/>
-    <block wx:for="{{releases}}" wx:key="id"><text wx:if="{{item.groupStart}}" class="date-label">{{item.date}}</text><view class="release" bindtap="openSoftware" data-slug="{{item.slug}}" data-platform="{{item.platform}}" data-release="{{item.id}}" hover-class="pressed" aria-role="link" aria-label="查看{{item.name}}{{item.platformName}}更新"><app-icon name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/><view class="release-main"><view class="release-heading"><view><text class="software-name">{{item.name}}</text><text class="device">{{item.platformName}}</text></view><text class="version">v{{item.version}}</text></view><text class="release-summary">{{item.summary}}</text><view class="release-footer"><text class="status {{item.status}}"><text class="status-dot"/>{{item.statusText}}</text><text class="release-action">查看更新 ›</text></view></view></view><ad-slot wx:if="{{index === 2}}" enabled="{{settings.ads_enabled}}" promotions="{{promotions}}" placement="home_feed"/></block>
-    <view class="all-notices"><button class="text-button" bindtap="allNotices">查看全部公告 ›</button></view>
-    <text class="footnote">{{hasDemo ? '示例内容 · ' : ''}}未配置真实下载地址时，获取入口保持不可用。下拉可刷新最新内容。</text>
+    <!-- 本周概览（R-HOME-01） -->
+    <view class="sv-sec hero">
+      <text class="hero__t">{{siteName}} · {{week.label}}</text>
+      <text class="hero__n">{{week.title}}</text>
+      <view wx:if="{{week.pills.length}}" class="hero__stats"><text wx:for="{{week.pills}}" wx:key="*this">{{item}}</text></view>
+      <view class="hero__search" bindtap="openSearch" hover-class="sv-pressed" aria-role="button" aria-label="搜索软件"><text>🔍</text><text class="sv-ell">搜软件名或用途，例如“看电视”</text></view>
+    </view>
+
+    <!-- 群公告横滑（R-HOME-03） -->
+    <view wx:if="{{notices.length}}" class="sv-sec">
+      <view class="sv-sh"><text class="sv-sh__title">群公告</text><text class="sv-sh__more" bindtap="allNotices" aria-role="link">全部 ›</text></view>
+      <scroll-view scroll-x class="sv-hs hs-bleed" enhanced show-scrollbar="{{false}}"><view class="sv-hs__row">
+        <view wx:for="{{notices}}" wx:key="id" class="annc {{item.activePinned ? 'annc--pin' : ''}}" bindtap="openNotice" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link" aria-label="{{item.title}}">
+          <view class="annc__tags"><text wx:if="{{item.activePinned}}" class="sv-tag sv-tag--gold">📌 置顶</text><text class="sv-tag sv-tag--{{item.typeTone}}">{{item.important ? '重要' : item.categoryText}}</text><text class="annc__date">{{item.shortDate}}</text></view>
+          <text class="annc__title">{{item.title}}</text>
+          <text class="annc__sum">{{item.summary}}</text>
+        </view>
+      </view></scroll-view>
+    </view>
+
+    <!-- 收藏的软件有更新（R-HOME-04） -->
+    <view wx:if="{{favUpdates.length}}" class="sv-sec">
+      <view class="sv-sh"><view class="sv-sh__title">收藏的软件有更新<text class="sv-badge">{{favUpdates.length}}</text></view><text class="sv-sh__more" bindtap="markAllRead" aria-role="button">全部已读</text></view>
+      <scroll-view scroll-x class="sv-hs hs-bleed" enhanced show-scrollbar="{{false}}"><view class="sv-hs__row">
+        <view wx:for="{{favUpdates}}" wx:key="id" class="favc" bindtap="openSoftware" data-slug="{{item.slug}}" data-platform="{{item.platform}}" hover-class="sv-pressed" aria-role="link" aria-label="{{item.name}}有新版本">
+          <text class="sv-dot favc__dot"/>
+          <app-icon size="sm" name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/>
+          <text class="favc__name sv-ell">{{item.name}}</text>
+          <text class="favc__ver sv-mono"><text wx:if="{{item.previous}}" class="sv-faint">{{item.previous}} → </text>{{item.version}}</text>
+          <text wx:if="{{item.tag}}" class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text>
+        </view>
+      </view></scroll-view>
+    </view>
+
+    <!-- 分类宫格（R-HOME-05） -->
+    <view class="sv-sec cats">
+      <view wx:for="{{categories}}" wx:key="id" class="cat" bindtap="openCategory" data-id="{{item.id}}" hover-class="sv-pressed" aria-role="button" aria-label="{{item.label}}"><text class="cat__e" style="background:{{item.bg}}">{{item.emoji}}</text><text>{{item.label}}</text></view>
+    </view>
+
+    <!-- 最新更新（R-HOME-06/07） -->
+    <view class="sv-sec feed-head">
+      <view class="sv-sh"><text class="sv-sh__title">最新更新</text><text class="sv-sh__more" bindtap="openLibrary" aria-role="link">软件库 ›</text></view>
+    </view>
+    <scroll-view scroll-x class="sv-chips" enhanced show-scrollbar="{{false}}"><view class="sv-chips__row">
+      <view wx:for="{{devices}}" wx:key="id" class="sv-chip {{platform === item.id ? 'sv-chip--on' : ''}}" bindtap="onPlatform" data-id="{{item.id}}" aria-role="button" aria-label="{{item.text}}" aria-selected="{{platform === item.id}}"><text class="sv-chip__in">{{item.text}}</text></view>
+    </view></scroll-view>
+    <view class="sv-sec feed">
+      <view wx:if="{{!items.length}}" class="sv-empty"><text class="sv-empty__e">📭</text><text>这个设备暂时没有更新</text></view>
+      <block wx:for="{{items}}" wx:key="key">
+        <view wx:if="{{item.heading}}" class="sv-day {{item.headingFav ? 'sv-day--fav' : ''}}">{{item.heading}}</view>
+        <view class="sv-rc {{item.isNew ? 'sv-rc--fav' : ''}}" bindtap="openSoftware" data-slug="{{item.slug}}" data-platform="{{item.platform}}" data-release="{{item.releaseId}}" hover-class="sv-pressed" aria-role="link" aria-label="查看{{item.name}} {{item.version}}">
+          <view class="sv-rc__top">
+            <app-icon name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/>
+            <view class="sv-grow">
+              <view class="sv-row rc-title"><view class="sv-rc__name sv-grow"><text class="sv-ell">{{item.name}}</text><text wx:if="{{item.isDemo}}" class="sv-tag sv-tag--gray">示例</text><text wx:if="{{item.isNew}}" class="sv-dot"/></view><text class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text></view>
+              <view class="sv-rc__ver sv-mono"><text wx:if="{{item.previous}}" class="old">{{item.previous}} → </text><text class="new">{{item.version}}</text></view>
+            </view>
+          </view>
+          <text class="sv-rc__sum">{{item.summary}}</text>
+          <view class="sv-rc__ft"><text wx:for="{{item.platforms}}" wx:for-item="p" wx:key="id" class="sv-mini">{{p.text}}</text><text class="rc-stat">{{item.rateText}} · {{item.viewsText}}</text></view>
+        </view>
+        <ad-slot wx:if="{{item.adAfter}}" enabled="{{adsEnabled}}" promotions="{{promotions}}" placement="home_feed"/>
+      </block>
+      <button wx:if="{{hasMore}}" class="sv-btn sv-btn--ghost sv-btn--block" bindtap="loadMore" hover-class="sv-pressed">加载更多</button>
+      <text wx:elif="{{items.length}}" class="no-more">没有更多了</text>
+    </view>
+
+    <!-- 本周热门（R-HOME-08） -->
+    <view wx:if="{{hot.length}}" class="sv-sec sv-card">
+      <view class="sv-sh"><text class="sv-sh__title">🔥 本周热门</text></view>
+      <view wx:for="{{hot}}" wx:key="id" class="sv-rank {{index === 0 ? 'sv-rank--first' : ''}}" bindtap="openSoftware" data-slug="{{item.slug}}" hover-class="sv-pressed" aria-role="link" aria-label="第{{item.rank}}名 {{item.name}}">
+        <text class="sv-rank__no sv-rank__no--{{item.rank}}">{{item.rank}}</text>
+        <app-icon size="sm" name="{{item.name}}" color="{{item.color}}" src="{{item.icon}}"/>
+        <view class="sv-grow"><text class="rank-name sv-ell">{{item.name}}</text><text class="sv-xs sv-muted">{{item.viewsText}}</text></view>
+        <text wx:if="{{item.tag}}" class="sv-tag sv-tag--{{item.tag.tone}}">{{item.tag.text}}</text>
+      </view>
+    </view>
+
+    <view class="sv-foot"><text>{{siteName}} · 群友整理的软件更新</text><text>只整理官方信息，不存放安装包{{hasDemo ? ' · 当前为示例内容' : ''}}</text><text wx:if="{{footerNote}}">{{footerNote}}</text></view>
   </block>
 </view>

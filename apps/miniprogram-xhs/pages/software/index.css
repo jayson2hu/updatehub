@@ -1,1 +1,14 @@
-.footnote{display:block}.hero{padding-bottom:34rpx}
+/* 软件库（UI 规范 §5.3 手机） */
+.search-entry{margin-bottom:8rpx}
+.count-row{display:flex;align-items:center;justify-content:space-between;margin-top:16rpx;margin-bottom:12rpx}
+.sorts{display:flex;align-items:center}
+.sort{padding:23rpx 0 23rpx 12rpx}
+.lib{display:grid;grid-template-columns:1fr 1fr;gap:20rpx;margin-top:0}
+.lc{position:relative;display:flex;flex-direction:column;gap:12rpx;min-width:0;background:#fff;border:1px solid #E4E9F2;border-radius:32rpx;padding:28rpx;box-shadow:0 2rpx 4rpx rgba(20,31,51,.04),0 8rpx 28rpx rgba(20,31,51,.05)}
+.lc__star{position:absolute;top:0;right:0;width:96rpx;height:96rpx;display:flex;align-items:center;justify-content:center;font-size:36rpx;color:#8A95A8}
+.lc__star--on{color:#F5A623}
+.lc__name{font-size:29rpx;font-weight:700;margin-top:4rpx}
+.lc__desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:25rpx;color:#5F6B80;min-height:76rpx;line-height:1.5}
+.lc__dev{font-size:26rpx;letter-spacing:4rpx}
+.lc__ver{display:flex;align-items:center;justify-content:space-between;gap:8rpx;flex-wrap:wrap}
+.want{display:inline-flex;margin-top:24rpx}

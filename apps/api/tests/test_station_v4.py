@@ -1,6 +1,7 @@
 """v4 station features: advice and stable versions, anonymous feedback, wishes,
 favourites sync codes, aggregate statistics and the admin dashboard."""
 from datetime import timedelta
+import hashlib
 
 import pytest
 from sqlalchemy import select
@@ -101,7 +102,7 @@ def test_feedback_is_rate_limited(client, admin):
 
 def test_wishes_merge_by_normalised_name_and_admin_workflow(client, admin):
     first = client.post(PUBLIC + "/wishes", json={"name": "XX 剪辑", "platforms": ["android"]})
-    assert first.status_code == 201 and first.json() == {"votes": 1, "status": "new"}
+    assert first.status_code == 201 and first.json()["votes"] == 1 and first.json()["status"] == "new" and first.json()["id"]
     second = client.post(PUBLIC + "/wishes", json={"name": "ｘｘ剪辑", "platforms": ["desktop"], "note": "电脑也要"})
     assert second.json()["votes"] == 2
     assert client.post(PUBLIC + "/wishes", json={"name": "!!!"}).status_code == 422
@@ -128,17 +129,59 @@ def test_sync_code_create_restore_expiry_and_unpublished_filter(client, admin, d
     admin.patch(ADMIN + "/software/" + shown["id"], json={"published": False})
     assert client.get(PUBLIC + "/sync-codes/" + code).json()["software_ids"] == []
     with database() as db:
-        db.get(StationSyncCode, code).expires_at = utcnow() - timedelta(seconds=1)
+        db.get(StationSyncCode, hashlib.sha256(code.encode()).hexdigest()).expires_at = utcnow() - timedelta(seconds=1)
         db.commit()
     assert client.get(PUBLIC + "/sync-codes/" + code).status_code == 404
     with database() as db:
         StatsService(db).purge()
-        assert db.get(StationSyncCode, code) is None
+        assert db.get(StationSyncCode, hashlib.sha256(code.encode()).hexdigest()) is None
 
 
 def test_sync_restore_is_throttled_against_guessing(client):
-    codes = [client.get(PUBLIC + "/sync-codes/AAAAAAAAAA").status_code for _ in range(31)]
-    assert codes[:30] == [404] * 30 and codes[30] == 429
+    codes = [client.get(PUBLIC + "/sync-codes/AAAAAAAAAA").status_code for _ in range(6)]
+    assert codes[:5] == [404] * 5 and codes[5] == 429
+
+
+def test_sync_regeneration_invalidates_old_code_and_stores_only_hash(client, admin, database):
+    app = software(admin)
+    first = client.post(PUBLIC + "/sync-codes", json={"software_ids": [app["id"]]}).json()
+    second = client.post(PUBLIC + "/sync-codes", json={"software_ids": [app["id"]], "previous_code": first["code"]}).json()
+    assert client.get(PUBLIC + "/sync-codes/" + first["code"]).status_code == 404
+    assert client.get(PUBLIC + "/sync-codes/" + second["code"]).json()["software_ids"] == [app["id"]]
+    assert client.get(PUBLIC + "/sync-codes/" + second["code"] + "ZZ").status_code == 404
+    with database() as db:
+        rows = list(db.scalars(select(StationSyncCode)))
+        assert len(rows) == 1 and len(rows[0].code) == 64 and rows[0].code != second["code"]
+        assert rows[0].software_ids == [app["slug"]]
+
+
+def test_vote_change_cancel_receipt_replay_and_channel(client, admin):
+    item = published(admin, software(admin), "1.0")
+    endpoint = PUBLIC + "/feedback/vote"
+    first = client.post(endpoint, json={"release_id": item["id"], "verdict": "ok"}).json()
+    assert (first["oks"], first["issues"]) == (1, 0)
+    changed = client.post(endpoint, json={"release_id": item["id"], "verdict": "issue", "receipt": first["receipt"], "channel": "wechat"}).json()
+    assert (changed["oks"], changed["issues"]) == (0, 1)
+    assert client.post(endpoint, json={"release_id": item["id"], "verdict": "issue", "receipt": first["receipt"]}).status_code == 409
+    detail = client.post(endpoint, json={"release_id": item["id"], "verdict": "issue", "receipt": changed["receipt"], "action": "details", "kind": "crash", "note": "<b>闪退</b>"}).json()
+    assert detail["issues"] == 1
+    stored = admin.get(ADMIN + "/feedback").json()["items"][0]
+    assert stored["channel"] == "wechat" and stored["note"] == "<b>闪退</b>"
+    cancelled = client.post(endpoint, json={"release_id": item["id"], "verdict": "none", "receipt": detail["receipt"]}).json()
+    assert (cancelled["oks"], cancelled["issues"], cancelled["receipt"]) == (0, 0, "")
+    assert admin.get(ADMIN + "/feedback").json()["items"] == []
+
+
+def test_wish_public_status_follows_merge_and_intake(client, admin):
+    first = client.post(PUBLIC + "/wishes", json={"name": "xx输入法app", "platforms": ["android"]}).json()
+    same = client.post(PUBLIC + "/wishes", json={"name": "ＸＸ 输入法", "platforms": ["tv"]}).json()
+    assert same["id"] == first["id"] and same["votes"] == 2
+    second = client.post(PUBLIC + "/wishes", json={"name": "另一款输入法"}).json()
+    assert admin.patch(ADMIN + "/wishes/" + first["id"], json={"merge_into_id": second["id"]}).status_code == 200
+    app = software(admin)
+    assert admin.patch(ADMIN + "/wishes/" + second["id"], json={"status": "added", "software_id": app["id"]}).status_code == 200
+    result = client.get(PUBLIC + "/wishes/" + first["id"]).json()
+    assert result["status"] == "added" and result["software_slug"] == app["slug"] and result["votes"] == 3
 
 
 def test_events_only_count_known_content_and_update_estimates(client, admin, database):

@@ -1,1 +1,15 @@
-.copy-button{display:flex;align-items:center;justify-content:center;min-height:44px;padding:16rpx 24rpx;margin:0;border:1rpx solid #d6e3d7;border-radius:14rpx;background:#fff;color:#35664a;font-size:26rpx;line-height:1.5;font-weight:500}.copy-button:after{border:0}.copy-button.primary{background:#35664a;color:#fff;border-color:#35664a}.copy-button[disabled]{background:#e1e9e1;color:#6b7b70}.pressed{opacity:.75}.copy-mask{position:fixed;top:0;right:0;bottom:0;left:0;background:#14291d88;z-index:100;display:flex;align-items:flex-end}.copy-sheet{padding:40rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));background:white;border-radius:28rpx 28rpx 0 0;width:100%;box-sizing:border-box}.copy-title{display:block;color:#253d30;font-size:36rpx;font-weight:600;margin-bottom:18rpx}.copy-help{display:block;font-size:28rpx;line-height:1.8;color:#66796b;margin-bottom:28rpx}.copy-value{display:block;font-size:27rpx;background:#f1f5f0;border-radius:12rpx;padding:24rpx;word-break:break-all;margin-bottom:28rpx;color:#253d30}
+.copy{display:flex;align-items:center;justify-content:center;min-height:88rpx;padding:0 28rpx;margin:0;border-radius:24rpx;font-size:28rpx;font-weight:600;line-height:1.35;white-space:nowrap;width:auto;box-sizing:border-box}
+.copy::after{border:none}
+.copy--primary{background:#2457E6;color:#fff;box-shadow:0 8rpx 24rpx rgba(36,87,230,.25)}
+.copy--soft{background:#EBF1FF;color:#2457E6}
+.copy--ghost{background:#fff;color:#141F33;border:1px solid #E4E9F2}
+.copy--block{display:flex;width:100%}
+.copy--lg{min-height:104rpx;font-size:32rpx;border-radius:28rpx}
+.copy--sm{font-size:26rpx;padding:0 22rpx;border-radius:18rpx}
+.copy[disabled]{background:#EEF1F6!important;color:#5F6B80!important;box-shadow:none!important;border-color:#EEF1F6!important;opacity:1}
+.pressed{opacity:.75}
+.copy-mask{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(15,22,38,.55);z-index:300;display:flex;align-items:flex-end}
+.copy-sheet{width:100%;box-sizing:border-box;background:#fff;border-radius:44rpx 44rpx 0 0;padding:40rpx 36rpx calc(44rpx + env(safe-area-inset-bottom))}
+.copy-title{display:block;font-size:36rpx;font-weight:700;color:#141F33;margin-bottom:12rpx}
+.copy-help{display:block;font-size:26rpx;line-height:1.7;color:#5F6B80;margin-bottom:24rpx}
+.copy-value{display:block;font-size:27rpx;line-height:1.6;background:#F1F4F9;border-radius:20rpx;padding:24rpx;word-break:break-all;margin-bottom:28rpx;color:#141F33}

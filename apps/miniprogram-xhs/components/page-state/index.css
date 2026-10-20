@@ -1,1 +1,9 @@
-.state{padding:70rpx 20rpx;text-align:center;color:#687c6e;font-size:28rpx}.title{display:block;font-size:36rpx;font-weight:600;color:#253d30;margin-bottom:18rpx}.description{display:block;line-height:1.9;margin-bottom:30rpx}.state button{min-height:88rpx;display:flex;align-items:center;justify-content:center;padding:16rpx 30rpx;font-size:28rpx;border:1rpx solid #d6e3d7;border-radius:12rpx;background:#fff;color:#35664a}.state button:after{border:0}.skeleton{height:140rpx;background:#e6eee4;border-radius:16rpx;margin-bottom:28rpx}.skeleton.short{height:40rpx;width:50%;margin-bottom:35rpx}
+.state{padding:52rpx 20rpx;text-align:center;color:#5F6B80;font-size:28rpx}
+.emoji{display:block;font-size:68rpx;line-height:1.3;margin-bottom:8rpx}
+.title{display:block;font-size:30rpx;font-weight:700;color:#141F33;margin-bottom:10rpx}
+.description{display:block;font-size:26rpx;line-height:1.7;margin-bottom:28rpx}
+.action{display:inline-flex;align-items:center;justify-content:center;min-height:88rpx;padding:0 36rpx;margin:0;border-radius:24rpx;background:#EBF1FF;color:#2457E6;font-size:28rpx;font-weight:600;line-height:1.4;width:auto}
+.action::after{border:none}
+.pressed{opacity:.72}
+.skeleton{height:200rpx;background:#EEF1F6;border-radius:32rpx;margin:0 28rpx 20rpx}
+.skeleton.short{height:120rpx;width:55%;margin-bottom:28rpx}

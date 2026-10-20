@@ -1,12 +1,41 @@
 {
-  "pages": ["pages/latest/index", "pages/software/index", "pages/announcements/index", "pages/detail/index", "pages/announcement/index"],
-  "window": { "navigationBarTitleText": "更新小站", "navigationBarBackgroundColor": "#f4f7f3", "navigationBarTextStyle": "black", "backgroundColor": "#f4f7f3", "backgroundTextStyle": "dark", "enablePullDownRefresh": true },
-  "tabBar": { "color": "#6b7b70", "selectedColor": "#35664a", "backgroundColor": "#ffffff", "borderStyle": "white", "list": [
-    { "pagePath": "pages/latest/index", "text": "最新", "iconPath": "assets/latest.png", "selectedIconPath": "assets/latest-active.png" },
-    { "pagePath": "pages/software/index", "text": "软件", "iconPath": "assets/software.png", "selectedIconPath": "assets/software-active.png" },
-    { "pagePath": "pages/announcements/index", "text": "公告", "iconPath": "assets/announcements.png", "selectedIconPath": "assets/announcements-active.png" }
-  ] },
-  "usingComponents": { "app-icon": "/components/app-icon/index", "copy-link": "/components/copy-link/index", "page-state": "/components/page-state/index", "ad-slot": "/components/ad-slot/index" },
+  "pages": [
+    "pages/latest/index",
+    "pages/software/index",
+    "pages/announcements/index",
+    "pages/me/index",
+    "pages/detail/index",
+    "pages/announcement/index",
+    "pages/search/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F4F6FB",
+    "backgroundColorTop": "#F4F6FB",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#626F84",
+    "selectedColor": "#2457E6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/latest/index", "text": "首页", "iconPath": "assets/tab-home.png", "selectedIconPath": "assets/tab-home-active.png" },
+      { "pagePath": "pages/software/index", "text": "软件库", "iconPath": "assets/tab-library.png", "selectedIconPath": "assets/tab-library-active.png" },
+      { "pagePath": "pages/announcements/index", "text": "公告", "iconPath": "assets/tab-notice.png", "selectedIconPath": "assets/tab-notice-active.png" },
+      { "pagePath": "pages/me/index", "text": "我的", "iconPath": "assets/tab-me.png", "selectedIconPath": "assets/tab-me-active.png" }
+    ]
+  },
+  "usingComponents": {
+    "app-icon": "/components/app-icon/index",
+    "copy-link": "/components/copy-link/index",
+    "page-state": "/components/page-state/index",
+    "ad-slot": "/components/ad-slot/index",
+    "sheet": "/components/sheet/index",
+    "wish-sheet": "/components/wish-sheet/index"
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

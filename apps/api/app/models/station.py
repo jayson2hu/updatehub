@@ -1,7 +1,7 @@
 """The community update station. Kept separate from the legacy catalog."""
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, JSON, PrimaryKeyConstraint, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, JSON, PrimaryKeyConstraint, String, Text, UniqueConstraint, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -30,6 +30,10 @@ class StationSoftware(Base):
     tags: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     # Per-device steps keyed by platform; `installation` stays the shared steps.
     install_guides: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    install_illustrations: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    install_tips: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    pricing: Mapped[str] = mapped_column(String(200), default="", server_default="")
+    listed_at: Mapped[date | None] = mapped_column(Date, nullable=True)
     # Net favourite events. Favourites live on visitors' devices, so this is an estimate.
     favorite_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # Cumulative daily-deduplicated detail views reported by clients (estimate).
@@ -45,6 +49,7 @@ class StationRelease(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     software_id: Mapped[str] = mapped_column(ForeignKey("station_software.id", ondelete="CASCADE"))
     platform: Mapped[str] = mapped_column(String(20))
+    view_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     version: Mapped[str] = mapped_column(String(80))
     summary: Mapped[str] = mapped_column(String(500), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
@@ -81,6 +86,7 @@ class StationReleaseLink(Base):
 
 class StationAnnouncement(Base):
     __tablename__ = "station_announcement"
+    view_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     slug: Mapped[str] = mapped_column(String(160), unique=True)
     title: Mapped[str] = mapped_column(String(200))
@@ -123,11 +129,13 @@ class StationSettings(Base):
     icp_number: Mapped[str] = mapped_column(String(60), default="", server_default="")
     notice_tip: Mapped[str] = mapped_column(String(300), default="", server_default="")
     inapp_hint: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    wechat_inapp_hint: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     hot_searches: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     about_text: Mapped[str] = mapped_column(Text, default="", server_default="")
     privacy_text: Mapped[str] = mapped_column(Text, default="", server_default="")
     disclaimer_text: Mapped[str] = mapped_column(Text, default="", server_default="")
     admin_nickname: Mapped[str] = mapped_column(String(30), default="", server_default="")
+    logo_text: Mapped[str] = mapped_column(String(4), default="喵", server_default="喵")
 
 
 class StationPromotion(Base):
@@ -167,6 +175,14 @@ class StationFeedbackIssue(Base):
     status: Mapped[str] = mapped_column(String(20), default="new", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    channel: Mapped[str] = mapped_column(String(12), default="web", server_default="web")
+
+
+class StationFeedbackSpent(Base):
+    """One-use operation receipts, not visitor identities or vote histories."""
+    __tablename__ = "station_feedback_spent"
+    digest: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 
 class StationWish(Base):
@@ -183,12 +199,15 @@ class StationWish(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    merged_into_id: Mapped[str | None] = mapped_column(ForeignKey("station_wish.id", ondelete="SET NULL"), nullable=True)
+    platform_votes: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    notes: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
 
 
 class StationSyncCode(Base):
     """Short-lived favourites transfer between a visitor's own devices."""
     __tablename__ = "station_sync_code"
-    code: Mapped[str] = mapped_column(String(12), primary_key=True)
+    code: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 only; never the readable code.
     software_ids: Mapped[list] = mapped_column(JSON, default=list)
     device: Mapped[str] = mapped_column(String(20), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

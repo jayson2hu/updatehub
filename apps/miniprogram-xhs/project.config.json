@@ -1,9 +1,9 @@
 {
-  "description": "更新小站 · 小红书小程序",
+  "description": "版本喵 · 小红书小程序",
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
   "appid": "",
-  "projectname": "更新小站-xhs",
+  "projectname": "版本喵-xhs",
   "setting": {
     "urlCheck": false,
     "es6": true,

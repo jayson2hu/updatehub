@@ -1,12 +1,32 @@
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def validate_https_address(value: str, label: str, *, prefix: bool = False):
+    """Validate configuration without echoing potentially secret input in errors."""
+    try:
+        if any(char.isspace() or ord(char) < 32 for char in value) or "\\" in value:
+            raise ValueError()
+        parsed = urlsplit(value)
+        _ = parsed.port
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or "?" in value or "#" in value or "*" in value:
+            raise ValueError()
+        if prefix:
+            if not parsed.path.endswith("/") or parsed.path == "/" or not parsed.path:
+                raise ValueError()
+        elif parsed.path not in {"", "/"}:
+            raise ValueError()
+    except ValueError as exc:
+        requirement = "an exact HTTPS app-specific path ending in /" if prefix else "an HTTPS origin without credentials, query, fragment or page path"
+        raise ValueError(f"{label} requires {requirement}") from exc
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     database_url: str = "postgresql+psycopg://updatehub@postgres:5432/updatehub"
     environment: str = "development"
@@ -18,6 +38,9 @@ class Settings(BaseSettings):
     session_ttl_hours: int = 12
     admin_initial_email: str = ""
     admin_initial_password: str = ""
+    station_signing_key: str = ""
+    legacy_enabled: bool = False
+    miniapp_referer_prefixes: str = ""
 
     @property
     def production(self) -> bool:
@@ -31,8 +54,16 @@ class Settings(BaseSettings):
     def validate_production(self):
         if self.production and ("database_url" not in self.model_fields_set or not self.database_url.startswith("postgresql")):
             raise ValueError("Production requires an explicit PostgreSQL DATABASE_URL")
-        if self.production and not self.public_site_url.startswith("https://"):
-            raise ValueError("PUBLIC_SITE_URL must use HTTPS in production")
+        if self.production:
+            validate_https_address(self.public_site_url, "PUBLIC_SITE_URL")
+            for origin in self.cors_origins.split(","):
+                if origin.strip():
+                    validate_https_address(origin.strip(), "CORS_ORIGINS")
+        for prefix in self.miniapp_referer_prefixes.split(","):
+            if prefix.strip():
+                validate_https_address(prefix.strip(), "MINIAPP_REFERER_PREFIXES", prefix=True)
+        if self.production and len(self.station_signing_key) < 32:
+            raise ValueError("STATION_SIGNING_KEY must contain at least 32 random characters in production")
         if not 1 <= self.session_ttl_hours <= 168:
             raise ValueError("SESSION_TTL_HOURS must be between 1 and 168")
         return self

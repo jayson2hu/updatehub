@@ -1,8 +1,12 @@
 node_modules/
 .next/
 .env
-.env.local
-.env.miniprogram
+.env.*
+!.env.example
+!.env.*.example
+project.private.config.json
+*.pem
+*.key
 .venv/
 __pycache__/
 .pytest_cache/

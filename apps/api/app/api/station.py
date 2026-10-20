@@ -1,12 +1,15 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Body, File, Query, Request, Response, UploadFile
+from fastapi import HTTPException
+from urllib.parse import urlsplit
+from app.core.config import get_settings
 
 from app.api.dependencies import CurrentAdmin, Database, WriteAdmin
-from app.core.security import check_origin, request_client_key, station_events_limiter, station_feedback_limiter, station_sync_create_limiter, station_sync_restore_limiter
+from app.core.security import check_origin, request_client_key, station_events_limiter, station_feedback_limiter, station_sync_create_limiter, station_sync_restore_limiter, station_vote_limiter, station_wish_limiter, station_detail_limiter, station_restore_minute_limiter, station_restore_day_limiter
 from app.schemas.station import (
     AnnouncementRead, EventBatch, FeedbackList, FeedbackUpdate, FeedbackWrite, PromotionRead, ReleaseRead, SettingsWrite, SoftwareDetail,
-    SoftwareRead, StationDashboard, StationData, SyncRead, SyncWrite, WishRead, WishReceipt, WishUpdate, WishWrite,
+    SoftwareRead, StationDashboard, StationData, SyncRead, SyncWrite, WishRead, WishReceipt, WishUpdate, WishWrite, VoteWrite, VoteRead, ReleaseBatch,
 )
 from app.services.station import StationService, save_station_image
 from app.services.station_engagement import FeedbackService, StationDashboardService, StatsService, SyncService, WishService
@@ -38,10 +41,36 @@ def promotion(slug: str, db: Database):
 def anonymous(request: Request, limiter, scope):
     """Shared guard for visitor writes: trusted origin and per-address throttle."""
     check_origin(request)
+    settings = get_settings()
+    referer = request.headers.get('referer', '')
+    if referer:
+        try:
+            parsed = urlsplit(referer)
+            _ = parsed.port
+            if not parsed.hostname or parsed.username or parsed.password or any(ord(char) < 33 for char in referer) or "\\" in referer:
+                raise ValueError()
+        except ValueError:
+            raise HTTPException(403, '请求来源无效，请从网站或已配置的小程序打开') from None
+        same_site = f'{parsed.scheme}://{parsed.netloc}' in settings.allowed_origins
+        native = any(referer.startswith(p.strip()) for p in settings.miniapp_referer_prefixes.split(',') if p.strip().startswith('https://') and p.strip().endswith('/'))
+        if not same_site and not native:
+            raise HTTPException(403, '请求来源不受信任，请从网站或已配置的小程序打开')
+    elif settings.production and not request.headers.get('origin'):
+        raise HTTPException(403, '缺少请求来源，请刷新页面或检查小程序合法域名配置')
     limiter.hit(scope + ":" + request_client_key(request))
 
 
 NO_STORE = {"Cache-Control": "no-store"}
+
+
+@router.post("/feedback/vote", response_model=VoteRead, summary="匿名投票、改投、撤销或补充说明")
+def vote(request: Request, db: Database, response: Response, payload: dict = Body(...)):
+    anonymous(request, station_vote_limiter, "vote")
+    body = StationService(db).validate(VoteWrite, payload)
+    if body.action == "details":
+        station_detail_limiter.hit("details:" + request_client_key(request) + ":" + body.release_id)
+    response.headers.update(NO_STORE)
+    return FeedbackService(db).vote(body)
 
 
 @router.post("/feedback", status_code=204, response_class=Response, summary="匿名反馈版本能否使用", description="不保存 IP、设备或访客标识；补充说明会隐藏联系方式。")
@@ -53,9 +82,17 @@ def feedback(request: Request, db: Database, payload: dict = Body(...)):
 
 @router.post("/wishes", response_model=WishReceipt, status_code=201, summary="提交想要的软件")
 def wish(request: Request, db: Database, response: Response, payload: dict = Body(...)):
-    anonymous(request, station_feedback_limiter, "wish")
+    anonymous(request, station_wish_limiter, "wish")
     response.headers.update(NO_STORE)
     return WishService(db).submit(StationService(db).validate(WishWrite, payload))
+
+
+@router.get("/wishes/{wish_id}", response_model=WishReceipt, summary="查询自己提交的软件请求状态")
+def wish_status(wish_id: str, request: Request, db: Database, response: Response):
+    anonymous(request, station_events_limiter, "wish-read")
+    response.headers.update(NO_STORE)
+    service = WishService(db)
+    return service.receipt(service.resolve(wish_id))
 
 
 @router.post("/sync-codes", response_model=SyncRead, status_code=201, summary="生成收藏同步码（30 天有效）")
@@ -68,6 +105,8 @@ def create_sync_code(request: Request, db: Database, response: Response, payload
 @router.get("/sync-codes/{code}", response_model=SyncRead, summary="用同步码恢复收藏")
 def restore_sync_code(code: str, request: Request, db: Database, response: Response):
     anonymous(request, station_sync_restore_limiter, "sync-restore")
+    station_restore_minute_limiter.hit(request_client_key(request))
+    station_restore_day_limiter.hit(request_client_key(request))
     response.headers.update(NO_STORE)
     return SyncService(db).restore(code)
 
@@ -97,6 +136,16 @@ def update_software(item_id: str, db: Database, admin: WriteAdmin, payload: dict
 @admin_router.post("/releases", response_model=ReleaseRead, status_code=201)
 def create_release(db: Database, admin: WriteAdmin, payload: dict = Body(...)):
     return StationService(db).save("release", payload, admin.admin_user_id)
+
+
+@admin_router.post("/releases/batch", response_model=list[ReleaseRead], status_code=201)
+def create_releases(db: Database, admin: WriteAdmin, payload: dict = Body(...)):
+    service = StationService(db)
+    body = service.validate(ReleaseBatch, payload)
+    # One transaction: a failed device cannot leave the others half-published.
+    results = [service.save("release", item.model_dump(mode="json"), admin.admin_user_id, commit=False) for item in body.releases]
+    db.commit()
+    return results
 
 
 @admin_router.patch("/releases/{item_id}", response_model=ReleaseRead)

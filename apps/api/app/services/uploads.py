@@ -19,7 +19,7 @@ def save_icon(file: UploadFile, db: Session, admin_id: str):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(data)) as source:
+            with Image.open(io.BytesIO(data), formats=["PNG", "JPEG", "WEBP"]) as source:
                 if source.format not in {"PNG", "JPEG", "WEBP"}:
                     raise ValueError("unsupported image format")
                 if source.width > 2048 or source.height > 2048:

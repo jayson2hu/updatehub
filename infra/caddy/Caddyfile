@@ -13,9 +13,10 @@
 		-Server
 	}
 	# All browser requests use one origin. Next.js proxies API, redirects and icons.
+	# Station images allow 5 MiB plus multipart overhead. API applies lower JSON limits.
 	@admin path /api/v1/admin/*
 	request_body @admin {
-		max_size 3MB
+		max_size 6MB
 	}
 	reverse_proxy web:3000 {
 		header_up X-Forwarded-For {remote_host}

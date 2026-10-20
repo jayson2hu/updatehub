@@ -137,9 +137,11 @@ def test_request_body_limit_precedes_multipart_parsing(client):
 
 
 def test_production_cookie_is_secure(client, monkeypatch):
+    monkeypatch.setenv("STATION_SIGNING_KEY", "test-production-signing-key-for-cookie-check")
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://updatehub@db/updatehub")
     monkeypatch.setenv("PUBLIC_SITE_URL", "https://example.com")
+    monkeypatch.setenv("CORS_ORIGINS", "")
     get_settings.cache_clear()
     response = client.post("/api/v1/admin/auth/login", json={"email": "admin@example.com", "password": "test-admin-password-123"})
     assert response.status_code == 200

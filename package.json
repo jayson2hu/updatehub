@@ -10,7 +10,7 @@
     "lint": "npm run lint --workspace @updatehub/web",
     "typecheck": "npm run typecheck --workspace @updatehub/web",
     "mini:build": "node scripts/build-miniprograms.cjs",
-    "mini:check": "node --test tests/miniprogram.test.cjs"
+    "mini:check": "python scripts/check-miniprograms.py"
   },
   "engines": { "node": ">=22" }
 }
