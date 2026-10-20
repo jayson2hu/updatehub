@@ -1,6 +1,6 @@
 # 版本喵 v4 · 软件更新与群公告
 
-代码仓库：[GitHub · jayson2hu/updatehub](https://github.com/jayson2hu/updatehub)（私有）。默认分支 `main`，开发分支 `feature/v4`；新机器克隆、验证和待配置项见 [仓库接手说明](docs/repository-handoff.md)。
+代码仓库：[GitHub · jayson2hu/updatehub](https://github.com/jayson2hu/updatehub)（公开，可匿名克隆）。默认分支 `main`，开发分支 `feature/v4`；新机器克隆、验证和待配置项见 [仓库接手说明](docs/repository-handoff.md)。
 
 面向中文手机用户的软件更新站：按设备与版本获取、安装图文、群公告、收藏同步、匿名反馈和 v5 管理工作台。站名与介绍可配置，访客免登录。本轮日常库有 9 款示例软件、17 条版本、4 条公告；未配置真实链接时不会模拟下载。广告默认关闭，位置、素材与聚合统计独立管理。
 

@@ -4,7 +4,7 @@
 
 ## 仓库与分支
 
-- GitHub 私有仓库：[jayson2hu/updatehub](https://github.com/jayson2hu/updatehub)。克隆和 CI 证据需要有权限的 GitHub 账号。
+- GitHub 公开仓库：[jayson2hu/updatehub](https://github.com/jayson2hu/updatehub)。2026-10-20 按所有者要求改为公开，已禁用凭据助手验证匿名读取远程分支成功；克隆无需 GitHub 登录，写入仍需授权。
 - 默认分支 `main`；现有开发分支 `feature/v4` 保留。首次交付将两条远程分支推送到同一个已检查的提交，不改写既有提交历史。
 - 网站、FastAPI 后台、数据库迁移、共用小程序源码和微信/小红书产物在同一个仓库。小程序改 `apps/miniprogram` 后运行 `npm run mini:build`，两端生成目录一同提交。
 - 不包含开发数据库、上传图片、管理员明文凭据、签名密钥、原生工程私人配置和本地验收截图。首次生产上线为空内容，不能从本地运行目录补齐数据。
@@ -20,7 +20,7 @@ git status --short
 git log -1 --oneline
 ```
 
-Git 凭据由本机凭据管理器或服务器受限 deploy key 管理，不能把 token 放进克隆地址或项目环境示例。
+公开仓库克隆和拉取无需配置凭据。推送凭据由本机凭据管理器或受限 deploy key 管理，不能把 token 放进克隆地址或项目环境示例。
 
 本地开发参考 [启动与运营](station-operations.md)，安装 Node.js 22+（CI 使用 24）、Python 3.13+，安装 npm/Python 依赖后迁移和创建自己的管理员。Windows 可执行 `./scripts/station-init.ps1 -SkipDemo -CreateAdmin` 创建空站；仅需要演示数据的独立开发环境才省略 `-SkipDemo`。本地持久目录在 `runtime/`，新机器需要自己初始化。
 
@@ -47,7 +47,7 @@ npm run typecheck
 - 微信和小红书原生发布尚缺真实 AppID 与合法 HTTPS 域名，开发工具编译和真机仍待验收。AppSecret 不得进入小程序或仓库。
 - 备案号按实际状态配置；未取得时留空。广告默认关闭，后续可使用已预留的独立模块和位置。
 
-仓库未声明开源许可证，创建私有仓库不构成开源发布。若以后公开仓库，应单独审查内容、历史与第三方素材授权并选择许可证。
+仓库已公开，尚未声明开源许可证；如需正式开源授权，后续由所有者选择许可证。
 
 ## 首次推送前检查记录
 
