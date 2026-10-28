@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Fragment, useMemo, useState } from 'react';
 import type { Platform, StationData } from '@/lib/station-types';
 import { allPlatforms, isExpired } from '@/lib/station';
-import { categoryMeta, categoryOrder, dayHeading, latestBySoftware, latestMarkers, monthDay, platformEmoji, platformShort, sortAnnouncements, type FeedEntry } from '@/lib/station-view';
+import { categoryMeta, categoryOrder, dayHeading, latestBySoftware, latestMarkers, monthDay, narrowEntry, platformEmoji, platformShort, sortAnnouncements, type FeedEntry } from '@/lib/station-view';
 import { favoritesStore, markSeen, useNewFavorites } from '@/hooks/use-station-local';
 import { useLocalStore } from '@/hooks/local-store';
 import { AdSlot } from './ad-slot';
@@ -30,7 +30,7 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
   favItems.sort((a, b) => Number(newIds.includes(b.software.id)) - Number(newIds.includes(a.software.id)));
 
   // 有新版的收藏软件提到列表最前（只取其当前版本），其余按日期分组。
-  const rows = feed.filter(e => device === 'all' || e.platforms.includes(device));
+  const rows = device === 'all' ? feed : feed.flatMap(e => narrowEntry(e, device) || []);
   const pinned = rows.filter(e => e.current && newIds.includes(e.software.id));
   const rest = rows.filter(e => !pinned.includes(e));
   const ordered = [...pinned, ...rest].slice(0, limit);
@@ -113,6 +113,8 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
           <div className="sv-desk-only"><AdSlot settings={settings} promotions={data.promotions} placement="desktop_sidebar" variant="side"/></div>
         </aside>
       </div>
+      {/* 首页底部横幅：更新列表之后、页脚之前。 */}
+      <div className="sv-sec"><AdSlot settings={settings} promotions={data.promotions} placement="home_banner" variant="wide"/></div>
     </div>
   </div>;
 }

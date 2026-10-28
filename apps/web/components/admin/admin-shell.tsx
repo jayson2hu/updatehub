@@ -10,6 +10,7 @@ import { errorMessage, isUnauthorized, Loading, Notice } from "./ui";
 import { BrandMark } from '@/components/station/common';
 import { QuickPublisher, openPublisher } from '@/components/station-admin/publishing';
 import type { DashboardData, StationData } from '@/lib/station-types';
+import { ThemeToggle } from "@/components/station/theme";
 
 const navigation = [
   { href: "/admin", label: "工作台", icon: LayoutDashboard },
@@ -74,6 +75,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <button type="button" className="adm-nav-expand" aria-expanded={expanded} aria-controls="admin-navigation" onClick={() => setExpanded(value => !value)}>{expanded ? "收起管理栏目" : "公告、设置与更多管理"}<ChevronDown size={16} /></button>
       <div className="adm-sidebar-bottom"><Link className="adm-nav-item" href="/" target="_blank" rel="noopener noreferrer"><ArrowUpRight size={18} />查看公开站点</Link><div className="adm-account"><span title={session.user.email}>{session.user.email}</span><button type="button" onClick={logout} disabled={leaving} aria-label="退出登录" title="退出登录"><LogOut size={18} /></button></div></div>
     </aside>
-    <div className="adm-main"><div className="adm-workspace-head"><span>内容管理 <ChevronDown size={13}/> {navigation.find(item => item.href === '/admin' ? path === item.href : path.startsWith(item.href))?.label || '编辑内容'}</span><Link href="/" target="_blank" rel="noopener noreferrer">查看网站<ArrowUpRight size={15}/></Link></div>{error && <Notice>{error}</Notice>}{children}</div><QuickPublisher/>
+    <div className="adm-main"><div className="adm-workspace-head"><span>内容管理 <ChevronDown size={13}/> {navigation.find(item => item.href === '/admin' ? path === item.href : path.startsWith(item.href))?.label || '编辑内容'}</span><span className="adm-head-actions"><ThemeToggle className=""/><Link href="/" target="_blank" rel="noopener noreferrer">查看网站<ArrowUpRight size={15}/></Link></span></div>{error && <Notice>{error}</Notice>}{children}</div><QuickPublisher/>
   </div>;
 }

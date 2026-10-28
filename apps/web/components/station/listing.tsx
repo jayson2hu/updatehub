@@ -1,10 +1,11 @@
 'use client';
 import { useMemo, useState } from 'react';
-import type { Announcement, Category, Release, Software } from '@/lib/station-types';
+import type { Announcement, Category, Promotion, Release, Software } from '@/lib/station-types';
 import { categoryMeta, categoryOrder, latestBySoftware, sortAnnouncements } from '@/lib/station-view';
 import { AnnCard, SoftCard } from './cards';
 import { WishSheet } from './sheets';
-import { Empty } from './ui';
+import { Empty, useStationUi } from './ui';
+import { AdSlot } from './ad-slot';
 
 /** 用 replaceState 把筛选写回 URL，刷新或分享后保持（不新增历史记录）。 */
 function writeQuery(values: Record<string, string>) {
@@ -15,7 +16,8 @@ function writeQuery(values: Record<string, string>) {
 
 /* ================= 软件库（R-LIB） ================= */
 export type LibrarySort = 'new' | 'hot';
-export function LibraryView({ software, releases, initialCat, initialSort }: { software: Software[]; releases: Release[]; initialCat: Category | 'all'; initialSort: LibrarySort }) {
+export function LibraryView({ software, releases, promotions, initialCat, initialSort }: { software: Software[]; releases: Release[]; promotions: Promotion[]; initialCat: Category | 'all'; initialSort: LibrarySort }) {
+  const { settings } = useStationUi();
   const [cat, setCat] = useState(initialCat);
   const [sort, setSort] = useState(initialSort);
   const [wish, setWish] = useState(false);
@@ -42,6 +44,7 @@ export function LibraryView({ software, releases, initialCat, initialSort }: { s
     </div>
     {list.length ? <div className="sv-lib-grid">{list.map(s => <SoftCard key={s.id} software={s} latest={latest.get(s.id)}/>)}</div>
       : <Empty icon="📭" title="这个分类还没有软件"><button type="button" className="sv-btn sv-btn--soft" onClick={() => setWish(true)}>＋ 我想要这个软件</button></Empty>}
+    <div className="sv-sec"><AdSlot settings={settings} promotions={promotions} placement="library_bottom" variant="wide"/></div>
     <WishSheet open={wish} onClose={() => setWish(false)}/>
   </div>;
 }

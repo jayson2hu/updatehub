@@ -129,10 +129,25 @@ export type InApp = 'xhs' | 'wechat' | null;
 export function detectInApp(ua: string): InApp { return /xiaohongshu|discover/i.test(ua) ? 'xhs' : /MicroMessenger/i.test(ua) ? 'wechat' : null; }
 
 /* ---------- 首页信息流 ---------- */
-export interface FeedEntry { key: string; software: Software; release: Release; platforms: Platform[]; releaseIds: string[]; day: string; /** 是否为该设备当前版本（否则链接带 release 参数）。 */ current: boolean }
+export interface FeedItem { platform: Platform; release: Release }
+export interface FeedEntry {
+  key: string; software: Software;
+  /** 卡片的主版本：各设备里最需要注意的那个（先别更新 > 可以等等 > 可选 > 建议）。 */
+  release: Release;
+  /** 卡片包含的每个设备的版本，按设备顺序。 */
+  items: FeedItem[];
+  platforms: Platform[]; releaseIds: string[]; day: string;
+  /** 是否为该设备当前版本（否则链接带 release 参数）。 */ current: boolean;
+}
+const adviceRank: Record<Advice, number> = { hold: 0, wait: 1, optional: 2, recommended: 3 };
+function finishEntry(e: FeedEntry): FeedEntry {
+  const items = allPlatforms.flatMap(p => e.items.filter(i => i.platform === p));
+  const release = [...items].sort((a, b) => adviceRank[a.release.advice] - adviceRank[b.release.advice])[0].release;
+  return { ...e, items, release, platforms: items.map(i => i.platform), releaseIds: items.map(i => i.release.id) };
+}
 /**
- * 同一软件、同一天（北京时间）、同一版本号且建议相同的多设备版本合并为一条（R-HOME-06）。
- * 建议不同时不合并，避免把「先别更新」藏进「建议更新」的卡片里。
+ * 首页每款软件只占一张卡片：各设备的当前版本合并在一起，放在最新那天。
+ * 旧版本不再进入首页列表，在软件详情的「历史版本」里查看。
  */
 export function buildFeed(data: Pick<StationData, 'software' | 'releases'>): FeedEntry[] {
   const soft = new Map(data.software.filter(s => s.published !== false).map(s => [s.id, s]));
@@ -140,15 +155,20 @@ export function buildFeed(data: Pick<StationData, 'software' | 'releases'>): Fee
   const seenPlatform = new Set<string>();
   for (const r of [...data.releases].filter(r => r.published_at && r.published !== false).sort(byPublishedDesc)) {
     const s = soft.get(r.software_id); if (!s) continue;
-    const current = !seenPlatform.has(`${s.id}|${r.platform}`);
+    if (seenPlatform.has(`${s.id}|${r.platform}`)) continue;
     seenPlatform.add(`${s.id}|${r.platform}`);
     const day = dayKey(r.published_at!);
-    const key = `${s.id}|${day}|${r.version}|${r.advice}`;
+    const key = s.id, current = true;
     const entry = map.get(key);
-    if (entry) { if (!entry.platforms.includes(r.platform)) { entry.platforms.push(r.platform); entry.releaseIds.push(r.id); } }
-    else map.set(key, { key, software: s, release: r, platforms: [r.platform], releaseIds: [r.id], day, current });
+    if (entry) { if (!entry.platforms.includes(r.platform)) { entry.platforms.push(r.platform); entry.items.push({ platform: r.platform, release: r }); } }
+    else map.set(key, { key, software: s, release: r, items: [{ platform: r.platform, release: r }], platforms: [r.platform], releaseIds: [r.id], day, current });
   }
-  return [...map.values()].map(e => ({ ...e, platforms: allPlatforms.filter(p => e.platforms.includes(p)) }));
+  return [...map.values()].map(finishEntry);
+}
+/** 按设备筛选时只保留该设备的版本。 */
+export function narrowEntry(entry: FeedEntry, platform: Platform): FeedEntry | null {
+  const items = entry.items.filter(i => i.platform === platform);
+  return items.length ? finishEntry({ ...entry, key: `${entry.key}|${platform}`, items }) : null;
 }
 export function weekSummary(feed: FeedEntry[], announcements: Announcement[], now: number) {
   const { start, end, label } = weekInfo(now);

@@ -6,6 +6,7 @@ import type { Settings } from '@/lib/station-types';
 import type { InApp } from '@/lib/station-view';
 import { useNewFavorites } from '@/hooks/use-station-local';
 import { Badge, StationUiProvider, useStationUi } from './ui';
+import { ThemeToggle } from './theme';
 
 type Route = 'home' | 'library' | 'detail' | 'announcements' | 'announcement' | 'search' | 'me' | 'about' | 'other';
 function routeOf(path: string): Route {
@@ -69,6 +70,7 @@ function DesktopNav({ route, settings, latest }: { route: Route; settings: Setti
       {/* 中文候选字确认后再跳页，避免拼音输入被导航打断。 */}
       <input type="search" value={query} placeholder="搜软件名或用途" aria-label="搜索软件" onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; search(e.currentTarget.value); }} onChange={e => { const value = e.target.value; setQuery(value); search(value); }}/>
     </form>}
+    <ThemeToggle/>
   </div></header>;
 }
 
@@ -89,14 +91,15 @@ function RouteTopbar({ route, settings, latest }: { route: Route; settings: Sett
   const { copy } = useStationUi();
   const count = useNewFavorites(latest).length;
   if (route === 'detail' || route === 'search') return null;
-  if (route === 'library') return <MobileTopbar><h1 className="sv-topbar__title">软件库</h1><Link className="sv-ib" href="/search" aria-label="搜索">🔍</Link></MobileTopbar>;
-  if (route === 'announcements') return <MobileTopbar><h1 className="sv-topbar__title">群公告</h1></MobileTopbar>;
-  if (route === 'me') return <MobileTopbar><h1 className="sv-topbar__title">我的</h1></MobileTopbar>;
+  if (route === 'library') return <MobileTopbar><h1 className="sv-topbar__title">软件库</h1><Link className="sv-ib" href="/search" aria-label="搜索">🔍</Link><ThemeToggle/></MobileTopbar>;
+  if (route === 'announcements') return <MobileTopbar><h1 className="sv-topbar__title">群公告</h1><ThemeToggle/></MobileTopbar>;
+  if (route === 'me') return <MobileTopbar><h1 className="sv-topbar__title">我的</h1><ThemeToggle/></MobileTopbar>;
   if (route === 'about') return <MobileTopbar back><span className="sv-topbar__title">关于本站</span></MobileTopbar>;
   if (route === 'announcement') return <MobileTopbar back><span className="sv-topbar__title">公告详情</span><button type="button" className="sv-ib" aria-label="复制公告链接" onClick={() => copy(window.location.href, '公告链接已复制')}>↗</button></MobileTopbar>;
   return <MobileTopbar>
     <Link href="/" className="sv-topbar__brand" aria-label={`${settings.site_name}首页`}><Logo settings={settings}/><span className="sv-brand">{settings.site_name}</span></Link>
     <Link className="sv-ib" href="/search" aria-label="搜索">🔍</Link>
+    <ThemeToggle/>
     <Link className="sv-ib" href="/me" aria-label={count ? `我的收藏，${count} 个有新版` : '我的收藏'}>⭐{count > 0 && <span className="sv-dot sv-ib__dot" aria-hidden="true"/>}</Link>
   </MobileTopbar>;
 }

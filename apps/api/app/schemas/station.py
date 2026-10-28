@@ -12,7 +12,7 @@ Platform = Literal["android", "ios", "tv", "desktop"]
 Status = Literal["normal", "attention", "unavailable"]
 Category = Literal["video", "netdisk", "tool", "music", "note", "reading", "browser", "other"]
 Advice = Literal["recommended", "wait", "hold", "optional"]
-Placement = Literal["home_feed", "detail_body", "desktop_sidebar"]
+Placement = Literal["home_feed", "home_banner", "library_bottom", "detail_body", "announcement_bottom", "desktop_sidebar"]
 Slug = Annotated[str, Field(min_length=1, max_length=160, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")]
 
 
@@ -268,7 +268,7 @@ class PromotionWrite(StationModel):
     starts_at: UtcDatetime | None = None
     ends_at: UtcDatetime | None = None
     published: bool = False
-    placements: list[Placement] = Field(default_factory=list, max_length=3)
+    placements: list[Placement] = Field(default_factory=list, max_length=6)
 
     @field_validator("target_url")
     @classmethod

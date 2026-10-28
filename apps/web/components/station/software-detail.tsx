@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Platform, Release, Software, SoftwareData, StationData } from '@/lib/station-types';
 import { castFeedback, type VoteResult } from '@/lib/station-feedback';
 import { allPlatforms, getReleaseState } from '@/lib/station';
 import {
-  adviceMeta, backupLinks, byPublishedDesc, categoryMeta, changeKindMeta, changeKindOrder, defaultInstallTip, feedbackRate, formatCount, hostOf,
+  adviceMeta, backupLinks, byPublishedDesc, categoryMeta, changeKindMeta, changeKindOrder, defaultInstallTip, feedbackRate, hostOf,
   latestBySoftware, latestMarkers, monthDay, officialLink, platformEmoji, platformFull, platformShort, softwarePath,
 } from '@/lib/station-view';
 import { track, trackDaily } from '@/lib/station-events';
@@ -18,8 +18,6 @@ import { QrPreview } from './qr-preview';
 import { errorMessage, FeedbackSheet, ShareSheet } from './sheets';
 import { AdviceTag, Empty, SoftIcon, useStationUi } from './ui';
 
-type Tab = 'notes' | 'guide' | 'faq' | 'history' | 'info';
-const TABS: [Tab, string][] = [['notes', '更新内容'], ['guide', '安装教程'], ['faq', '常见问题'], ['history', '版本记录'], ['info', '软件信息']];
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
@@ -41,7 +39,6 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
   // userPick 为 null 表示"自动"：此时常用设备（本机存储，水合后才可读）可以覆盖 UA 识别结果。
   const [userPick, setUserPick] = useState<Platform | null>(explicit ? fallback : null);
   const [releaseId, setReleaseId] = useState<string | undefined>(matched?.id);
-  const [tab, setTab] = useState<Tab>('notes');
   const [sheet, setSheet] = useState<'share' | 'issue' | null>(null);
   const [announce, setAnnounce] = useState('');
   // 本次会话新投的票（服务端数据要刷新后才包含），用于在本地 +1 显示。
@@ -91,7 +88,6 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
   const stable = latest?.advice === 'hold' && latest.stable_release_id ? list.find(r => r.id === latest.stable_release_id) : undefined;
   const shareUrl = `${siteOrigin}${softwarePath(software.slug, platform, historical ? release?.id : undefined)}`;
   const cat = categoryMeta[software.category] || categoryMeta.other;
-  const lastUpdate = ordered.find(r => r.platform === platform)?.published_at;
 
   // 下载点击：小红书内改为打开引导（R-GLOBAL-06），否则上报 dl_copy（下载点击口径 §7.5）。
   function onDownload(event: React.MouseEvent, id: string) {
@@ -136,7 +132,6 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
             </div>
             <div className="sv-dhead__actions"><FavButton id={software.id} className=""/><button type="button" className="sv-btn sv-btn--ghost" onClick={() => setSheet('share')}>↗ 分享</button></div>
           </div>
-          <Kpis release={latest} favorites={software.favorite_count} lastUpdate={lastUpdate}/>
           {release && <Verdict release={release}/>}
         </section>
 
@@ -162,20 +157,16 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
           <div className="sv-desk-only"><AdSlot settings={station.settings} promotions={station.promotions} placement="desktop_sidebar" variant="side"/></div>
         </div>
 
-        <div className="sv-detail__adwide sv-mobile-only"><AdSlot settings={station.settings} promotions={station.promotions} placement="detail_body" variant="wide"/></div>
-
-        <section className="sv-detail__tabs" aria-label="软件资料">
-          <TabList tab={tab} setTab={setTab}/>
-          <div className="sv-card sv-tabpanel" role="tabpanel" id={`sv-panel-${tab}`} aria-labelledby={`sv-tab-${tab}`} tabIndex={0}>
-            {tab === 'notes' && <NotesTab release={release} software={software}/>}
-            <VersionView id={release?.id}/>{tab === 'guide' && <GuideTab software={software} release={release} platform={platform}/>}
-            {tab === 'faq' && <FaqTab software={software} platform={platform}/>}
-            {tab === 'history' && <HistoryTab list={list} current={release} onPick={chooseVersion}/>}
-            {tab === 'info' && <InfoTab software={software} release={release}/>}
-          </div>
-        </section>
-
+        {/* 单页依次展开：安装 → 改了什么 → 反馈 → 历史版本 → 常见问题 → 软件信息，不再藏在标签页里。 */}
+        <VersionView id={release?.id}/>
+        <section className="sv-card sv-detail__sec" aria-labelledby="sv-guide-title"><GuideTab software={software} release={release} platform={platform}/></section>
+        <section className="sv-card sv-detail__sec" aria-labelledby="sv-notes-title"><div className="sv-sh"><h2 id="sv-notes-title">改了什么</h2></div><NotesTab release={release} software={software}/></section>
         <section className="sv-card sv-detail__fb" aria-labelledby="sv-fb-title"><FeedbackBox software={software} latest={latest} historical={historical} onIssue={() => setSheet('issue')}/></section>
+        <section className="sv-card sv-detail__sec" aria-labelledby="sv-history-title"><div className="sv-sh"><h2 id="sv-history-title">历史版本</h2></div><HistoryTab list={list} current={release} onPick={chooseVersion}/></section>
+        {/* 手机正文广告放在历史版本之后，远离结论和下载按钮。 */}
+        <div className="sv-detail__adwide sv-mobile-only"><AdSlot settings={station.settings} promotions={station.promotions} placement="detail_body" variant="wide"/></div>
+        <section className="sv-card sv-detail__sec" aria-labelledby="sv-faq-title"><div className="sv-sh"><h2 id="sv-faq-title">常见问题</h2></div><FaqTab software={software} platform={platform}/></section>
+        <section className="sv-card sv-detail__sec" aria-labelledby="sv-info-title"><div className="sv-sh"><h2 id="sv-info-title">软件信息</h2></div><InfoTab software={software} release={release}/></section>
 
         {related.length > 0 && <section className="sv-card sv-detail__related" aria-labelledby="sv-rel-title"><div className="sv-sh"><h2 id="sv-rel-title">相关公告</h2></div>{related.map(n => <AnnCard key={n.id} notice={n} now={now} software={station.software}/>)}</section>}
 
@@ -194,15 +185,7 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
   </article>;
 }
 
-/* ---------- 关键数字与结论条 ---------- */
-function Kpis({ release, favorites, lastUpdate }: { release?: Release; favorites: number; lastUpdate?: string | null }) {
-  const rate = feedbackRate(release);
-  return <div className="sv-kpis">
-    <div><b className={rate.enough ? 'sv-u-ok' : ''}>{rate.enough ? `${rate.pct}%` : '—'}</b><span>{rate.enough ? '反馈能用' : '反馈较少'}</span></div>
-    <div><b>{formatCount(favorites)}</b><span>人收藏</span></div>
-    <div><b>{monthDay(lastUpdate) || '—'}</b><span>最近更新</span></div>
-  </div>;
-}
+/* ---------- 结论印章 ---------- */
 function Verdict({ release }: { release: Release }) {
   const m = adviceMeta[release.advice] || adviceMeta.optional;
   return <div className={`sv-verdict sv-verdict--${m.tone}`}>
@@ -282,18 +265,6 @@ function DownloadArea(props: DownloadProps) {
 }
 
 /* ---------- 标签页（R-DETAIL-13～17） ---------- */
-function TabList({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  function onKey(e: React.KeyboardEvent) {
-    const i = TABS.findIndex(([k]) => k === tab);
-    const next = e.key === 'ArrowRight' ? (i + 1) % TABS.length : e.key === 'ArrowLeft' ? (i - 1 + TABS.length) % TABS.length : e.key === 'Home' ? 0 : e.key === 'End' ? TABS.length - 1 : -1;
-    if (next < 0) return;
-    e.preventDefault(); setTab(TABS[next][0]);
-    ref.current?.querySelector<HTMLElement>(`#sv-tab-${TABS[next][0]}`)?.focus();
-  }
-  return <div ref={ref} className="sv-tabs" role="tablist" aria-label="软件资料" onKeyDown={onKey}>{TABS.map(([k, label]) => <button key={k} id={`sv-tab-${k}`} type="button" role="tab" aria-selected={tab === k} aria-controls={`sv-panel-${k}`} tabIndex={tab === k ? 0 : -1} onClick={() => setTab(k)}>{label}</button>)}</div>;
-}
-
 function NotesTab({ release, software }: { release?: Release; software: Software }) {
   if (!release) return <p className="sv-u-small sv-u-muted">这个设备还没有发布版本。</p>;
   const groups = changeKindOrder.map(k => [k, release.changes.filter(c => c.kind === k)] as const).filter(([, items]) => items.length);
@@ -310,7 +281,7 @@ function NotesTab({ release, software }: { release?: Release; software: Software
 function GuideTab({ software, release, platform }: { software: Software; release?: Release; platform: Platform }) {
   const steps = software.install_guides?.[platform]?.length ? software.install_guides[platform]! : software.installation;
   return <>
-    <h3 className="sv-tab-title">{platformFull[platform]}安装教程</h3>
+    <div className="sv-sh"><h2 id="sv-guide-title">{platformFull[platform]}怎么装</h2></div>
     {steps.length > 0 && <p className="sv-u-xs sv-u-muted">大约 {Math.max(2, steps.length)} 分钟</p>}
     {steps.length ? <ol className="sv-steps">{steps.map((s, i) => <li key={i}><div><span>{s}</span>{software.install_illustrations?.[platform]?.[i] && <img className="sv-guide-image" src={software.install_illustrations[platform]![i]} alt={`${platformFull[platform]}安装步骤 ${i + 1}`} width={480} height={320} loading="lazy"/>}</div></li>)}</ol> : <p className="sv-u-small sv-u-muted">安装教程正在整理中。</p>}
     <div className="sv-tip">💡 {software.install_tips?.[platform] || release?.install_notice || defaultInstallTip[platform]}</div>

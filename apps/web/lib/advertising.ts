@@ -2,7 +2,7 @@ import type { Promotion } from './station-types';
 import { isPromotionActive } from './station';
 
 // All providers use these positions. Provider destinations never enter release links.
-export type AdPlacement = 'home_feed' | 'detail_body' | 'desktop_sidebar';
+export type AdPlacement = 'home_feed' | 'home_banner' | 'library_bottom' | 'detail_body' | 'announcement_bottom' | 'desktop_sidebar';
 export interface AdProvider {
   id: string;
   select: (promotions: Promotion[], placement: AdPlacement) => Promotion | undefined;

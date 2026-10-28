@@ -18,5 +18,5 @@ export default async function SoftwarePage({ searchParams }: { searchParams: Pro
   const query = await searchParams;
   const cat = one(query.cat), sort = one(query.sort);
   const data = await getStationData();
-  return <><PageView name="library"/><LibraryView key={`${cat || ""}:${sort || ""}`} software={data.software} releases={data.releases} initialCat={isCategory(cat) ? cat : 'all'} initialSort={sort === 'hot' ? 'hot' : 'new'}/></>;
+  return <><PageView name="library"/><LibraryView key={`${cat || ""}:${sort || ""}`} software={data.software} releases={data.releases} promotions={data.promotions} initialCat={isCategory(cat) ? cat : 'all'} initialSort={sort === 'hot' ? 'hot' : 'new'}/></>;
 }
