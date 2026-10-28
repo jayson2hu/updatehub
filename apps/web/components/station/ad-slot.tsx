@@ -23,7 +23,8 @@ const subscribeClosed = (fn: () => void) => { closedListeners.add(fn); return ()
 export type AdVariant = 'feed' | 'wide' | 'side';
 
 /**
- * 广告位：只有 home_feed / detail_body / desktop_sidebar 三个位置（R-AD-01）。
+ * 广告位共 6 个：首页信息流 / 首页底部横幅 / 软件库底部 / 详情正文 / 公告正文后 / 电脑侧栏。
+ * 都不放在结论与下载按钮之间（R-AD-01）。
  * 总开关和按位置开关都打开、且有有效投放时才渲染；否则不留空白（R-AD-04）。
  */
 export function AdSlot({ settings, promotions, placement, variant, provider = houseAdProvider }: { settings: Settings; promotions: Promotion[]; placement: AdPlacement; variant: AdVariant; provider?: AdProvider }) {

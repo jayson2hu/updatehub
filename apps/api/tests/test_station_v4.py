@@ -230,6 +230,21 @@ def test_ad_placement_switches_filter_public_promotions_and_dashboard(client, ad
     assert dashboard["promotions"][0]["impressions"] == 1
 
 
+def test_reserved_ad_slots_accept_promotions_and_report_separately(client, admin):
+    slots = ["home_feed", "home_banner", "library_bottom", "detail_body", "announcement_bottom", "desktop_sidebar"]
+    payload = {"slug": "all-slots", "title": "全部位置", "target_url": "https://example.com", "published": True, "placements": slots}
+    promotion = admin.post(ADMIN + "/promotions", json=payload)
+    assert promotion.status_code == 201 and promotion.json()["placements"] == slots
+    assert admin.post(ADMIN + "/promotions", json={**payload, "slug": "bad-slot", "placements": ["top_banner"]}).status_code == 422
+    admin.patch(ADMIN + "/settings", json={"ads_enabled": True, "ad_placements": {"home_banner": False}})
+    public = client.get(PUBLIC + "/data").json()["promotions"]
+    assert public[0]["placements"] == [slot for slot in slots if slot != "home_banner"]
+    client.post(PUBLIC + "/events", json={"events": [{"event": "ad_imp", "key": "announcement_bottom:" + promotion.json()["id"]}]})
+    by_slot = {row["placement"]: row for row in admin.get(ADMIN + "/dashboard").json()["ads"]}
+    assert list(by_slot) == slots
+    assert by_slot["announcement_bottom"]["impressions"] == 1 and by_slot["home_banner"]["enabled"] is False
+
+
 def test_dashboard_series_and_permissions(client, admin):
     app = software(admin)
     published(admin, app, "1.0")

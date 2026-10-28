@@ -38,7 +38,7 @@ SYNC_DAYS = 30
 SYNC_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"  # No 0/O, 1/I/L.
 SYNC_LENGTH = 10
 PAGES = {"home", "library", "detail", "announcements", "announcement", "search", "me"}
-PLACEMENTS = ("home_feed", "detail_body", "desktop_sidebar")
+PLACEMENTS = ("home_feed", "home_banner", "library_bottom", "detail_body", "announcement_bottom", "desktop_sidebar")
 REDACTED = "［已隐藏］"
 BEIJING = timezone(timedelta(hours=8))
 CONTACT_PATTERNS = (

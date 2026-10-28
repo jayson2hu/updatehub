@@ -8,7 +8,7 @@ import { adviceMeta, noticeText, issueKinds } from '@/lib/station-view';
 import { Copy, date, errorText, Flash, Heading, labels, Pending, useStationAdmin } from './common';
 import { changed, openPublisher } from './publishing';
 
-export const slotLabels = { home_feed: '首页信息流', detail_body: '详情页下载区下方', desktop_sidebar: '电脑右侧栏' };
+export const slotLabels = { home_feed: '首页信息流', home_banner: '首页底部横幅', library_bottom: '软件库列表底部', detail_body: '详情页历史版本后', announcement_bottom: '公告正文后', desktop_sidebar: '电脑右侧栏' };
 export function Workbench() {
   const { data, error, reload } = useStationAdmin();
   const [stats, setStats] = useState<DashboardData | null>(null); const [failure, setFailure] = useState(''); const [revision, setRevision] = useState(0);

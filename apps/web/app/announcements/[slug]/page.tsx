@@ -7,6 +7,7 @@ import { announcementTypes, annTypeTone, isPinnedNow, latestBySoftware, monthDay
 import { AnnouncementTracker, CopyPageLink } from '@/components/station/announcement';
 import { PageView } from '@/components/station/page-view';
 import { AdviceTag, SoftIcon } from '@/components/station/ui';
+import { AdSlot } from '@/components/station/ad-slot';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
@@ -61,5 +62,6 @@ export default async function AnnouncementPage({ params }: { params: Promise<{ s
       </section>}
       <div className="sv-u-mt16"><CopyPageLink label="🔗 复制公告链接" ok="公告链接已复制"/></div>
     </article>
+    <div className="sv-sec"><AdSlot settings={data.settings} promotions={data.promotions} placement="announcement_bottom" variant="wide"/></div>
   </div>;
 }

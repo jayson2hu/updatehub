@@ -8,7 +8,7 @@ import { isPromotionActive, isPromotionEnded, safeLink } from '@/lib/station';
 import { Copy, date, errorText, Field, Flash, Heading, ImageUpload, newSlug, Pending, Preview, SaveActions, useStationAdmin, writeBody } from './common';
 
 import { AdOverview } from './ad-overview';
-export const placements = { home_feed: '首页更新列表中部', detail_body: '软件详情正文', desktop_sidebar: '桌面端侧栏' };
+export const placements = { home_feed: '首页更新列表中部', home_banner: '首页底部横幅', library_bottom: '软件库列表底部', detail_body: '软件详情正文（历史版本后）', announcement_bottom: '公告正文后', desktop_sidebar: '电脑右侧栏' };
 function state(p: Promotion) { return !p.published ? '未上线' : isPromotionEnded(p) ? '已结束' : isPromotionActive(p) ? '投放中' : '等待开始'; }
 
 export function PromotionsPage() {

@@ -113,6 +113,8 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
           <div className="sv-desk-only"><AdSlot settings={settings} promotions={data.promotions} placement="desktop_sidebar" variant="side"/></div>
         </aside>
       </div>
+      {/* 首页底部横幅：更新列表之后、页脚之前。 */}
+      <div className="sv-sec"><AdSlot settings={settings} promotions={data.promotions} placement="home_banner" variant="wide"/></div>
     </div>
   </div>;
 }

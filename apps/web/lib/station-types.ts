@@ -3,7 +3,7 @@ export type Status = 'normal' | 'attention' | 'unavailable';
 export type Advice = 'recommended' | 'wait' | 'hold' | 'optional';
 export type Category = 'video' | 'netdisk' | 'tool' | 'music' | 'note' | 'reading' | 'browser' | 'other';
 export type ChangeKind = 'added' | 'fixed' | 'improved' | 'known_issue';
-export type AdPlacementKey = 'home_feed' | 'detail_body' | 'desktop_sidebar';
+export type AdPlacementKey = 'home_feed' | 'home_banner' | 'library_bottom' | 'detail_body' | 'announcement_bottom' | 'desktop_sidebar';
 export type IssueKind = 'crash' | 'install' | 'download' | 'login' | 'link' | 'other';
 export interface FAQ { question: string; answer: string; platforms?: Platform[] }
 export interface Software { install_illustrations?: Partial<Record<Platform, Record<string, string>>>; install_tips?: Partial<Record<Platform, string>>; pricing?: string; listed_at?: string | null; created_at?: string; id: string; slug: string; name: string; aliases: string[]; summary: string; icon_url: string; color: string; platforms: Platform[]; status: Status; status_reason: string; installation: string[]; faqs: FAQ[]; screenshots: string[]; published: boolean; is_demo: boolean; category: Category; description: string; developer: string; website_url: string; tags: string[]; install_guides: Partial<Record<Platform, string[]>>; favorite_count: number; view_count: number }
