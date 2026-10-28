@@ -92,6 +92,7 @@ html.sv-lock { overflow: hidden; }
 .sv-site .sv-tag--brand { background: var(--sv-brand-soft); color: var(--sv-brand); }
 .sv-site .sv-tag--gold { background: var(--sv-gold-soft); color: var(--sv-warn); }
 .sv-site .sv-mini { display: inline-block; font-size: 11px; border: 1px solid var(--sv-line); border-radius: 5px; padding: 0 5px; color: var(--sv-ink2); background: var(--sv-surface); line-height: 18px; white-space: nowrap; }
+.sv-site .sv-mini--ok { color: var(--sv-ok); border-color: currentColor; } .sv-site .sv-mini--warn { color: var(--sv-warn); border-color: currentColor; } .sv-site .sv-mini--bad { color: var(--sv-bad); border-color: currentColor; font-weight: 700; } .sv-site .sv-mini--opt { color: var(--sv-ink2); }
 .sv-site .sv-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sv-red-dot); display: inline-block; vertical-align: middle; margin-left: 4px; flex: none; }
 .sv-site .sv-badge { min-width: 18px; height: 18px; border-radius: 9px; background: var(--sv-red-dot); color: var(--sv-on-brand); font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; padding: 0 5px; line-height: 1; }
 

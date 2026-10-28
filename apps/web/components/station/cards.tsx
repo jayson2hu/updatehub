@@ -2,10 +2,10 @@
 import Link from 'next/link';
 import type { Announcement, Release, Software } from '@/lib/station-types';
 import { allPlatforms, isExpired } from '@/lib/station';
-import { announcementTypes, annTone, annTypeTone, categoryMeta, feedbackRate, findRanges, formatCount, isPinnedNow, monthDay, platformEmoji, platformFull, softwarePath, type FeedEntry } from '@/lib/station-view';
+import { adviceMeta, announcementTypes, annTone, annTypeTone, categoryMeta, feedbackRate, findRanges, formatCount, isPinnedNow, monthDay, platformEmoji, platformFull, platformShort, softwarePath, type FeedEntry } from '@/lib/station-view';
 import { favoritesStore, toggleFavorite } from '@/hooks/use-station-local';
 import { useLocalStore } from '@/hooks/local-store';
-import { AdviceTag, DeviceMini, Dot, Empty, SoftIcon, useStationUi } from './ui';
+import { AdviceTag, Dot, Empty, SoftIcon, useStationUi } from './ui';
 
 /** 关键词高亮：按文本节点拆分，不拼接 HTML，避免注入（R-SEARCH-04）。 */
 export function Highlight({ text, query }: { text: string; query: string }) {
@@ -17,21 +17,26 @@ export function Highlight({ text, query }: { text: string; query: string }) {
   return <>{out}</>;
 }
 
-/* ---------- 更新卡（R-HOME-07） ---------- */
+/* ---------- 更新卡（R-HOME-07）：同一软件一张卡，各设备分别标出 ---------- */
 export function ReleaseCard({ entry, isNew }: { entry: FeedEntry; isNew: boolean }) {
-  const { software, release, platforms } = entry;
+  const { software, release, items } = entry;
   const rate = feedbackRate(release);
-  return <Link className={`sv-release-card${isNew ? ' is-new' : ''}`} href={softwarePath(software.slug, platforms[0], entry.current ? undefined : release.id)}>
+  const sameVersion = items.every(i => i.release.version === items[0].release.version);
+  const mixedAdvice = items.some(i => i.release.advice !== items[0].release.advice);
+  const main = items.find(i => i.release === release) || items[0];
+  return <Link className={`sv-release-card${isNew ? ' is-new' : ''}`} href={softwarePath(software.slug, main.platform, entry.current ? undefined : release.id)}>
     <span className="sv-release-card__head">
       <SoftIcon software={software}/>
       <span className="sv-u-grow">
         <span className="sv-release-card__title"><b className="sv-u-ell">{software.name}</b>{software.is_demo && <span className="sv-demo">示例</span>}{isNew && <Dot/>}<span className="sv-release-card__tag"><AdviceTag advice={release.advice}/></span></span>
-        <span className="sv-release-card__ver sv-mono">{release.previous_version && <><span className="sv-u-faint">{release.previous_version}</span> → </>}<b>{release.version}</b></span>
+        {sameVersion && <span className="sv-release-card__ver sv-mono">{release.previous_version && <><span className="sv-u-faint">{release.previous_version}</span> → </>}<b>{release.version}</b></span>}
       </span>
     </span>
     {release.summary && <span className="sv-release-card__sum">{release.summary}</span>}
     <span className="sv-release-card__foot">
-      {platforms.map(p => <DeviceMini key={p} platform={p}/>)}
+      {items.map(({ platform, release: r }) => <span key={platform} className={`sv-mini${mixedAdvice ? ` sv-mini--${adviceMeta[r.advice].tone}` : ''}`} title={platformFull[platform]}>
+        <span aria-hidden="true">{platformEmoji[platform]}</span> {platformShort[platform]}{!sameVersion && <span className="sv-mono"> {r.version}</span>}{mixedAdvice && ` · ${adviceMeta[r.advice].label}`}
+      </span>)}
       <span className="sv-release-card__stat">👍 {rate.enough ? `${rate.pct}% 能用` : '反馈较少'}{software.view_count > 0 && ` · ${formatCount(software.view_count)} 人看过`}</span>
     </span>
   </Link>;
