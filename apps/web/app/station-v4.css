@@ -534,12 +534,27 @@ html.sv-lock { overflow: hidden; }
 }
 /* 电脑双栏：右栏（下载卡 + 侧栏广告）跨所有行吸顶，最后的 1fr 行吸收多余高度。 */
 @media (min-width: 1024px) {
-  .sv-site .sv-detail { display: grid; grid-template-columns: minmax(0, 1fr) 336px; grid-template-rows: repeat(6, auto) 1fr; column-gap: 24px; row-gap: 16px; align-items: start; }
+  .sv-site .sv-detail { display: grid; grid-template-columns: minmax(0, 1fr) 336px; grid-template-rows: repeat(11, auto) 1fr; column-gap: 24px; row-gap: 16px; align-items: start; }
   .sv-site .sv-detail > * { grid-column: 1; }
   .sv-site .sv-detail > .sv-detail__aside { grid-column: 2; grid-row: 1 / -1; position: sticky; top: 84px; display: flex; flex-direction: column; gap: 16px; }
   .sv-site .sv-versions { margin: 12px 0; padding: 0; }
 }
 @media (min-width: 768px) and (max-width: 1023.98px) { .sv-site .sv-detail__aside { display: flex; flex-direction: column; gap: 16px; } }
+
+/* ---------- 结论印章：双线方框、微微倾斜；图标形状区分建议（圆 / 三角 / 八角） ---------- */
+.sv-site .sv-verdict { background: var(--sv-card); border: 1px solid var(--sv-line); border-radius: var(--sv-r); padding: 16px; flex-direction: column; gap: 8px; }
+.sv-site .sv-verdict b { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; font-size: 21px; font-weight: 900; letter-spacing: 1px; padding: 6px 14px 6px 10px; border: 4px double currentColor; border-radius: 4px; transform: rotate(-2deg); }
+.sv-site .sv-verdict--ok, .sv-site .sv-verdict--warn, .sv-site .sv-verdict--bad, .sv-site .sv-verdict--opt { background: var(--sv-card); }
+.sv-site .sv-verdict--ok b { color: var(--sv-ok); } .sv-site .sv-verdict--warn b { color: var(--sv-warn); } .sv-site .sv-verdict--bad b { color: var(--sv-bad); } .sv-site .sv-verdict--opt b { color: var(--sv-ink2); }
+.sv-site .sv-verdict .sv-u-small { color: var(--sv-ink); font-size: 15px; line-height: 1.7; }
+.sv-site .sv-verdict__icon { display: none; }
+.sv-site .sv-verdict b::before { content: ""; width: 22px; height: 22px; flex: none; background: currentColor; }
+.sv-site .sv-verdict--ok b::before { border-radius: 50%; }
+.sv-site .sv-verdict--warn b::before { clip-path: polygon(50% 4%, 98% 92%, 2% 92%); }
+.sv-site .sv-verdict--bad b::before { clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
+.sv-site .sv-verdict--opt b::before { border-radius: 50%; background: none; border: 3px solid currentColor; box-sizing: border-box; }
+@media (min-width: 768px) { .sv-site .sv-verdict b { font-size: 26px; } }
+.sv-site .sv-detail__sec .sv-sh h2 { font-size: 18px; }
 
 /* ---------- 搜索 ---------- */
 .sv-site .sv-searchbar { position: sticky; top: 0; z-index: 40; height: 52px; background: var(--sv-surface); display: flex; align-items: center; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--sv-line); }
