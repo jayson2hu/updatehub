@@ -2,6 +2,7 @@ FROM node:24-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG API_INTERNAL_URL=http://api:8000
+ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
 COPY . .
 RUN npm ci && npm run build --workspace apps/web

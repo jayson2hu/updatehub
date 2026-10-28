@@ -3,6 +3,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 WORKDIR /app
+ARG PIP_INDEX_URL=https://pypi.org/simple
 COPY apps/api/requirements.txt ./requirements.txt
 RUN python -m pip install --no-cache-dir --upgrade pip==26.2 \
     && pip install --no-cache-dir -r requirements.txt \

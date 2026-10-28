@@ -11,6 +11,7 @@ import os
 import re
 import secrets
 import time
+import traceback
 import httpx
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -387,7 +388,8 @@ try:
                 slot.scroll_into_view_if_needed()
                 expect(slot.get_by_text("广告", exact=True)).to_be_visible()
                 expect(slot.locator("img")).to_be_visible()
-                assert slot.locator("img").evaluate("el => el.complete && el.naturalWidth > 0")
+                expect(slot.locator("img")).to_have_js_property("complete", True)
+                assert slot.locator("img").evaluate("el => el.naturalWidth > 0"), "广告图片加载完成后没有有效图像"
                 snapshot(tab, "advertisement-home-390")
                 slot.get_by_role("button", name="关闭广告", exact=True).click()
                 expect(slot).to_have_count(0)
@@ -552,11 +554,13 @@ try:
         report["status"] = "passed"
 except Exception as error:
     message = str(error)
+    report["failure_type"] = type(error).__name__
+    report["failure_frames"] = [{"file": Path(frame.filename).name, "line": frame.lineno, "function": frame.name} for frame in traceback.extract_tb(error.__traceback__)]
     for value in sorted(redactions, key=len, reverse=True):
         message = message.replace(value, "[已隐藏同步码]")
     denied = isinstance(error, PermissionError) or any(term in message for term in ["EPERM", "WinError 5", "Access is denied", "拒绝访问"])
     report["status"] = "blocked" if denied else "failed"
-    report["reason"] = "环境拒绝启动浏览器自动化进程，未产生截图或浏览器通过证据。" if denied else message[:1600]
+    report["reason"] = "环境拒绝启动浏览器自动化进程，未产生截图或浏览器通过证据。" if denied else (message or type(error).__name__)[:1600]
     report["pending"] = ["修复本次失败并复跑后续检查"] if report["checks"] else ["360/390/768/1440 实际页面截图", "后台 1280/1440 排版", "焦点、复制失败及固定栏", "慢 4G LCP/CLS"]
     print(report["reason"], flush=True)
 finally:
