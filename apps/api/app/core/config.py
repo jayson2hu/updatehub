@@ -1,9 +1,11 @@
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import urlsplit
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 
 def validate_https_address(value: str, label: str, *, prefix: bool = False):
@@ -23,6 +25,16 @@ def validate_https_address(value: str, label: str, *, prefix: bool = False):
     except ValueError as exc:
         requirement = "an exact HTTPS app-specific path ending in /" if prefix else "an HTTPS origin without credentials, query, fragment or page path"
         raise ValueError(f"{label} requires {requirement}") from exc
+
+
+def is_sqlite_file(url: str) -> bool:
+    """Production SQLite must be a persistent absolute file, never in-memory or cwd-relative."""
+    try:
+        parsed = make_url(url)
+    except ArgumentError:
+        return False
+    database = parsed.database or ""
+    return parsed.get_backend_name() == "sqlite" and database != ":memory:" and not database.startswith("file:") and (PurePosixPath(database).is_absolute() or PureWindowsPath(database).is_absolute())
 
 
 class Settings(BaseSettings):
@@ -52,8 +64,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production(self):
-        if self.production and ("database_url" not in self.model_fields_set or not self.database_url.startswith("postgresql")):
-            raise ValueError("Production requires an explicit PostgreSQL DATABASE_URL")
+        if self.production and ("database_url" not in self.model_fields_set or not (self.database_url.startswith("postgresql") or is_sqlite_file(self.database_url))):
+            raise ValueError("Production requires an explicit DATABASE_URL: an absolute SQLite file path or PostgreSQL")
         if self.production:
             validate_https_address(self.public_site_url, "PUBLIC_SITE_URL")
             for origin in self.cors_origins.split(","):

@@ -12,6 +12,15 @@ from app.core.config import Settings
 from app.core.database import build_engine
 
 
+def test_sqlite_file_engine_uses_wal_and_waits_for_writers(tmp_path):
+    engine = build_engine("sqlite:///" + str(tmp_path / "pragmas.db").replace("\\", "/"))
+    with engine.connect() as connection:
+        assert connection.execute(text("PRAGMA journal_mode")).scalar() == "wal"
+        assert connection.execute(text("PRAGMA busy_timeout")).scalar() == 5000
+        assert connection.execute(text("PRAGMA foreign_keys")).scalar() == 1
+    engine.dispose()
+
+
 def test_alembic_roundtrip_and_schema_alignment(tmp_path):
     url = "sqlite:///" + str(tmp_path / "roundtrip.db").replace("\\", "/")
     env = {**os.environ, "PYTHONIOENCODING": "utf-8", "DATABASE_URL": url, "ENVIRONMENT": "development"}
@@ -34,12 +43,15 @@ def test_postgresql_migration_compiles_without_connection():
     assert "TIMESTAMP WITH TIME ZONE" in result.stdout
 
 
-def test_production_configuration_requires_postgres_and_https(monkeypatch):
+def test_production_configuration_requires_persistent_database_and_https(monkeypatch):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     with pytest.raises(ValidationError):
         Settings(environment="production", public_site_url="https://example.com", _env_file=None)
-    with pytest.raises(ValidationError):
-        Settings(environment="production", database_url="sqlite:///local.db", public_site_url="https://example.com", _env_file=None)
+    for url in ["sqlite:///local.db", "sqlite://", "sqlite:///:memory:", "sqlite:///file:station?mode=memory&uri=true", "mysql://app@db/app"]:
+        with pytest.raises(ValidationError):
+            Settings(environment="production", database_url=url, public_site_url="https://example.com", cors_origins="", station_signing_key="test-signing-key-is-32-characters-minimum", _env_file=None)
+    for url in ["sqlite:////data/station.db", "sqlite:///C:/station/station.db"]:
+        assert Settings(environment="production", database_url=url, public_site_url="https://example.com", cors_origins="", station_signing_key="test-signing-key-is-32-characters-minimum", _env_file=None).production
     with pytest.raises(ValidationError):
         Settings(environment="production", database_url="postgresql+psycopg://app@db/app", public_site_url="http://example.com", _env_file=None)
     with pytest.raises(ValidationError):

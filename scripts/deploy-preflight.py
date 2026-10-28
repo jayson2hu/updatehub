@@ -45,12 +45,11 @@ def evaluate(values, bootstrap=False):
     check("DOMAIN", domain_ok, "填写已购买并指向服务器的实际域名；中文域名填写 Punycode")
     check("PUBLIC_SITE_URL", domain_ok and values.get("PUBLIC_SITE_URL") == "https://" + domain, "必须等于 https:// 加 DOMAIN，不带尾斜线、端口、路径或查询参数")
     check("ACME_EMAIL", bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", values.get("ACME_EMAIL", ""))), "填写可接收证书通知的邮箱")
-    for key in ["POSTGRES_PASSWORD", "STATION_SIGNING_KEY"]:
-        value = values.get(key, "")
-        check(key, bool(re.fullmatch(r"[a-f0-9]{64}", value)) and len(set(value)) >= 8, "使用 secrets.token_hex(32) 独立生成，保存到受保护的密钥副本")
-    check("independent_secrets", bool(values.get("POSTGRES_PASSWORD")) and values.get("POSTGRES_PASSWORD") != values.get("STATION_SIGNING_KEY"), "数据库密码与反馈签名密钥不能共用")
-    for key in ["POSTGRES_DB", "POSTGRES_USER"]:
-        check(key, bool(re.fullmatch(r"[a-z][a-z0-9_]{0,62}", values.get(key, "updatehub"))), "仅用小写字母、数字、下划线；以字母开头，最多 63 字符")
+    value = values.get("STATION_SIGNING_KEY", "")
+    check("STATION_SIGNING_KEY", bool(re.fullmatch(r"[a-f0-9]{64}", value)) and len(set(value)) >= 8, "使用 secrets.token_hex(32) 独立生成，保存到受保护的密钥副本")
+    # The SQLite file path is fixed in docker-compose.prod.yml; leftover settings suggest a stale template.
+    stale = [key for key in ["DATABASE_URL", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_USER"] if values.get(key)]
+    check("no_database_overrides", not stale, "删除 DATABASE_URL 与 POSTGRES_* 配置；生产数据库固定为数据卷内的 SQLite 文件")
     check("LEGACY_ENABLED", values.get("LEGACY_ENABLED", "false").lower() == "false", "保持旧接口关闭")
     for index, value in enumerate(filter(None, (p.strip() for p in values.get("MINIAPP_REFERER_PREFIXES", "").split(",")))):
         try:
@@ -64,7 +63,7 @@ def evaluate(values, bootstrap=False):
         email = values.get("ADMIN_INITIAL_EMAIL", "")
         password = values.get("ADMIN_INITIAL_PASSWORD", "")
         check("ADMIN_INITIAL_EMAIL", bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email)) and email != "admin@update.local", "填写独立生产管理员邮箱")
-        check("ADMIN_INITIAL_PASSWORD", len(password) >= 16 and not any(c in password for c in "$\r\n") and password not in {values.get("POSTGRES_PASSWORD"), values.get("STATION_SIGNING_KEY")}, "使用独立至少 16 位密码；不要包含 Compose 会插值的 $；初始化后删除")
+        check("ADMIN_INITIAL_PASSWORD", len(password) >= 16 and not any(c in password for c in "$\r\n") and password != values.get("STATION_SIGNING_KEY"), "使用独立至少 16 位密码；不要包含 Compose 会插值的 $；初始化后删除")
     else:
         check("bootstrap_password_removed", not values.get("ADMIN_INITIAL_PASSWORD"), "初始化完成后清空 ADMIN_INITIAL_PASSWORD 并重新创建 API 容器；首次启动可用 --bootstrap")
     return checks
@@ -81,7 +80,7 @@ def main():
     try:
         values = read_env(args.env_file)
         checks = evaluate(values, args.bootstrap)
-        names = set(values) | {"POSTGRES_DB", "POSTGRES_USER", "DOMAIN", "PUBLIC_SITE_URL", "POSTGRES_PASSWORD", "STATION_SIGNING_KEY", "MINIAPP_REFERER_PREFIXES", "ADMIN_INITIAL_EMAIL", "ADMIN_INITIAL_PASSWORD", "COMPOSE_PROJECT_NAME", "COMPOSE_FILE"}
+        names = set(values) | {"DOMAIN", "PUBLIC_SITE_URL", "STATION_SIGNING_KEY", "MINIAPP_REFERER_PREFIXES", "ADMIN_INITIAL_EMAIL", "ADMIN_INITIAL_PASSWORD", "COMPOSE_PROJECT_NAME", "COMPOSE_FILE"}
         overrides = [name for name in names if name in os.environ and os.environ[name] != values.get(name, "")]
         checks.append({"name": "shell_environment_overrides", "status": "failed" if overrides else "passed", "action": "清除与配置文件冲突的同名环境变量后重试（包括 COMPOSE_PROJECT_NAME/COMPOSE_FILE）" if overrides else ""})
         if os.name != "nt":

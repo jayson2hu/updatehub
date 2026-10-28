@@ -1,15 +1,15 @@
 # 部署、备份与恢复
 
-当前为版本喵 v4，网站/后台与双端小程序共用数据库。2026-10-19 的本地 SQLite、实际重启、独立恢复及原生 PostgreSQL 17 证据见 [统一验收](v4/05-测试与验收.md)。本轮 PostgreSQL 在生产 API 配置下完成 6 组检查，pg_dump/pg_restore 后 28 表行数及摘要一致，并由新进程读取；TestClient HTTPS 地址只用于验证 Cookie/应用配置。部署机 PostgreSQL、Docker 镜像、持久卷和真实 TLS 尚未验收。以下是部署步骤，不是已上线声明。
+当前为版本喵 v4，网站/后台与双端小程序共用数据库。**2026-10-28 起生产改用 SQLite 单文件**（`station_data` 卷内 `/data/station.db`，WAL 模式），不再部署 PostgreSQL 容器；代码仍兼容 PostgreSQL，需要多实例时改 `DATABASE_URL` 即可迁回。以下 PostgreSQL 记录为切换前的历史证据。2026-10-19 的本地 SQLite、实际重启、独立恢复及原生 PostgreSQL 17 证据见 [统一验收](v4/05-测试与验收.md)。本轮 PostgreSQL 在生产 API 配置下完成 6 组检查，pg_dump/pg_restore 后 28 表行数及摘要一致，并由新进程读取；TestClient HTTPS 地址只用于验证 Cookie/应用配置。部署机 PostgreSQL、Docker 镜像、持久卷和真实 TLS 尚未验收。以下是部署步骤，不是已上线声明。
 
 ## 生产准备与启动
 
 当前部署交接入口：[容器部署清单与 Codex 手册](container-deployment-handoff.md)。用户已确定首次正式上线**空内容**；只迁移表结构并创建独立生产管理员，不迁移当前开发库/图片/账号，不导入演示数据。安全状态见 [本次检测报告](security-review-20261020.md)。
 
-要求 Linux、Docker Engine、Compose v2、可解析到服务器的域名，以及可供 Caddy 访问的 80/443 TCP 与可选 443 UDP。数据库和图标写入持久化卷；镜像和代码不能代替数据备份。
+要求 Linux、Docker Engine、Compose v2、可解析到服务器的域名，以及可供 Caddy 访问的 80/443 TCP 与可选 443 UDP。数据库文件和图片同在 `station_data` 持久化卷；镜像和代码不能代替数据备份。SQLite 只允许一个写入进程：API 固定单容器，不要 `--scale api`，也不要把该卷挂给其他写入方。
 
 1. 将 `.env.production.example` 复制为仓库根目录 `.env`，限制该文件读取权限（Linux 为 0600）。
-2. 分别生成唯一的 `POSTGRES_PASSWORD` 和 `STATION_SIGNING_KEY`：`python3 -c "import secrets; print(secrets.token_hex(32))"`，两次使用独立结果，不复用。数据库密码用十六进制避免 URL 转义；签名密钥用于匿名反馈改投/撤销，必须持久保存且至少 32 个随机字符，所有实例保持一致。管理员会话仍使用独立随机 token。
+2. 生成 `STATION_SIGNING_KEY`：`python3 -c "import secrets; print(secrets.token_hex(32))"`。不要在 `.env` 设置 `DATABASE_URL` 或 `POSTGRES_*`，数据库路径固定在 Compose 中，预检查会拒绝残留项。签名密钥用于匿名反馈改投/撤销，必须持久保存且至少 32 个随机字符，所有实例保持一致。管理员会话仍使用独立随机 token。
 3. 设置 `DOMAIN=你的域名`、`ACME_EMAIL=运维邮箱`、`PUBLIC_SITE_URL=https://你的域名`，以及站名、介绍和初始管理员邮箱与密码。`DOMAIN` 只填主机名，不含路径。
 4. 在根目录执行：
 
@@ -34,7 +34,7 @@ docker compose -f docker-compose.prod.yml logs --tail 100 api web caddy
 
 核对域名 HTTPS、首页数据、登录退出、新建与下线测试软件、图标上传、外部官方链接来源、手机布局，以及 API 容器内的 `/ready`。生产 API 文档是否公开由应用环境配置决定，不应依赖其作为健康检查。
 
-生产配置是独立文件，只传 `-f docker-compose.prod.yml`；不要同时叠加开发配置。两个配置使用不同项目名和数据卷。生产不暴露 PostgreSQL、API 或 Web 端口。
+生产配置是独立文件，只传 `-f docker-compose.prod.yml`；不要同时叠加开发配置。两个配置使用不同项目名和数据卷。生产不暴露 API 或 Web 端口。
 
 ## 更新与回退
 
@@ -49,7 +49,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ## 每日备份
 
-在仓库根目录运行以下命令。脚本使用 `pg_dump --format=custom`，同时归档图标卷，生成 SHA-256 校验文件。只有成功生成新备份后才清理指定备份目录中超过 14 天的同格式历史文件。
+在仓库根目录运行以下命令。脚本在 API 容器内用 SQLite 在线备份接口生成一致快照（不停服），先做 `integrity_check` 再导出为单个 `.sqlite3` 文件，同时归档图片目录，生成 SHA-256 校验文件。只有成功生成新备份后才清理指定备份目录中超过 14 天的同格式历史文件。
 
 ```sh
 bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups
@@ -61,7 +61,7 @@ bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups
 10 3 * * * cd /srv/updatehub && /bin/bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups >> /var/log/updatehub-backup.log 2>&1
 ```
 
-默认保留约 14 天，时点恢复能力约为一天；没有 WAL 连续归档。数据库与图标先后备份，不是跨存储原子快照。重要变更前暂停后台写入，执行备份并确认两份文件完整。数据量增长时再评估专用备份方案。
+默认保留约 14 天，时点恢复能力约为一天；没有连续归档。数据库与图标先后备份，不是跨存储原子快照。重要变更前暂停后台写入，执行备份并确认两份文件完整。数据量增长时再评估专用备份方案。
 
 数据库备份包含管理员密码散列、会话与审计信息。备份目录仅运维账号可读，将副本加密保存到不同主机。`STATION_SIGNING_KEY` 从安全密钥库单独备份并与本次数据快照记录关联，Compose 的数据库/图片备份脚本不会自动归档环境密钥。丢失或轮换密钥会让旧反馈修改凭据失效；不会自动清空内容与计数。异地复制、告警与密钥管理尚未自动化。
 
@@ -73,10 +73,10 @@ bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups
 cd /srv/updatehub-backups
 sha256sum -c updatehub-checksums-实际时间戳.sha256
 cd /srv/updatehub
-bash infra/scripts/restore.sh docker-compose.prod.yml /srv/updatehub-backups/updatehub-db-实际时间戳.dump updatehub_restore_20260926
+bash infra/scripts/restore.sh docker-compose.prod.yml /srv/updatehub-backups/updatehub-db-实际时间戳.sqlite3 /srv/updatehub-restore-20260926
 ```
 
-恢复脚本在创建数据库前自动核对 dump 与同目录、同时间戳 SHA-256 清单，只接受 `backup.sh` 的文件命名。校验通过后仅创建全新数据库；目标已存在、目标为在线库或 PostgreSQL 系统库时拒绝执行。恢复成功后会删除恢复库的历史管理员会话。脚本不删除旧库、不自动切换连接串；失败时保留隔离目标供检查，修正后使用另一个新名字重试。
+恢复脚本先核对备份与同目录、同时间戳 SHA-256 清单，只接受 `backup.sh` 的文件命名。校验通过后只写入一个**新建的**绝对路径目录（已存在或位于源码目录内时拒绝），在生产镜像中做 `integrity_check` 并删除副本里的历史管理员会话。脚本不接触在线卷、不自动切换；失败时保留隔离目录供检查，修正后换一个新目录重试。
 
 图标需恢复到独立目录或独立卷，不直接覆盖在线卷。对于本脚本产生、已校验且可信的归档，可在运维主机使用 Python 3.12+ 安全提取：
 
@@ -85,7 +85,19 @@ mkdir /srv/updatehub-restore-icons-20260926
 python3 -c "import tarfile; a=tarfile.open('/srv/updatehub-backups/updatehub-uploads-实际时间戳.tar.gz'); a.extractall('/srv/updatehub-restore-icons-20260926', filter='data')"
 ```
 
-启动独立测试 API，明确将 `DATABASE_URL` 指向恢复库、`UPLOAD_DIR` 指向恢复目录，并使用独立端口。验证迁移版本、软件数量、分类关联、公开详情、图标、管理员登录和审计读取；确认恢复库中没有继续有效的历史会话后再计划正式切换。正式切换前停止写入、创建最后备份、确认目标卷权限、修改连接串与图标挂载并重启，然后再次验收。
+启动独立测试 API，将 `DATABASE_URL` 指向 `sqlite:////恢复目录/station.db`、`UPLOAD_DIR` 指向恢复的图片目录，并使用独立端口。验证迁移版本、软件数量、公开详情、图片、管理员登录和审计读取后再计划正式切换。
+
+正式切换：先执行一次最后备份，再停服替换文件。旧库连同 `-wal`/`-shm` 一起改名保留，**不能只替换主文件**——残留的旧 WAL 会被应用到新文件上造成损坏。容器以 UID 10001 运行，替换前先让它可读恢复目录：
+
+```sh
+bash infra/scripts/backup.sh docker-compose.prod.yml /srv/updatehub-backups
+sudo chown -R 10001:10001 /srv/updatehub-restore-20260926
+docker compose -f docker-compose.prod.yml stop web api
+docker compose -f docker-compose.prod.yml run --rm --no-deps -v /srv/updatehub-restore-20260926:/restore:ro --entrypoint sh api -c 'for f in station.db station.db-wal station.db-shm; do [ ! -e /data/$f ] || mv /data/$f /data/$f.before-restore; done; cp /restore/station.db /data/station.db'
+docker compose -f docker-compose.prod.yml up -d
+```
+
+图片如需一并回退，用同样方式把恢复目录复制到 `/data/uploads`。切换后再次验收，确认无误后再删除 `*.before-restore`。
 
 记录每次演练的备份时间、文件校验、恢复耗时、数据核对与结果。仅生成备份文件不算通过恢复验证。
 

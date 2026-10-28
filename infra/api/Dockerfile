@@ -10,7 +10,7 @@ RUN python -m pip install --no-cache-dir --upgrade pip==26.2 \
     && groupadd --gid 10001 updatehub \
     && useradd --uid 10001 --gid updatehub --no-create-home updatehub \
     && mkdir -p /data/uploads \
-    && chown updatehub:updatehub /data/uploads
+    && chown -R updatehub:updatehub /data
 COPY --chown=updatehub:updatehub apps/api/ ./
 COPY --chown=updatehub:updatehub infra/api/entrypoint.sh /usr/local/bin/updatehub-api
 RUN chmod 755 /usr/local/bin/updatehub-api

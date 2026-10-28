@@ -13,7 +13,7 @@
 
 ## 运行方式
 
-编排文件为 `compose.preview.yaml`，项目名 `updatehub-preview`。PostgreSQL 17、FastAPI 和 Next.js 独立运行。Web 映射到空闲的 80 端口，API 和数据库没有宿主机端口映射；三个容器均配置 `restart: unless-stopped`。数据存放在专用 `postgres_data`、`uploads` 卷中。API/Web 使用非 root 用户和只读根文件系统。
+编排文件为 `compose.preview.yaml`，项目名 `updatehub-preview`。FastAPI 和 Next.js 独立运行，数据库为 `station_data` 卷内的 SQLite 文件 `/data/station.db`（2026-10-28 起，与生产一致；此前的 `postgres_data`/`uploads` 卷不会自动迁移，切换时需重新初始化或单独导入）。Web 映射到空闲的 80 端口，API 没有宿主机端口映射；两个容器均配置 `restart: unless-stopped`。API/Web 使用非 root 用户和只读根文件系统。
 
 根目录 `.env` 权限为 `0600`，保存本次随机生成的数据库密码、持久签名密钥和访问配置。管理员创建完成后，初始化密码已从 `.env` 和运行容器环境清除。
 

@@ -9,11 +9,18 @@ class Base(DeclarativeBase):
 
 
 def build_engine(url: str):
-    engine = create_engine(url, pool_pre_ping=True, connect_args={"check_same_thread": False} if url.startswith("sqlite") else {})
+    engine = create_engine(url, pool_pre_ping=True, connect_args={"check_same_thread": False, "timeout": 5} if url.startswith("sqlite") else {})
     if url.startswith("sqlite"):
         @event.listens_for(engine, "connect")
-        def sqlite_foreign_keys(connection, _):
+        def sqlite_pragmas(connection, _):
+            # WAL lets readers proceed during a write; busy_timeout queues writers
+            # instead of failing. pysqlite starts a transaction only at the first
+            # write, so read-then-write requests do not hit lock-upgrade deadlocks.
             connection.execute("PRAGMA foreign_keys=ON")
+            connection.execute("PRAGMA busy_timeout=5000")
+            if connection.execute("PRAGMA journal_mode").fetchone()[0] != "memory":
+                connection.execute("PRAGMA journal_mode=WAL")
+                connection.execute("PRAGMA synchronous=NORMAL")
     return engine
 
 

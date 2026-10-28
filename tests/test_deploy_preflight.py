@@ -15,7 +15,7 @@ spec.loader.exec_module(preflight)
 
 class DeploymentPreflight(unittest.TestCase):
     def configuration(self):
-        return {"DOMAIN": "updates.operator.cn", "PUBLIC_SITE_URL": "https://updates.operator.cn", "ACME_EMAIL": "ops@operator.cn", "POSTGRES_PASSWORD": "0123456789abcdef" * 4, "STATION_SIGNING_KEY": "fedcba9876543210" * 4}
+        return {"DOMAIN": "updates.operator.cn", "PUBLIC_SITE_URL": "https://updates.operator.cn", "ACME_EMAIL": "ops@operator.cn", "STATION_SIGNING_KEY": "fedcba9876543210" * 4}
 
     def failures(self, **overrides):
         return [x["name"] for x in preflight.evaluate({**self.configuration(), **overrides}) if x["status"] != "passed"]
@@ -25,10 +25,10 @@ class DeploymentPreflight(unittest.TestCase):
         self.assertIn("PUBLIC_SITE_URL", self.failures(PUBLIC_SITE_URL="https://other.operator.cn"))
         self.assertIn("DOMAIN", self.failures(DOMAIN="example.com"))
 
-    def test_unique_secrets_and_safe_database_names(self):
-        self.assertIn("independent_secrets", self.failures(STATION_SIGNING_KEY=self.configuration()["POSTGRES_PASSWORD"]))
-        self.assertIn("POSTGRES_PASSWORD", self.failures(POSTGRES_PASSWORD="a" * 64))
-        self.assertIn("POSTGRES_USER", self.failures(POSTGRES_USER="name:password@host"))
+    def test_signing_key_and_fixed_sqlite_database(self):
+        self.assertIn("STATION_SIGNING_KEY", self.failures(STATION_SIGNING_KEY="a" * 64))
+        self.assertIn("no_database_overrides", self.failures(DATABASE_URL="sqlite:////tmp/other.db"))
+        self.assertIn("no_database_overrides", self.failures(POSTGRES_PASSWORD="0123456789abcdef" * 4))
 
     def test_bootstrap_lifecycle_and_native_scope(self):
         self.assertIn("bootstrap_password_removed", self.failures(ADMIN_INITIAL_PASSWORD="not-a-production-password"))
@@ -44,12 +44,12 @@ class DeploymentPreflight(unittest.TestCase):
             path.write_text("\n".join(f"{key}={value}" for key, value in values.items()), encoding="utf-8")
             path.chmod(0o600)
             env = {key: value for key, value in os.environ.items() if key not in values and not key.startswith("COMPOSE_")}
-            env["POSTGRES_PASSWORD"] = "conflicting-shell-value-do-not-log"
+            env["STATION_SIGNING_KEY"] = "conflicting-shell-value-do-not-log"
             result = subprocess.run([sys.executable, str(Path(preflight.__file__)), "--env-file", str(path)], env=env, capture_output=True, text=True, encoding="utf-8")
             self.assertEqual(result.returncode, 1)
             report = json.loads(result.stdout)
             self.assertIn("shell_environment_overrides", {item["name"] for item in report["checks"] if item["status"] == "failed"})
-            for secret in [values["POSTGRES_PASSWORD"], values["STATION_SIGNING_KEY"], env["POSTGRES_PASSWORD"]]:
+            for secret in [values["STATION_SIGNING_KEY"], env["STATION_SIGNING_KEY"]]:
                 self.assertNotIn(secret, result.stdout + result.stderr)
 
 

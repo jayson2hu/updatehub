@@ -36,7 +36,7 @@ apps/api/.venv/Scripts/python.exe -m pip install -r apps/api/requirements.txt
 
 **正式首次上线为空内容**：仅迁移表结构、必要配置并创建独立生产管理员，不导入开发库/图片/账号，不执行 seed。本站只维护软件或独立服务的通知和入口，不接入听书目录、章节、音频或第三方凭据。开发环境可继续录入，与生产分离。
 
-后续交给 Codex 部署时，从 [容器部署交接手册](docs/container-deployment-handoff.md) 开始，使用 [.env.production.example](.env.production.example)。手册包含准备清单、空站部署、备份/恢复、验收和可复制的部署任务。源码打包：`apps/api/.venv/Scripts/python.exe scripts/package-station-release.py`，自动排除运行数据与秘密并生成 SHA-256 清单。
+生产数据库为 SQLite 单文件，不再部署 PostgreSQL 容器（2026-10-28 起）；备份恢复见 [部署与恢复](docs/deployment.md)。后续交给 Codex 部署时，从 [容器部署交接手册](docs/container-deployment-handoff.md) 开始，使用 [.env.production.example](.env.production.example)。手册包含准备清单、空站部署、备份/恢复、验收和可复制的部署任务。源码打包：`apps/api/.venv/Scripts/python.exe scripts/package-station-release.py`，自动排除运行数据与秘密并生成 SHA-256 清单。
 
 本轮安全修复：5 个受影响 Python 包已升级，npm/pip 扫描未报告已知漏洞；Bandit 无发现；API 全量 169 项及随后新增空站测试所在专项 28 项通过（两组有重叠），部署配置 4 项通过，小程序 7+50 项通过。范围与剩余风险见 [安全检测报告](docs/security-review-20261020.md)。本机未构建/运行生产容器，真实 TLS、镜像/OS 漏洞和服务器验收仍待部署时完成。下方 142 项等为此前产品验收记录。
 
@@ -75,7 +75,7 @@ UpdateHub 面向固定用户群，集中发布软件更新、使用提醒和维�
 
 - Web：Next.js 16、React、TypeScript，位于 `apps/web`。
 - API：FastAPI、SQLAlchemy 2、Alembic、Argon2id，位于 `apps/api`。
-- 默认数据库：PostgreSQL 17；本地可显式使用 SQLite 做开发验证。
+- 数据库：生产使用 SQLite 单文件（`station_data` 卷内 `/data/station.db`，WAL 模式，单 API 容器）；代码仍兼容 PostgreSQL 17，需要多实例时改 `DATABASE_URL` 迁回。
 - 部署：Docker Compose、Caddy HTTPS、持久化数据库与图标卷。
 
 ```text

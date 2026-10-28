@@ -184,7 +184,6 @@ jobs:
     timeout-minutes: 20
     needs: [web, api]
     env:
-      POSTGRES_PASSWORD: ci-compose-validation-only
       STATION_SIGNING_KEY: ci-only-persistent-station-signing-key-32-chars
       PUBLIC_SITE_URL: https://example.com
       DOMAIN: example.com
@@ -206,7 +205,7 @@ jobs:
           bash tests/container_restore.sh
       - name: Container logs
         if: failure()
-        run: docker compose -f docker-compose.prod.yml logs --tail 150 api web postgres
+        run: docker compose -f docker-compose.prod.yml logs --tail 150 api web
       - name: Remove disposable CI services and volumes
         if: always()
         run: docker compose -f docker-compose.prod.yml down --volumes
