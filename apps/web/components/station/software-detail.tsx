@@ -174,7 +174,6 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
       </div>
     </div>
 
-    <div className="sv-sticky-spacer" aria-hidden="true"/>
     <div className="sv-sticky-dl">
       <button type="button" className="sv-btn sv-btn--ghost sv-sticky-dl__issue" onClick={openIssue} disabled={!latest}>👎 有问题</button>
       <PrimaryDownload {...downloadProps} short/>
