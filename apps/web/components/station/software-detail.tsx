@@ -5,7 +5,7 @@ import type { Platform, Release, Software, SoftwareData, StationData } from '@/l
 import { castFeedback, type VoteResult } from '@/lib/station-feedback';
 import { allPlatforms, getReleaseState } from '@/lib/station';
 import {
-  adviceMeta, backupLinks, byPublishedDesc, categoryMeta, changeKindMeta, changeKindOrder, defaultInstallTip, feedbackRate, hostOf,
+  adviceMeta, friendlyAdvice, backupLinks, byPublishedDesc, categoryMeta, changeKindMeta, changeKindOrder, defaultInstallTip, feedbackRate, hostOf,
   latestBySoftware, latestMarkers, monthDay, officialLink, platformEmoji, platformFull, platformShort, softwarePath,
 } from '@/lib/station-view';
 import { track, trackDaily } from '@/lib/station-events';
@@ -17,6 +17,7 @@ import { InAppBar, MobileTopbar } from './chrome';
 import { QrPreview } from './qr-preview';
 import { errorMessage, FeedbackSheet, ShareSheet } from './sheets';
 import { AdviceTag, Empty, SoftIcon, useStationUi } from './ui';
+import { CatMark, moodOf } from './cat';
 
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -187,9 +188,14 @@ export function SoftwareDetail({ data, station, requestedPlatform, requestedRele
 /* ---------- 结论印章 ---------- */
 function Verdict({ release }: { release: Release }) {
   const m = adviceMeta[release.advice] || adviceMeta.optional;
+  const rate = feedbackRate(release);
   return <div className={`sv-verdict sv-verdict--${m.tone}`}>
-    <span className="sv-verdict__icon" aria-hidden="true">{m.icon}</span>
-    <div><b>{m.label} · {platformShort[release.platform]}版 {release.version}</b>{release.advice_note && <span className="sv-u-small">{release.advice_note}</span>}</div>
+    <CatMark mood={moodOf(release.advice)} size={52} label={friendlyAdvice[release.advice]}/>
+    <div className="sv-verdict__body">
+      <b>{release.version} {friendlyAdvice[release.advice]}</b>
+      {release.advice_note && <span className="sv-u-small">{release.advice_note}</span>}
+      <span className="sv-verdict__meta">{platformShort[release.platform]}版{rate.enough ? ` · ${rate.pct}% 群友说能用` : ''}</span>
+    </div>
   </div>;
 }
 

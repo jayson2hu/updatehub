@@ -548,19 +548,18 @@ html.sv-lock { overflow: hidden; }
 }
 @media (min-width: 768px) and (max-width: 1023.98px) { .sv-site .sv-detail__aside { display: flex; flex-direction: column; gap: 16px; } }
 
-/* ---------- 结论印章：双线方框、微微倾斜；图标形状区分建议（圆 / 三角 / 八角） ---------- */
-.sv-site .sv-verdict { background: var(--sv-card); border: 1px solid var(--sv-line); border-radius: var(--sv-r); padding: 16px; flex-direction: column; gap: 8px; }
-.sv-site .sv-verdict b { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; font-size: 21px; font-weight: 900; letter-spacing: 1px; padding: 6px 14px 6px 10px; border: 4px double currentColor; border-radius: 4px; transform: rotate(-2deg); }
-.sv-site .sv-verdict--ok, .sv-site .sv-verdict--warn, .sv-site .sv-verdict--bad, .sv-site .sv-verdict--opt { background: var(--sv-card); }
-.sv-site .sv-verdict--ok b { color: var(--sv-ok); } .sv-site .sv-verdict--warn b { color: var(--sv-warn); } .sv-site .sv-verdict--bad b { color: var(--sv-bad); } .sv-site .sv-verdict--opt b { color: var(--sv-ink2); }
-.sv-site .sv-verdict .sv-u-small { color: var(--sv-ink); font-size: 15px; line-height: 1.7; }
-.sv-site .sv-verdict__icon { display: none; }
-.sv-site .sv-verdict b::before { content: ""; width: 22px; height: 22px; flex: none; background: currentColor; }
-.sv-site .sv-verdict--ok b::before { border-radius: 50%; }
-.sv-site .sv-verdict--warn b::before { clip-path: polygon(50% 4%, 98% 92%, 2% 92%); }
-.sv-site .sv-verdict--bad b::before { clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
-.sv-site .sv-verdict--opt b::before { border-radius: 50%; background: none; border: 3px solid currentColor; box-sizing: border-box; }
-@media (min-width: 768px) { .sv-site .sv-verdict b { font-size: 26px; } }
+/* ---------- v7 猫咪结论卡：按结论换底色与猫咪表情 ---------- */
+.sv-site .sv-verdict { border: 0; border-radius: 28px; padding: 18px; display: flex; flex-direction: row; gap: 12px; align-items: flex-start; }
+.sv-site .sv-verdict--ok { background: var(--sv-ok-soft); } .sv-site .sv-verdict--warn { background: var(--sv-warn-soft); }
+.sv-site .sv-verdict--bad { background: var(--sv-bad-soft); } .sv-site .sv-verdict--opt { background: var(--sv-surface); }
+.sv-site .sv-verdict .sv7-cat { flex: none; }
+.sv-site .sv-verdict__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sv-site .sv-verdict b { display: block; font-size: 20px; font-weight: 800; border: 0; padding: 0; transform: none; }
+.sv-site .sv-verdict b::before { content: none; }
+.sv-site .sv-verdict--ok b { color: var(--sv-ok); } .sv-site .sv-verdict--warn b { color: var(--sv-warn); } .sv-site .sv-verdict--bad b { color: var(--sv-bad); } .sv-site .sv-verdict--opt b { color: var(--sv-ink); }
+.sv-site .sv-verdict .sv-u-small { color: var(--sv-ink); font-size: 15px; line-height: 1.6; }
+.sv-site .sv-verdict__meta { font-size: 12px; color: var(--sv-ink2); }
+@media (min-width: 768px) { .sv-site .sv-verdict b { font-size: 24px; } }
 .sv-site .sv-detail__sec .sv-sh h2 { font-size: 18px; }
 
 /* ---------- 搜索 ---------- */
@@ -715,4 +714,23 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
   .sv-site .sv-release-card__foot { margin-top: auto; gap: 4px; }
   .sv-site .sv-feed > .sv-day:not(.sv-day--fav) { display: none; }
   .sv-site .sv-day { margin: 8px 0 0; }
+}
+
+/* ---------- v7 详情：居中软件头、胶囊设备、圆点步骤 ---------- */
+.sv-site .sv-dev { border-radius: 999px; border-color: transparent; background: var(--sv-surface); min-height: 44px; flex-direction: row; gap: 4px; font-size: 14px; }
+.sv-site .sv-dev[aria-pressed="true"] { background: var(--sv-ink); border-color: var(--sv-ink); color: var(--sv-on-ink); }
+.sv-site .sv-dev > span { font-size: 15px; }
+.sv-site .sv-dev em { background: var(--sv-accent); color: var(--sv-on-accent); }
+.sv-site .sv-download { background: var(--sv-card); }
+.sv-site .sv-download .sv-dev:not([aria-pressed="true"]) { background: var(--sv-bg); }
+.sv-site .sv-versions button { border-radius: 16px; border-color: transparent; background: var(--sv-bg); }
+.sv-site .sv-versions button[aria-pressed="true"] { background: var(--sv-brand-soft); color: var(--sv-brand); }
+.sv-site .sv-steps li::before { background: var(--sv-brand-soft); color: var(--sv-brand); font-weight: 800; }
+.sv-site .sv-fb button { border-radius: 999px; }
+.sv-site .sv-sticky-dl { border-top: 0; background: var(--sv-bg); }
+@media (max-width: 767.98px) {
+  .sv-site .sv-dhead { flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  .sv-site .sv-dhead .sv-ico--xl { width: 72px; height: 72px; border-radius: 24px; font-size: 30px; }
+  .sv-site .sv-dhead h1 { font-size: 24px; font-weight: 800; }
+  .sv-site .sv-dev > span { display: none; }
 }
