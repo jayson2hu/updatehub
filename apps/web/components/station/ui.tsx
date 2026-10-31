@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Advice, Platform, Settings, Software } from '@/lib/station-types';
-import { adviceMeta, platformEmoji, platformFull, platformShort, type InApp } from '@/lib/station-view';
+import { adviceMeta, friendlyAdvice, platformEmoji, platformFull, platformShort, type InApp } from '@/lib/station-view';
 
 /* ================= 站点上下文 ================= */
 interface StationUi {
@@ -146,7 +146,7 @@ export function SoftIcon({ software, size = 'md' }: { software: Pick<Software, '
     {software.icon_url && !failed ? <img src={software.icon_url} alt="" width={dims} height={dims} loading="lazy" onError={() => setFailed(true)}/> : Array.from(software.name.trim())[0] || '软'}
   </span>;
 }
-export function AdviceTag({ advice }: { advice: Advice }) { const m = adviceMeta[advice] || adviceMeta.optional; return <span className={`sv-tag sv-tag--${m.tone}`}><span aria-hidden="true">{m.icon}</span> {m.label}</span>; }
+export function AdviceTag({ advice }: { advice: Advice }) { const m = adviceMeta[advice] || adviceMeta.optional; return <span className={`sv-tag sv-tag--${m.tone}`}>{friendlyAdvice[advice] || m.label}</span>; }
 export function DeviceMini({ platform }: { platform: Platform }) { return <span className="sv-mini" title={platformFull[platform]}><span aria-hidden="true">{platformEmoji[platform]}</span> {platformShort[platform]}</span>; }
 export function Dot({ label = '有新版' }: { label?: string }) { return <span className="sv-dot" role="img" aria-label={label}/>; }
 export function Badge({ count, label }: { count: number; label?: string }) { return count > 0 ? <span className="sv-badge" aria-label={label || `${count} 个有新版`}>{count > 99 ? '99+' : count}</span> : null; }

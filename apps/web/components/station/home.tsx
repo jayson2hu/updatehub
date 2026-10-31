@@ -7,7 +7,7 @@ import { categoryMeta, categoryOrder, dayHeading, latestBySoftware, latestMarker
 import { favoritesStore, markSeen, useNewFavorites } from '@/hooks/use-station-local';
 import { useLocalStore } from '@/hooks/local-store';
 import { AdSlot } from './ad-slot';
-import { AnnMini, FavList, FavUpdateCard, RankList, ReleaseCard } from './cards';
+import { ChatBubble, FavList, FavUpdateCard, RankList, ReleaseCard } from './cards';
 import { Badge, Empty, useStationUi } from './ui';
 
 interface Week { label: string; count: number; recommended: number; hold: number; important: number }
@@ -45,7 +45,7 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
   });
   const readAll = () => { markSeen(newIds, markers); toast('已全部标为已读'); };
 
-  const hero = <section className="sv-hero" aria-labelledby="sv-hero-title">
+  const hero = <section className="sv-hero sv-desk-only" aria-labelledby="sv-hero-title">
     <div className="sv-hero__main">
       <p className="sv-hero__kicker">{settings.site_name} · {week.label}</p>
       <h1 id="sv-hero-title" className="sv-hero__title">{week.count ? `本周 ${week.count} 个软件更新` : '本周暂无软件更新'}</h1>
@@ -87,9 +87,10 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
   return <div className="sv-home">
     <div className="sv-container">
       {hero}
-      {notices.length > 0 && <section className="sv-sec sv-mobile-only" aria-labelledby="sv-ann-title">
-        <div className="sv-sh"><h2 id="sv-ann-title">群公告</h2><Link href="/announcements">全部 ›</Link></div>
-        <div className="sv-hs">{notices.map(n => <AnnMini key={n.id} notice={n} now={now}/>)}</div>
+      <Link href="/search" className="sv7-search sv-mobile-only"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>想找什么软件喵？</Link>
+      {notices.length > 0 && <section className="sv-sec sv-mobile-only sv7-chat" aria-labelledby="sv-ann-title">
+        <div className="sv-sh"><h2 id="sv-ann-title" className="sv7-chat__title">群主说</h2><Link href="/announcements">全部 ›</Link></div>
+        {notices.slice(0, 3).map(n => <ChatBubble key={n.id} notice={n} now={now}/>)}
       </section>}
       {newIds.length > 0 && <section className="sv-sec sv-mobile-only" aria-labelledby="sv-favnew-title">
         <div className="sv-sh"><h2 id="sv-favnew-title">收藏的软件有更新 <Badge count={newIds.length}/></h2><button type="button" onClick={readAll}>全部已读</button></div>
@@ -101,7 +102,7 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
       </nav>
       <div className="sv-layout">
         <section className="sv-sec sv-layout__main" aria-labelledby="sv-feed-title">
-          <div className="sv-sh"><h2 id="sv-feed-title" className="sv-feed-title">最新更新</h2><Link href="/software" className="sv-mobile-only">软件库 ›</Link><span className="sv-desk-only sv-u-small sv-u-muted">共 {feed.length} 条</span></div>
+          <div className="sv-sh"><h2 id="sv-feed-title" className="sv-feed-title">最近的新版本</h2><Link href="/software" className="sv-mobile-only">软件库 ›</Link><span className="sv-desk-only sv-u-small sv-u-muted">共 {feed.length} 条</span></div>
           {feedList}
         </section>
         <aside className="sv-aside" aria-label="侧栏">
