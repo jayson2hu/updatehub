@@ -10,10 +10,14 @@ import { useLocalStore } from '@/hooks/local-store';
 import { FavList, SimCard } from './cards';
 import { formatSyncCode, SyncSheet, WishSheet } from './sheets';
 import { useStationUi } from './ui';
+import { CatMark } from './cat';
+import { THEME_LABELS, useTheme } from './theme';
+import { THEMES } from '@/lib/theme';
 
 /** 我的（R-ME）：全部数据只在本机，访客不用注册。 */
 export function MeView({ software, releases }: { software: Software[]; releases: Release[] }) {
   const { settings, toast } = useStationUi();
+  const theme = useTheme();
   const markers = useMemo(() => latestMarkers(releases), [releases]);
   const latest = useMemo(() => latestBySoftware(releases), [releases]);
   const softById = useMemo(() => new Map(software.map(s => [s.id, s])), [software]);
@@ -46,7 +50,7 @@ export function MeView({ software, releases }: { software: Software[]; releases:
   return <div className="sv-me">
     <div className="sv-me__top">
       <section className="sv-me-head" aria-labelledby="sv-me-title">
-        <span className="sv-me-head__av" aria-hidden="true">🙂</span>
+        <span className="sv-me-head__av"><CatMark size={44}/></span>
         <div className="sv-u-grow">
           <h1 id="sv-me-title" className="sv-me-head__name">访客</h1>
           <p className="sv-u-xs sv-me-head__sub">不用注册 · 收藏保存在这台<span className="sv-mobile-only">手机</span><span className="sv-desk-only">电脑</span>上</p>
@@ -82,6 +86,13 @@ export function MeView({ software, releases }: { software: Software[]; releases:
         <div className="sv-chips sv-chips--wrap" role="group" aria-label="常用设备">
           <button type="button" className="sv-chip" aria-pressed={device === ''} onClick={() => { deviceStore.set(''); toast('已改为自动识别'); }}>自动识别</button>
           {allPlatforms.map(p => <button key={p} type="button" className="sv-chip" aria-pressed={device === p} onClick={() => { deviceStore.set(p); toast('已设为常用设备'); }}><span aria-hidden="true">{platformEmoji[p]}</span> {platformFull[p]}</button>)}
+        </div>
+      </section>
+
+      <section className="sv-card" aria-labelledby="sv-me-theme">
+        <div className="sv-sh"><h2 id="sv-me-theme">🌗 外观</h2></div>
+        <div className="sv-chips sv-chips--wrap" role="group" aria-label="外观">
+          {THEMES.map(t => <button key={t} type="button" className="sv-chip" aria-pressed={theme.choice === t} onClick={() => theme.setChoice(t)}>{THEME_LABELS[t]}</button>)}
         </div>
       </section>
 

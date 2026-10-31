@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { createLocalStore, useLocalStore } from '@/hooks/local-store';
 import { THEME_KEY, THEMES, type ThemeChoice } from '@/lib/theme';
 
-const LABELS: Record<ThemeChoice, string> = { system: '跟随系统', light: '白天', dark: '黑夜' };
+export const THEME_LABELS: Record<ThemeChoice, string> = { system: '跟随系统', light: '白天', dark: '黑夜' };
 
 const themeStore = createLocalStore<ThemeChoice>(THEME_KEY, 'system', v => THEMES.includes(v as ThemeChoice) ? v as ThemeChoice : 'system');
 
@@ -38,10 +38,10 @@ export function ThemeToggle({ className = 'sv-ib' }: { className?: string }) {
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', close); };
   }, [open]);
   return <div className="sv-theme" ref={box}>
-    <button type="button" className={className} aria-label={`外观：${LABELS[choice]}`} aria-haspopup="menu" aria-expanded={open} aria-controls={menuId} onClick={() => setOpen(v => !v)}><ThemeIcon choice={choice}/></button>
+    <button type="button" className={className} aria-label={`外观：${THEME_LABELS[choice]}`} aria-haspopup="menu" aria-expanded={open} aria-controls={menuId} onClick={() => setOpen(v => !v)}><ThemeIcon choice={choice}/></button>
     {open && <div className="sv-theme__menu" role="menu" id={menuId} aria-label="外观">
       <span className="sv-theme__label">外观</span>
-      {THEMES.map(t => <button key={t} type="button" role="menuitemradio" aria-checked={choice === t} className="sv-theme__opt" onClick={() => { setChoice(t); setOpen(false); }}><ThemeIcon choice={t}/>{LABELS[t]}</button>)}
+      {THEMES.map(t => <button key={t} type="button" role="menuitemradio" aria-checked={choice === t} className="sv-theme__opt" onClick={() => { setChoice(t); setOpen(false); }}><ThemeIcon choice={t}/>{THEME_LABELS[t]}</button>)}
     </div>}
   </div>;
 }

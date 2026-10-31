@@ -6,6 +6,8 @@ import { AnnCard, SoftCard } from './cards';
 import { WishSheet } from './sheets';
 import { Empty, useStationUi } from './ui';
 import { AdSlot } from './ad-slot';
+import Link from 'next/link';
+import { CatMark } from './cat';
 
 /** 用 replaceState 把筛选写回 URL，刷新或分享后保持（不新增历史记录）。 */
 function writeQuery(values: Record<string, string>) {
@@ -29,6 +31,7 @@ export function LibraryView({ software, releases, promotions, initialCat, initia
   const pickSort = (s: LibrarySort) => { setSort(s); writeQuery({ sort: s === 'new' ? '' : s }); };
   return <div className="sv-container sv-library">
     <header className="sv-page-head sv-desk-only"><h1>软件库</h1><p>群里整理过的全部软件，点击查看下载和教程。</p></header>
+    <Link href="/search" className="sv7-search sv-mobile-only"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>搜软件名，比如“云盘”</Link>
     <div className="sv-chips" role="group" aria-label="分类">
       <button type="button" className="sv-chip" aria-pressed={cat === 'all'} onClick={() => pickCat('all')}><span aria-hidden="true">🧩</span> 全部</button>
       {categoryOrder.map(c => <button key={c} type="button" className="sv-chip" aria-pressed={cat === c} onClick={() => pickCat(c)}><span aria-hidden="true">{categoryMeta[c].icon}</span> {categoryMeta[c].label}</button>)}
@@ -60,7 +63,7 @@ export function AnnouncementsView({ announcements, software, initialType, now }:
     <header className="sv-page-head sv-desk-only"><h1>群公告</h1><p>重要通知、使用提醒和维护安排。</p></header>
     <div className="sv-chips sv-u-mb12" role="group" aria-label="公告类型">{ANN_TYPES.map(([k, label]) => <button key={k} type="button" className="sv-chip" aria-pressed={type === k} onClick={() => { setType(k); setLimit(20); writeQuery({ type: k === 'all' ? '' : k }); }}>{label}</button>)}</div>
     {list.length ? <>
-      {list.slice(0, limit).map(n => <AnnCard key={n.id} notice={n} now={now} software={software}/>)}
+      <div className="sv7-thread">{list.slice(0, limit).map(n => <div key={n.id} className="sv7-msg"><CatMark size={36}/><AnnCard notice={n} now={now} software={software}/></div>)}</div>
       {list.length > limit ? <button type="button" className="sv-btn sv-btn--ghost sv-btn--block" onClick={() => setLimit(v => v + 20)}>加载更多</button> : <p className="sv-end">已结束的公告会保留，方便查看之前的说明</p>}
     </> : <Empty icon="📭" title="暂时没有这类公告"/>}
   </div>;
