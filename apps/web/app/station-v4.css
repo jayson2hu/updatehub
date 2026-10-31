@@ -5,14 +5,14 @@
  * 前台独立加载；作用域重置保持控件在各页面的一致性。
  */
 .sv-site {
-  --sv-bg: #F5F0E6; --sv-card: #FFFDF8; --sv-surface: #FFFDF8; --sv-ink: #1F1A14; --sv-ink2: #5C5346; --sv-ink3: #6B6152; --sv-line: #E3D9C6; --sv-line-strong: #CDBFA6;
-  --sv-brand: #24408E; --sv-brand2: #24408E; --sv-brand-solid: #24408E; --sv-brand-soft: #E4E9F6; --sv-on-brand: #FFFFFF; --sv-on-ink: #F5F0E6; --sv-accent: #E8742A;
-  --sv-ok: #1E6B3A; --sv-ok-soft: #E3F1E4; --sv-ok-ink: #14512B; --sv-ok-solid: #1E6B3A; --sv-warn: #8A4B00; --sv-warn-soft: #FCEBD0; --sv-warn-ink: #5E3500;
-  --sv-bad: #B3261E; --sv-bad-soft: #FBE4E1; --sv-bad-ink: #8E1D16; --sv-opt-soft: #ECE8E0;
-  --sv-gold: #E8742A; --sv-gold-soft: #FCEBD0; --sv-tip-bg: #FCEBD0; --sv-tip-line: #EBCB97; --sv-mark: #FBE7A1; --sv-star: #E8742A; --sv-rank2: #C2410C;
-  --sv-r: 6px; --sv-sh: none;
-  --sv-focus: #8FA6E0; --sv-hover-line: #CDBFA6; --sv-gray-soft: #ECE8E0; --sv-input-bg: #EFE8DA; --sv-red-dot: #B3261E; --sv-switch-off: #B5AA97;
-  --sv-nav-bg: rgba(255,253,248,.96); --sv-ad-bg: #EFEBE3; --sv-ad-img: #D8D0C2; --sv-ad-line: #B9AE9B; --sv-tape: rgba(232,116,42,.35);
+  --sv-bg: #FFF6EF; --sv-card: #FFFFFF; --sv-surface: #FFFFFF; --sv-ink: #3B2A20; --sv-ink2: #7A5C4B; --sv-ink3: #8C6E5C; --sv-line: #F2E2D6; --sv-line-strong: #E6CDBD;
+  --sv-brand: #B4441A; --sv-brand2: #B4441A; --sv-brand-solid: #FF8A5B; --sv-brand-soft: #FFE9DC; --sv-on-brand: #3B2A20; --sv-on-ink: #FFF6EF; --sv-accent: #FF8A5B;
+  --sv-ok: #1F7A4D; --sv-ok-soft: #E3F6EC; --sv-ok-ink: #14512B; --sv-ok-solid: #1F7A4D; --sv-warn: #94560A; --sv-warn-soft: #FFF1D6; --sv-warn-ink: #5E3500;
+  --sv-bad: #B4321E; --sv-bad-soft: #FFE4DE; --sv-bad-ink: #8E1D16; --sv-opt-soft: #F6ECE4;
+  --sv-gold: #FF8A5B; --sv-gold-soft: #FFF1D6; --sv-tip-bg: #FFF1D6; --sv-tip-line: #F2D3A8; --sv-mark: #FFE3A3; --sv-star: #FF8A5B; --sv-rank2: #C2410C;
+  --sv-r: 24px; --sv-sh: none;
+  --sv-focus: #E0703F; --sv-hover-line: #E6CDBD; --sv-gray-soft: #F6ECE4; --sv-input-bg: #FFF3EA; --sv-red-dot: #D9381E; --sv-switch-off: #D9C3B5;
+  --sv-nav-bg: rgba(255,246,239,.96); --sv-ad-bg: #FBEDE3; --sv-ad-img: #F2D9C9; --sv-ad-line: #E3C3AE; --sv-tape: rgba(232,116,42,.35); --sv-on-accent: #3B2A20; --sv-nav: #3B2A20; --sv-on-nav: #F5E6DC;
   --sv-safe-b: env(safe-area-inset-bottom, 0px);
   --sv-tabbar-h: calc(61px + var(--sv-safe-b)); /* links + padding + top border */
   --sv-download-h: 65px;
@@ -73,16 +73,16 @@ html.sv-lock { overflow: hidden; }
 .sv-site .sv-sh > a, .sv-site .sv-sh > button { font-size: 13px; color: var(--sv-ink2); white-space: nowrap; position: relative; flex: none; }
 .sv-site .sv-sh > a::after, .sv-site .sv-sh > button::after { content: ""; position: absolute; inset: -12px -8px; }
 
-.sv-site .sv-btn { min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: filter .15s; text-align: center; position: relative; line-height: 1.3; }
+.sv-site .sv-btn { min-height: 44px; padding: 0 16px; border-radius: 999px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: filter .15s; text-align: center; position: relative; line-height: 1.3; }
 .sv-site .sv-btn:hover { filter: brightness(.97); }
 .sv-site .sv-btn:active { filter: brightness(.93); }
 .sv-site .sv-btn--primary { background: var(--sv-brand-solid); color: var(--sv-on-brand); box-shadow: none; }
 .sv-site .sv-btn--soft { background: var(--sv-brand-soft); color: var(--sv-brand); }
 .sv-site .sv-btn--ghost { background: var(--sv-surface); border: 1px solid var(--sv-line); color: var(--sv-ink); }
 .sv-site .sv-btn--danger { background: var(--sv-bad-soft); color: var(--sv-bad); }
-.sv-site .sv-btn--sm { min-height: 32px; padding: 0 11px; font-size: 13px; border-radius: 9px; }
+.sv-site .sv-btn--sm { min-height: 32px; padding: 0 11px; font-size: 13px; border-radius: 999px; }
 .sv-site .sv-btn--sm::after { content: ""; position: absolute; inset: -6px -2px; }
-.sv-site .sv-btn--lg { min-height: 52px; font-size: 16px; border-radius: 14px; }
+.sv-site .sv-btn--lg { min-height: 52px; font-size: 16px; border-radius: 999px; }
 .sv-site .sv-btn--block { width: 100%; display: flex; white-space: normal; }
 .sv-site .sv-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; filter: none; }
 
@@ -96,9 +96,9 @@ html.sv-lock { overflow: hidden; }
 .sv-site .sv-mini { display: inline-block; font-size: 11px; border: 1px solid var(--sv-line); border-radius: 5px; padding: 0 5px; color: var(--sv-ink2); background: var(--sv-surface); line-height: 18px; white-space: nowrap; }
 .sv-site .sv-mini--ok { color: var(--sv-ok); border-color: currentColor; } .sv-site .sv-mini--warn { color: var(--sv-warn); border-color: currentColor; } .sv-site .sv-mini--bad { color: var(--sv-bad); border-color: currentColor; font-weight: 700; } .sv-site .sv-mini--opt { color: var(--sv-ink2); }
 .sv-site .sv-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sv-red-dot); display: inline-block; vertical-align: middle; margin-left: 4px; flex: none; }
-.sv-site .sv-badge { min-width: 18px; height: 18px; border-radius: 9px; background: var(--sv-red-dot); color: var(--sv-on-brand); font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; padding: 0 5px; line-height: 1; }
+.sv-site .sv-badge { min-width: 18px; height: 18px; border-radius: 9px; background: var(--sv-red-dot); color: #FFFFFF; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; padding: 0 5px; line-height: 1; }
 
-.sv-site .sv-ico { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; color: var(--sv-on-brand); font-weight: 800; font-size: 19px; box-shadow: inset 0 -2px 0 rgba(0,0,0,.08); overflow: hidden; line-height: 1; }
+.sv-site .sv-ico { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; color: #FFFFFF; font-weight: 800; font-size: 19px; box-shadow: inset 0 -2px 0 rgba(0,0,0,.08); overflow: hidden; line-height: 1; }
 .sv-site .sv-ico img { width: 100%; height: 100%; object-fit: cover; }
 .sv-site .sv-ico--sm { width: 36px; height: 36px; font-size: 15px; border-radius: 10px; }
 .sv-site .sv-ico--lg { width: 64px; height: 64px; font-size: 27px; border-radius: 17px; }
@@ -343,8 +343,8 @@ html.sv-lock { overflow: hidden; }
 
 /* ---------- 广告 ---------- */
 .sv-site .sv-ad { position: relative; border: 1px solid var(--sv-line); border-radius: var(--sv-r); background: var(--sv-surface); overflow: hidden; }
-.sv-site .sv-ad__label { position: absolute; top: 8px; left: 8px; font-size: 11px; background: rgba(0,0,0,.5); color: var(--sv-on-brand); border-radius: 4px; padding: 0 6px; z-index: 2; line-height: 18px; pointer-events: none; }
-.sv-site .sv-ad__close { position: absolute; top: 0; right: 0; width: 44px; height: 44px; z-index: 2; display: grid; place-items: center; color: var(--sv-on-brand); font-size: 12px; }
+.sv-site .sv-ad__label { position: absolute; top: 8px; left: 8px; font-size: 11px; background: rgba(0,0,0,.5); color: #FFFFFF; border-radius: 4px; padding: 0 6px; z-index: 2; line-height: 18px; pointer-events: none; }
+.sv-site .sv-ad__close { position: absolute; top: 0; right: 0; width: 44px; height: 44px; z-index: 2; display: grid; place-items: center; color: #FFFFFF; font-size: 12px; }
 .sv-site .sv-ad__close::before { content: ""; position: absolute; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.38); z-index: -1; }
 @media (min-width: 768px) { .sv-site .sv-ad__close { display: none; } }
 .sv-site .sv-ad__link { display: block; color: inherit; }
@@ -624,29 +624,29 @@ html.sv-lock .sv-site .sv-toast.is-on { transform: translateX(-50%); }
 
 /* ---------- 外观：白天 / 黑夜 / 跟随系统（html[data-theme]） ---------- */
 html[data-theme="dark"] .sv-site {
-  --sv-bg: #16130F; --sv-card: #211D17; --sv-surface: #211D17; --sv-ink: #EDE6D8; --sv-ink2: #B3A893; --sv-ink3: #A69B87; --sv-line: #3A3328; --sv-line-strong: #51483B;
-  --sv-brand: #A9BCF5; --sv-brand2: #A9BCF5; --sv-brand-solid: #3F5FC9; --sv-brand-soft: #26304D; --sv-on-brand: #FFFFFF; --sv-on-ink: #16130F;
-  --sv-ok: #7FD49E; --sv-ok-soft: #1C3326; --sv-ok-ink: #A8E4BE; --sv-ok-solid: #4CAF73; --sv-warn: #F2B866; --sv-warn-soft: #3A2A12; --sv-warn-ink: #F6D3A0;
-  --sv-bad: #F59A90; --sv-bad-soft: #3E1F1B; --sv-bad-ink: #FBC2BB; --sv-opt-soft: #2E2922;
-  --sv-gold-soft: #3A2A12; --sv-tip-bg: #3A2A12; --sv-tip-line: #6B4E1E; --sv-mark: #5A4A12; --sv-rank2: #F0A060;
-  --sv-focus: #6F8BE0; --sv-hover-line: #51483B; --sv-gray-soft: #2E2922; --sv-input-bg: #2A251E; --sv-red-dot: #F06A5E; --sv-switch-off: #5E5446;
-  --sv-nav-bg: rgba(33,29,23,.96); --sv-ad-bg: #1D1A15; --sv-ad-img: #3A3328; --sv-ad-line: #5E5446;
+  --sv-bg: #1E1612; --sv-card: #2B211B; --sv-surface: #2B211B; --sv-ink: #F6E9DF; --sv-ink2: #C9AE9C; --sv-ink3: #AD9282; --sv-line: #3A2C24; --sv-line-strong: #4E3C31;
+  --sv-brand: #FFA27E; --sv-brand2: #FFA27E; --sv-brand-solid: #FF8A5B; --sv-brand-soft: #3E2A20; --sv-on-brand: #2A1A12; --sv-on-ink: #1E1612;
+  --sv-ok: #8FDDB2; --sv-ok-soft: #1E382B; --sv-ok-ink: #C3EED6; --sv-ok-solid: #4CAF73; --sv-warn: #F2C072; --sv-warn-soft: #3E2E15; --sv-warn-ink: #F6D3A0;
+  --sv-bad: #FF9F8C; --sv-bad-soft: #4A251E; --sv-bad-ink: #FFC6B9; --sv-opt-soft: #33271F;
+  --sv-gold-soft: #3E2E15; --sv-tip-bg: #3E2E15; --sv-tip-line: #6B4E1E; --sv-mark: #5A4A12; --sv-rank2: #F0A060;
+  --sv-focus: #FF8A5B; --sv-hover-line: #4E3C31; --sv-gray-soft: #33271F; --sv-input-bg: #241A15; --sv-red-dot: #FF7A63; --sv-switch-off: #5E4A3E;
+  --sv-nav-bg: rgba(43,33,27,.96); --sv-ad-bg: #261C17; --sv-ad-img: #3A2C24; --sv-ad-line: #5E4A3E; --sv-accent: #FF8A5B; --sv-on-accent: #2A1A12; --sv-nav: #F6E9DF; --sv-on-nav: #2A1A12;
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]):not([data-theme="dark"]) .sv-site {
-  --sv-bg: #16130F; --sv-card: #211D17; --sv-surface: #211D17; --sv-ink: #EDE6D8; --sv-ink2: #B3A893; --sv-ink3: #A69B87; --sv-line: #3A3328; --sv-line-strong: #51483B;
-  --sv-brand: #A9BCF5; --sv-brand2: #A9BCF5; --sv-brand-solid: #3F5FC9; --sv-brand-soft: #26304D; --sv-on-brand: #FFFFFF; --sv-on-ink: #16130F;
-  --sv-ok: #7FD49E; --sv-ok-soft: #1C3326; --sv-ok-ink: #A8E4BE; --sv-ok-solid: #4CAF73; --sv-warn: #F2B866; --sv-warn-soft: #3A2A12; --sv-warn-ink: #F6D3A0;
-  --sv-bad: #F59A90; --sv-bad-soft: #3E1F1B; --sv-bad-ink: #FBC2BB; --sv-opt-soft: #2E2922;
-  --sv-gold-soft: #3A2A12; --sv-tip-bg: #3A2A12; --sv-tip-line: #6B4E1E; --sv-mark: #5A4A12; --sv-rank2: #F0A060;
-  --sv-focus: #6F8BE0; --sv-hover-line: #51483B; --sv-gray-soft: #2E2922; --sv-input-bg: #2A251E; --sv-red-dot: #F06A5E; --sv-switch-off: #5E5446;
-  --sv-nav-bg: rgba(33,29,23,.96); --sv-ad-bg: #1D1A15; --sv-ad-img: #3A3328; --sv-ad-line: #5E5446;
-  }
+  --sv-bg: #1E1612; --sv-card: #2B211B; --sv-surface: #2B211B; --sv-ink: #F6E9DF; --sv-ink2: #C9AE9C; --sv-ink3: #AD9282; --sv-line: #3A2C24; --sv-line-strong: #4E3C31;
+  --sv-brand: #FFA27E; --sv-brand2: #FFA27E; --sv-brand-solid: #FF8A5B; --sv-brand-soft: #3E2A20; --sv-on-brand: #2A1A12; --sv-on-ink: #1E1612;
+  --sv-ok: #8FDDB2; --sv-ok-soft: #1E382B; --sv-ok-ink: #C3EED6; --sv-ok-solid: #4CAF73; --sv-warn: #F2C072; --sv-warn-soft: #3E2E15; --sv-warn-ink: #F6D3A0;
+  --sv-bad: #FF9F8C; --sv-bad-soft: #4A251E; --sv-bad-ink: #FFC6B9; --sv-opt-soft: #33271F;
+  --sv-gold-soft: #3E2E15; --sv-tip-bg: #3E2E15; --sv-tip-line: #6B4E1E; --sv-mark: #5A4A12; --sv-rank2: #F0A060;
+  --sv-focus: #FF8A5B; --sv-hover-line: #4E3C31; --sv-gray-soft: #33271F; --sv-input-bg: #241A15; --sv-red-dot: #FF7A63; --sv-switch-off: #5E4A3E;
+  --sv-nav-bg: rgba(43,33,27,.96); --sv-ad-bg: #261C17; --sv-ad-img: #3A2C24; --sv-ad-line: #5E4A3E; --sv-accent: #FF8A5B; --sv-on-accent: #2A1A12; --sv-nav: #F6E9DF; --sv-on-nav: #2A1A12;
+}
 }
 html[data-theme="dark"] { color-scheme: dark; }
-html[data-theme="dark"] body { background: #16130F; }
-@media (prefers-color-scheme: dark) { html:not([data-theme="light"]):not([data-theme="dark"]) { color-scheme: dark; } html:not([data-theme="light"]):not([data-theme="dark"]) body { background: #16130F; } }
-html[data-theme="light"] body, html:not([data-theme]) body { background: #F5F0E6; }
+html[data-theme="dark"] body { background: #1E1612; }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]):not([data-theme="dark"]) { color-scheme: dark; } html:not([data-theme="light"]):not([data-theme="dark"]) body { background: #1E1612; } }
+html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF; }
 .sv-site .sv-theme { position: relative; flex: none; }
 .sv-site .sv-theme__menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 60; width: 176px; background: var(--sv-card); border: 1px solid var(--sv-line); border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,.22); padding: 4px; display: flex; flex-direction: column; }
 .sv-site .sv-theme__label { padding: 8px 12px 4px; font-size: 12px; font-weight: 700; color: var(--sv-ink2); }
@@ -654,3 +654,12 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #F5F0E6
 .sv-site .sv-theme__opt[aria-checked="true"] { background: var(--sv-gray-soft); font-weight: 700; }
 .sv-site .sv-theme__opt[aria-checked="true"]::after { content: "✓"; margin-left: auto; color: var(--sv-brand); font-weight: 900; }
 .sv-site .sv-theme svg { width: 22px; height: 22px; }
+
+/* ---------- v7 软萌喵：圆润无描边的卡片、橘色胶囊选中态 ---------- */
+.sv-site .sv-card, .sv-site .sv-release-card, .sv-site .sv-soft-card, .sv-site .sv-ann-card, .sv-site .sv-ann-mini, .sv-site .sv-result,
+.sv-site .sv-cat, .sv-site .sv-sim-card, .sv-site .sv-fav-card, .sv-site .sv-hero, .sv-site .sv-article, .sv-site .sv-kpis, .sv-site .sv-ad { border-color: transparent; }
+.sv-site .sv-chip { border-color: transparent; background: var(--sv-surface); font-size: 14px; min-height: 38px; padding: 0 16px; }
+.sv-site .sv-chip[aria-pressed="true"] { background: var(--sv-accent); border-color: var(--sv-accent); color: var(--sv-on-accent); font-weight: 700; }
+.sv-site .sv-btn--ghost { border-color: var(--sv-line-strong); }
+.sv-site .sv-search { border-radius: 999px; background: var(--sv-surface); }
+.sv-site .sv-input { border-radius: 16px; }
