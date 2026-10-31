@@ -5,7 +5,7 @@
  * 前台独立加载；作用域重置保持控件在各页面的一致性。
  */
 .sv-site {
-  --sv-bg: #FFF6EF; --sv-card: #FFFFFF; --sv-surface: #FFFFFF; --sv-ink: #3B2A20; --sv-ink2: #7A5C4B; --sv-ink3: #8C6E5C; --sv-line: #F2E2D6; --sv-line-strong: #E6CDBD;
+  --sv-bg: #FFF6EF; --sv-card: #FFFFFF; --sv-surface: #FFFFFF; --sv-ink: #3B2A20; --sv-ink2: #7A5C4B; --sv-ink3: #80614F; --sv-line: #F2E2D6; --sv-line-strong: #E6CDBD;
   --sv-brand: #B4441A; --sv-brand2: #B4441A; --sv-brand-solid: #FF8A5B; --sv-brand-soft: #FFE9DC; --sv-on-brand: #3B2A20; --sv-on-ink: #FFF6EF; --sv-accent: #FF8A5B;
   --sv-ok: #1F7A4D; --sv-ok-soft: #E3F6EC; --sv-ok-ink: #14512B; --sv-ok-solid: #1F7A4D; --sv-warn: #94560A; --sv-warn-soft: #FFF1D6; --sv-warn-ink: #5E3500;
   --sv-bad: #B4321E; --sv-bad-soft: #FFE4DE; --sv-bad-ink: #8E1D16; --sv-opt-soft: #F6ECE4;
@@ -736,7 +736,7 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
 .sv-site .sv-versions button[aria-pressed="true"] { background: var(--sv-brand-soft); color: var(--sv-brand); }
 .sv-site .sv-steps li::before { background: var(--sv-brand-soft); color: var(--sv-brand); font-weight: 800; }
 .sv-site .sv-fb button { border-radius: 999px; }
-.sv-site .sv-sticky-dl { border-top: 0; background: var(--sv-bg); }
+.sv-site .sv-sticky-dl { border-top: 0; background: var(--sv-bg); bottom: 0; padding-bottom: calc(var(--sv-tabbar-h) + 4px); align-items: flex-start; }
 @media (max-width: 767.98px) {
   .sv-site .sv-dhead { flex-direction: column; align-items: center; text-align: center; gap: 6px; }
   .sv-site .sv-dhead .sv-ico--xl { width: 72px; height: 72px; border-radius: 24px; font-size: 30px; }
