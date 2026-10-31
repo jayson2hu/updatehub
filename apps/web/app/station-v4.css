@@ -14,7 +14,7 @@
   --sv-focus: #E0703F; --sv-hover-line: #E6CDBD; --sv-gray-soft: #F6ECE4; --sv-input-bg: #FFF3EA; --sv-red-dot: #D9381E; --sv-switch-off: #D9C3B5;
   --sv-nav-bg: rgba(255,246,239,.96); --sv-ad-bg: #FBEDE3; --sv-ad-img: #F2D9C9; --sv-ad-line: #E3C3AE; --sv-tape: rgba(232,116,42,.35); --sv-on-accent: #3B2A20; --sv-nav: #3B2A20; --sv-on-nav: #F5E6DC;
   --sv-safe-b: env(safe-area-inset-bottom, 0px);
-  --sv-tabbar-h: calc(61px + var(--sv-safe-b)); /* links + padding + top border */
+  --sv-tabbar-h: calc(84px + var(--sv-safe-b)); /* floating pill: 64px bar + 12px gap + 8px breathing room */
   --sv-download-h: 65px;
   display: flex; flex-direction: column;
   min-height: 100vh; min-height: 100dvh; background: var(--sv-bg); color: var(--sv-ink);
@@ -663,3 +663,25 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
 .sv-site .sv-btn--ghost { border-color: var(--sv-line-strong); }
 .sv-site .sv-search { border-radius: 999px; background: var(--sv-surface); }
 .sv-site .sv-input { border-radius: 16px; }
+
+/* ---------- v7 顶栏：猫咪 + 站名 + 今日副标题 ---------- */
+.sv-site .sv-logo--cat { background: none; box-shadow: none; width: 40px; height: 40px; }
+.sv-site .sv-logo--cat .sv7-cat { display: block; }
+.sv-site .sv-topbar { height: 64px; background: var(--sv-bg); border-bottom: 0; padding: 0 8px 0 16px; }
+.sv-site .sv-topbar__title { font-size: 22px; font-weight: 800; }
+.sv-site .sv7-brand { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.sv-site .sv7-brand .sv-brand { font-size: 21px; font-weight: 800; letter-spacing: 0; }
+.sv-site .sv7-brand__sub { font-size: 12.5px; color: var(--sv-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-site .sv-topbar .sv-ib, .sv-site .sv-topbar .sv-theme > button { background: var(--sv-surface); border-radius: 50%; width: 44px; height: 44px; margin-left: 4px; }
+.sv-site .sv-nav { background: var(--sv-nav-bg); border-bottom-color: transparent; }
+.sv-site .sv-nav__links a.is-on { background: var(--sv-accent); color: var(--sv-on-accent); border-radius: 999px; }
+
+/* ---------- v7 底栏：悬浮深色胶囊，当前项橘色 ---------- */
+@media (max-width: 767.98px) {
+  .sv-site .sv-tabbar { left: 12px; right: 12px; bottom: calc(12px + var(--sv-safe-b)); padding: 6px; border-top: 0; border-radius: 32px; background: var(--sv-nav); gap: 4px; box-shadow: 0 8px 24px rgba(59,42,32,.18); }
+  .sv-site .sv-tabbar a { min-height: 52px; border-radius: 26px; font-size: 14px; color: var(--sv-on-nav); }
+  .sv-site .sv-tabbar a.is-on { background: var(--sv-accent); color: var(--sv-on-accent); font-weight: 800; }
+  .sv-site .sv-tabbar a.is-on::before { display: none; }
+  .sv-site .sv-tabbar__icon { display: none; }
+  .sv-site .sv-tabbar .sv-badge { top: 6px; left: auto; right: 12px; }
+}

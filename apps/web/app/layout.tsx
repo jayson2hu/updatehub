@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { StationChrome } from '@/components/station/chrome';
 import { themeBootScript } from '@/lib/theme';
-import { getStationData } from '@/lib/station';
+import { getStationData, requestNow } from '@/lib/station';
 import type { Settings, StationData } from '@/lib/station-types';
 import { siteUrl } from '@/lib/format';
-import { detectInApp, latestMarkers } from '@/lib/station-view';
+import { detectInApp, latestMarkers, todaySummary } from '@/lib/station-view';
 import './base.css';
 // Legacy styles are confined to the admin layout; visitors only load v4.
 import './station-v4.css';
@@ -32,6 +32,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const ua = (await headers()).get('user-agent') || '';
   // suppressHydrationWarning: the boot script sets data-theme before React hydrates.
   return <html lang="zh-CN" data-theme="system" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootScript }}/></head><body>
-    <StationChrome settings={data?.settings || FALLBACK} inApp={detectInApp(ua)} latest={data ? latestMarkers(data.releases) : {}}>{children}</StationChrome>
+    <StationChrome settings={data?.settings || FALLBACK} inApp={detectInApp(ua)} latest={data ? latestMarkers(data.releases) : {}} summary={data ? todaySummary(data.releases, requestNow()) : { today: 0, hold: 0 }}>{children}</StationChrome>
   </body></html>;
 }

@@ -99,6 +99,13 @@ export function latestBySoftware(releases: Release[]) {
   return map;
 }
 /** 红点判定用：每款软件最新版本的发布时间（R-GLOBAL-08）。 */
+/** 首页顶栏副标题：今天（北京时间）有几款软件发布了新版，其中几款建议先别更新。 */
+export function todaySummary(releases: Release[], now: number) {
+  const today = dayKey(now);
+  const fresh = releases.filter(r => r.published !== false && r.published_at && dayKey(r.published_at) === today);
+  return { today: new Set(fresh.map(r => r.software_id)).size, hold: new Set(fresh.filter(r => r.advice === 'hold').map(r => r.software_id)).size };
+}
+
 export function latestMarkers(releases: Release[]) {
   const out: Record<string, string> = {};
   latestBySoftware(releases).forEach((r, id) => { if (r.published_at) out[id] = r.published_at; });
