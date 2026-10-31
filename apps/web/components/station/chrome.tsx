@@ -7,6 +7,7 @@ import type { InApp } from '@/lib/station-view';
 import { useNewFavorites } from '@/hooks/use-station-local';
 import { Badge, StationUiProvider, useStationUi } from './ui';
 import { ThemeToggle } from './theme';
+import { CatMark } from './cat';
 
 type Route = 'home' | 'library' | 'detail' | 'announcements' | 'announcement' | 'search' | 'me' | 'about' | 'other';
 function routeOf(path: string): Route {
@@ -28,7 +29,7 @@ export function useBack() {
   return () => { if (navigatedInside && window.history.length > 1) router.back(); else router.push('/'); };
 }
 
-export function StationChrome({ children, settings, inApp, latest }: { children: ReactNode; settings: Settings; inApp: InApp; latest: Record<string, string> }) {
+export function StationChrome({ children, settings, inApp, latest, summary }: { children: ReactNode; settings: Settings; inApp: InApp; latest: Record<string, string>; summary: { today: number; hold: number } }) {
   const path = usePathname() || '/';
   const [firstPath] = useState(path);
   useEffect(() => { if (path !== firstPath) navigatedInside = true; }, [path, firstPath]);
@@ -39,7 +40,7 @@ export function StationChrome({ children, settings, inApp, latest }: { children:
   return <div className="sv-site" data-route={route}><StationUiProvider settings={settings} inApp={inApp} latest={latest}>
       <a className="sv-skip" href="#sv-main">跳到主要内容</a>
       <DesktopNav route={route} settings={settings} latest={latest}/>
-      <RouteTopbar route={route} settings={settings} latest={latest}/>
+      <RouteTopbar route={route} settings={settings} latest={latest} summary={summary}/>
       {route === 'home' && <InAppBar/>}
       <main id="sv-main" className="sv-main" tabIndex={-1}>{children}</main>
       <Footer settings={settings}/>
@@ -75,7 +76,10 @@ function DesktopNav({ route, settings, latest }: { route: Route; settings: Setti
 }
 
 export function Logo({ settings }: { settings: Settings }) {
-  return <span className="sv-logo" aria-hidden="true">{settings.logo_text || Array.from(settings.site_name || '喵')[0]}</span>;
+  // 管理员另设了文字标志时沿用文字；默认（空或“喵”）显示猫咪吉祥物。
+  const text = settings.logo_text?.trim();
+  if (text && text !== '喵') return <span className="sv-logo" aria-hidden="true">{text}</span>;
+  return <span className="sv-logo sv-logo--cat" aria-hidden="true"><CatMark size={36}/></span>;
 }
 
 /* ---------- 手机顶栏（R-GLOBAL-02）；详情页、搜索页由页面自己渲染 ---------- */
@@ -87,7 +91,7 @@ export function MobileTopbar({ children, back = false }: { children?: ReactNode;
   </div>;
 }
 
-function RouteTopbar({ route, settings, latest }: { route: Route; settings: Settings; latest: Record<string, string> }) {
+function RouteTopbar({ route, settings, latest, summary }: { route: Route; settings: Settings; latest: Record<string, string>; summary: { today: number; hold: number } }) {
   const { copy } = useStationUi();
   const count = useNewFavorites(latest).length;
   if (route === 'detail' || route === 'search') return null;
@@ -97,7 +101,7 @@ function RouteTopbar({ route, settings, latest }: { route: Route; settings: Sett
   if (route === 'about') return <MobileTopbar back><span className="sv-topbar__title">关于本站</span></MobileTopbar>;
   if (route === 'announcement') return <MobileTopbar back><span className="sv-topbar__title">公告详情</span><button type="button" className="sv-ib" aria-label="复制公告链接" onClick={() => copy(window.location.href, '公告链接已复制')}>↗</button></MobileTopbar>;
   return <MobileTopbar>
-    <Link href="/" className="sv-topbar__brand" aria-label={`${settings.site_name}首页`}><Logo settings={settings}/><span className="sv-brand">{settings.site_name}</span></Link>
+    <Link href="/" className="sv-topbar__brand" aria-label={`${settings.site_name}首页`}><Logo settings={settings}/><span className="sv7-brand"><span className="sv-brand">{settings.site_name}</span><span className="sv7-brand__sub">{summary.today ? `今天有 ${summary.today} 个更新${summary.hold ? `，${summary.hold} 个要小心喵` : ''}` : '群友整理的软件更新'}</span></span></Link>
     <Link className="sv-ib" href="/search" aria-label="搜索">🔍</Link>
     <ThemeToggle/>
     <Link className="sv-ib" href="/me" aria-label={count ? `我的收藏，${count} 个有新版` : '我的收藏'}>⭐{count > 0 && <span className="sv-dot sv-ib__dot" aria-hidden="true"/>}</Link>

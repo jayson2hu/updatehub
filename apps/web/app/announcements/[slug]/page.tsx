@@ -8,6 +8,7 @@ import { AnnouncementTracker, CopyPageLink } from '@/components/station/announce
 import { PageView } from '@/components/station/page-view';
 import { AdviceTag, SoftIcon } from '@/components/station/ui';
 import { AdSlot } from '@/components/station/ad-slot';
+import { CatMark } from '@/components/station/cat';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
@@ -40,6 +41,7 @@ export default async function AnnouncementPage({ params }: { params: Promise<{ s
     <PageView name="announcement"/><AnnouncementTracker id={notice.id}/>
     <nav className="sv-crumbs" aria-label="面包屑"><Link href="/announcements">群公告</Link><span aria-hidden="true"> › </span><span aria-current="page">详情</span></nav>
     <article className="sv-article">
+      <p className="sv7-author"><CatMark size={40}/><span><b>群主</b><span className="sv-u-xs sv-u-muted">{monthDay(notice.published_at)} 在群里说</span></span></p>
       {ended && <p className="sv-oldnote">这条公告已结束，内容仅供参考。</p>}
       <p className="sv-ann-card__meta">
         {isPinnedNow(notice, now) && <span className="sv-tag sv-tag--gold">📌 置顶</span>}

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import type { Announcement, Release, Software } from '@/lib/station-types';
 import { allPlatforms, isExpired } from '@/lib/station';
-import { adviceMeta, announcementTypes, annTone, annTypeTone, categoryMeta, feedbackRate, findRanges, formatCount, isPinnedNow, monthDay, platformEmoji, platformFull, platformShort, softwarePath, type FeedEntry } from '@/lib/station-view';
+import { adviceMeta, friendlyAdvice, announcementTypes, annTone, annTypeTone, categoryMeta, feedbackRate, findRanges, formatCount, isPinnedNow, monthDay, platformEmoji, platformFull, platformShort, softwarePath, type FeedEntry } from '@/lib/station-view';
 import { favoritesStore, toggleFavorite } from '@/hooks/use-station-local';
 import { useLocalStore } from '@/hooks/local-store';
 import { AdviceTag, Dot, Empty, SoftIcon, useStationUi } from './ui';
@@ -35,7 +35,7 @@ export function ReleaseCard({ entry, isNew }: { entry: FeedEntry; isNew: boolean
     {release.summary && <span className="sv-release-card__sum">{release.summary}</span>}
     <span className="sv-release-card__foot">
       {items.map(({ platform, release: r }) => <span key={platform} className={`sv-mini${mixedAdvice ? ` sv-mini--${adviceMeta[r.advice].tone}` : ''}`} title={platformFull[platform]}>
-        <span aria-hidden="true">{platformEmoji[platform]}</span> {platformShort[platform]}{!sameVersion && <span className="sv-mono"> {r.version}</span>}{mixedAdvice && ` · ${adviceMeta[r.advice].label}`}
+        <span aria-hidden="true">{platformEmoji[platform]}</span> {platformShort[platform]}{!sameVersion && <span className="sv-mono"> {r.version}</span>}{mixedAdvice && ` · ${friendlyAdvice[r.advice]}`}
       </span>)}
       <span className="sv-release-card__stat">👍 {rate.enough ? `${rate.pct}% 能用` : '反馈较少'}{software.view_count > 0 && ` · ${formatCount(software.view_count)} 人看过`}</span>
     </span>
@@ -95,6 +95,16 @@ export function AnnMini({ notice, now }: { notice: Announcement; now: number }) 
     </span>
     <b className="sv-ann-mini__title">{notice.title}</b>
     {notice.summary && <span className="sv-ann-mini__sum">{notice.summary}</span>}
+  </Link>;
+}
+
+/* ---------- 「群主说」公告气泡（v7） ---------- */
+export function ChatBubble({ notice, now }: { notice: Announcement; now: number }) {
+  const important = notice.importance !== 'normal';
+  return <Link href={`/announcements/${encodeURIComponent(notice.slug)}`} className={`sv7-bubble${isExpired(notice, now) ? ' is-ended' : ''}`}>
+    <span className={`sv7-bubble__meta${important ? ' is-imp' : ''}`}>{isPinnedNow(notice, now) && '置顶 · '}{important ? '重要' : announcementTypes[notice.category]} · {monthDay(notice.published_at)}</span>
+    <b className="sv7-bubble__title">{notice.title}</b>
+    {notice.summary && <span className="sv7-bubble__sum">{notice.summary}</span>}
   </Link>;
 }
 

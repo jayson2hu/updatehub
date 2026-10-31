@@ -32,6 +32,8 @@ export const adviceMeta: Record<Advice, { label: string; icon: string; tone: Ton
   hold: { label: '先别更新', icon: '✕', tone: 'bad', notice: '⛔ 先别更新' },
   optional: { label: '可选更新', icon: '○', tone: 'opt', notice: '🔘 可选更新，按需' },
 };
+/** 前台口语化的结论用语（v7）；后台与群通知仍用 adviceMeta.label。 */
+export const friendlyAdvice: Record<Advice, string> = { recommended: '放心更新', wait: '等等再说', hold: '先别更新', optional: '按需更新' };
 export const changeKindOrder: ChangeKind[] = ['added', 'fixed', 'improved', 'known_issue'];
 export const changeKindMeta: Record<ChangeKind, { label: string; cls: string }> = {
   added: { label: '新增', cls: 'added' }, fixed: { label: '修复', cls: 'fixed' }, improved: { label: '优化', cls: 'improved' }, known_issue: { label: '已知问题', cls: 'known' },
@@ -99,6 +101,13 @@ export function latestBySoftware(releases: Release[]) {
   return map;
 }
 /** 红点判定用：每款软件最新版本的发布时间（R-GLOBAL-08）。 */
+/** 首页顶栏副标题：今天（北京时间）有几款软件发布了新版，其中几款建议先别更新。 */
+export function todaySummary(releases: Release[], now: number) {
+  const today = dayKey(now);
+  const fresh = releases.filter(r => r.published !== false && r.published_at && dayKey(r.published_at) === today);
+  return { today: new Set(fresh.map(r => r.software_id)).size, hold: new Set(fresh.filter(r => r.advice === 'hold').map(r => r.software_id)).size };
+}
+
 export function latestMarkers(releases: Release[]) {
   const out: Record<string, string> = {};
   latestBySoftware(releases).forEach((r, id) => { if (r.published_at) out[id] = r.published_at; });
