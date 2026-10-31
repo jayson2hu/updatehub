@@ -700,18 +700,27 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
 .sv-site .sv-release-card { border-radius: var(--sv-r); }
 .sv-site .sv-ico { border-radius: 16px; box-shadow: none; }
 .sv-site .sv-tag { border-radius: 999px; padding: 0 10px; line-height: 24px; font-weight: 700; }
+/* 软件卡片网格：手机两列、电脑三列；日期分组占整行 */
+.sv-site .sv-feed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sv-site .sv-feed > * { grid-column: 1 / -1; }
+.sv-site .sv-feed > .sv-release-card { grid-column: auto; margin: 0; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.sv-site .sv-release-card__head { flex-direction: column; align-items: flex-start; gap: 8px; }
+.sv-site .sv-release-card__head .sv-ico { width: 48px; height: 48px; font-size: 20px; }
+.sv-site .sv-release-card__head > .sv-u-grow { width: 100%; }
+.sv-site .sv-release-card__title { flex-wrap: wrap; }
+.sv-site .sv-release-card__title b { font-size: 16px; font-weight: 800; }
+.sv-site .sv-release-card__tag { order: 5; flex-basis: 100%; margin: 6px 0 0; padding: 0; }
+.sv-site .sv-release-card__foot { margin-top: auto; gap: 4px; }
+.sv-site .sv-release-card__sum { margin: 0; }
+@media (min-width: 768px) {
+  .sv-site .sv-feed { gap: 14px; }
+  .sv-site .sv-feed > .sv-release-card { padding: 18px; }
+  .sv-site .sv-feed > .sv-day { margin: 10px 0 0; }
+  .sv-site .sv-release-card__stat { display: none; }
+}
+@media (min-width: 1024px) { .sv-site .sv-feed { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 767.98px) {
-  .sv-site .sv-feed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .sv-site .sv-feed > * { grid-column: 1 / -1; }
-  .sv-site .sv-feed > .sv-release-card { grid-column: auto; margin: 0; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-  .sv-site .sv-release-card__head { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .sv-site .sv-release-card__head .sv-ico { width: 48px; height: 48px; font-size: 20px; }
-  .sv-site .sv-release-card__head > .sv-u-grow { width: 100%; }
-  .sv-site .sv-release-card__title { flex-wrap: wrap; }
-  .sv-site .sv-release-card__title b { font-size: 16px; font-weight: 800; }
-  .sv-site .sv-release-card__tag { order: 5; flex-basis: 100%; margin: 6px 0 0; padding: 0; }
   .sv-site .sv-release-card__sum, .sv-site .sv-release-card__stat { display: none; }
-  .sv-site .sv-release-card__foot { margin-top: auto; gap: 4px; }
   .sv-site .sv-feed > .sv-day:not(.sv-day--fav) { display: none; }
   .sv-site .sv-day { margin: 8px 0 0; }
 }
@@ -755,3 +764,16 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
 @media (min-width: 768px) { .sv-site .sv-me-head { border-radius: 0; } .sv-site .sv-me__top { border-radius: 28px; } .sv-site .sv-me-stats { margin-top: 0; border-radius: 0; } }
 @media (max-width: 767.98px) { .sv-site .sv-article { background: var(--sv-surface); padding: 18px 16px; } }
 .sv-site .sv-card .sv-chip:not([aria-pressed="true"]) { background: var(--sv-bg); }
+
+/* ---------- v7 电脑宽屏：首页横幅猫咪、群主说气泡 ---------- */
+.sv-site .sv-hero::after { content: none; }
+@media (min-width: 768px) {
+  .sv-site .sv-hero { background: var(--sv-brand-soft); border-radius: 28px; }
+  .sv-site .sv-hero__main > .sv7-cat { display: block; margin-bottom: 8px; }
+  .sv-site .sv-hero__stats span { background: var(--sv-surface); border-color: transparent; border-radius: 999px; padding: 2px 12px; }
+  .sv-site .sv-hero__search { background: var(--sv-surface); border-radius: 999px; padding: 0 20px; }
+  .sv-site .sv-hero__side { background: transparent; border: 0; padding: 0; gap: 10px; }
+  .sv-site .sv-hero__side .sv7-chat__title { display: flex; align-items: center; gap: 6px; }
+  .sv-site .sv-hero__side .sv7-bubble { max-width: 100%; }
+  .sv-site .sv-cat { border-radius: 24px; }
+}

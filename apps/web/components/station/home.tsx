@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { Fragment, useMemo, useState } from 'react';
 import type { Platform, StationData } from '@/lib/station-types';
 import { allPlatforms, isExpired } from '@/lib/station';
-import { categoryMeta, categoryOrder, dayHeading, latestBySoftware, latestMarkers, monthDay, narrowEntry, platformEmoji, platformShort, sortAnnouncements, type FeedEntry } from '@/lib/station-view';
+import { categoryMeta, categoryOrder, dayHeading, latestBySoftware, latestMarkers, narrowEntry, platformEmoji, platformShort, sortAnnouncements, type FeedEntry } from '@/lib/station-view';
 import { favoritesStore, markSeen, useNewFavorites } from '@/hooks/use-station-local';
 import { useLocalStore } from '@/hooks/local-store';
 import { AdSlot } from './ad-slot';
 import { ChatBubble, FavList, FavUpdateCard, RankList, ReleaseCard } from './cards';
 import { Badge, Empty, useStationUi } from './ui';
+import { CatMark } from './cat';
 
 interface Week { label: string; count: number; recommended: number; hold: number; important: number }
 const PAGE = 20;
@@ -47,6 +48,7 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
 
   const hero = <section className="sv-hero sv-desk-only" aria-labelledby="sv-hero-title">
     <div className="sv-hero__main">
+      <CatMark size={56} mood={week.hold > 0 ? 'unsure' : 'happy'}/>
       <p className="sv-hero__kicker">{settings.site_name} · {week.label}</p>
       <h1 id="sv-hero-title" className="sv-hero__title">{week.count ? `本周 ${week.count} 个软件更新` : '本周暂无软件更新'}</h1>
       {week.count > 0 && <p className="sv-hero__stats">
@@ -56,9 +58,9 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
       </p>}
       <Link href="/search" className="sv-hero__search"><span aria-hidden="true">🔍</span> 搜软件名或用途，例如“看电视”</Link>
     </div>
-    {notices.length > 0 && <div className="sv-hero__side sv-desk-only">
-      <b className="sv-u-small">📌 最新公告</b>
-      <ul>{notices.slice(0, 3).map(n => <li key={n.id}><Link href={`/announcements/${encodeURIComponent(n.slug)}`}><span className="sv-u-ell sv-u-grow">{n.title}</span><span className="sv-u-xs">{monthDay(n.published_at)}</span></Link></li>)}</ul>
+    {notices.length > 0 && <div className="sv-hero__side sv7-chat sv-desk-only">
+      <div className="sv-sh"><h2 className="sv7-chat__title"><CatMark size={28}/> 群主说</h2><Link href="/announcements">全部 ›</Link></div>
+      {notices.slice(0, 2).map(n => <ChatBubble key={n.id} notice={n} now={now}/>)}
     </div>}
   </section>;
 
