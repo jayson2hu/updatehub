@@ -257,11 +257,13 @@ try:
 
         def quick_pick(dialog, platforms):
             """v6 快捷发布：按钮选软件（超过 8 个时用「更多软件」），并只勾选指定设备。"""
+            # 软件列表读取完成前只有「正在读取软件…」，先等第一步出现再判断按钮还是下拉。
+            expect(dialog.get_by_text("① 哪个软件", exact=True)).to_be_visible()
             choice = dialog.get_by_role("button", name=software_name, exact=True)
             if choice.count():
                 choice.click()
             else:
-                dialog.get_by_label("更多软件", exact=True).select_option(label=software_name)
+                dialog.get_by_label("更多软件", exact=True).select_option(value=software["id"])
             boxes = dialog.locator(".sa-check-group label")
             for i in range(boxes.count()):
                 box = boxes.nth(i)
