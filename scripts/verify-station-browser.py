@@ -255,14 +255,26 @@ try:
                     context.close()
         check("小红书默认引导、微信独立开关与下载引导", inapp_hints)
 
+        def quick_pick(dialog, platforms):
+            """v6 快捷发布：按钮选软件（超过 8 个时用「更多软件」），并只勾选指定设备。"""
+            choice = dialog.get_by_role("button", name=software_name, exact=True)
+            if choice.count():
+                choice.click()
+            else:
+                dialog.get_by_label("更多软件", exact=True).select_option(label=software_name)
+            boxes = dialog.locator(".sa-check-group label")
+            for i in range(boxes.count()):
+                box = boxes.nth(i)
+                box.locator("input").set_checked(any(box.inner_text().startswith(name) for name in platforms))
+
         def admin_publish():
             goto(manager, "/admin")
             manager.locator(".adm-publish").click()
             dialog = manager.get_by_role("dialog", name="发布软件更新")
             expect(dialog).to_be_visible()
-            dialog.get_by_label("选择软件", exact=True).select_option(software["id"])
-            dialog.get_by_label("新版本号", exact=True).fill("4.0-draft")
-            dialog.get_by_label("一句话说明（最多 40 字）", exact=True).fill("隔离验收的快捷发布草稿")
+            quick_pick(dialog, ["安卓手机"])
+            dialog.get_by_label("② 新版本号", exact=True).fill("4.0-draft")
+            dialog.get_by_label(re.compile("^④ 一句话告诉群友")).fill("隔离验收的快捷发布草稿")
             snapshot(manager, "admin-publish-1440")
             manager.set_viewport_size({"width": 1280, "height": 900})
             snapshot(manager, "admin-publish-1280", full_page=False)
@@ -289,11 +301,12 @@ try:
             manager.evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(new Error('denied'))}})")
             manager.locator(".adm-publish").click()
             dialog = manager.get_by_role("dialog", name="发布软件更新")
-            dialog.get_by_label("选择软件", exact=True).select_option(software["id"])
-            dialog.get_by_label("安卓电视", exact=True).check()
-            dialog.get_by_label("新版本号", exact=True).fill("5.0")
-            dialog.get_by_label("一句话说明（最多 40 字）", exact=True).fill("手机和电视同时更新，保留各自的获取入口。")
+            quick_pick(dialog, ["安卓手机", "安卓电视"])
+            dialog.get_by_label("② 新版本号", exact=True).fill("5.0")
+            dialog.get_by_label(re.compile("^④ 一句话告诉群友")).fill("手机和电视同时更新，保留各自的获取入口。")
+            dialog.get_by_text("选填：更新内容、下载链接", exact=False).click()
             for platform, label in [("android", "安卓手机"), ("tv", "安卓电视")]:
+                dialog.locator(".sa-inherit").filter(has_text=label).get_by_role("button", name="这次要改", exact=True).click()
                 dialog.get_by_label(f"官方下载链接（{label}）", exact=True).fill(f"https://downloads.example.test/{platform}/5.0")
             with manager.expect_response(lambda r: r.url.endswith("/admin/station/releases/batch") and r.request.method == "POST") as batch:
                 dialog.get_by_role("button", name="发布并复制群通知", exact=True).click()
