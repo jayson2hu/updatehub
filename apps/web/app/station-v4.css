@@ -774,7 +774,7 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
   .sv-site .sv-hero__main > .sv7-cat { display: block; margin-bottom: 8px; }
   .sv-site .sv-hero__stats span { background: var(--sv-surface); border-color: transparent; border-radius: 999px; padding: 2px 12px; }
   .sv-site .sv-hero__search { background: var(--sv-surface); border-radius: 999px; padding: 0 20px; }
-  .sv-site .sv-hero__side { background: transparent; border: 0; padding: 0; gap: 10px; }
+  .sv-site .sv-hero__side { background: var(--sv-brand-soft); border: 0; padding: 0; gap: 10px; }
   .sv-site .sv-hero__side .sv7-chat__title { display: flex; align-items: center; gap: 6px; }
   .sv-site .sv-hero__side .sv7-bubble { max-width: 100%; }
   .sv-site .sv-cat { border-radius: 24px; }
