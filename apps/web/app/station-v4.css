@@ -736,7 +736,9 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
 .sv-site .sv-versions button[aria-pressed="true"] { background: var(--sv-brand-soft); color: var(--sv-brand); }
 .sv-site .sv-steps li::before { background: var(--sv-brand-soft); color: var(--sv-brand); font-weight: 800; }
 .sv-site .sv-fb button { border-radius: 999px; }
-.sv-site .sv-sticky-dl { border-top: 0; background: var(--sv-bg); bottom: 0; padding-bottom: calc(var(--sv-tabbar-h) + 4px); align-items: flex-start; }
+.sv-site .sv-sticky-dl { border-top: 0; background: var(--sv-bg); }
+/* 悬浮底栏四周留空，用伪元素把下载条底色铺到底栏后面，避免透出页面内容 */
+.sv-site .sv-sticky-dl::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: var(--sv-tabbar-h); background: var(--sv-bg); }
 @media (max-width: 767.98px) {
   .sv-site .sv-dhead { flex-direction: column; align-items: center; text-align: center; gap: 6px; }
   .sv-site .sv-dhead .sv-ico--xl { width: 72px; height: 72px; border-radius: 24px; font-size: 30px; }
@@ -776,4 +778,10 @@ html[data-theme="light"] body, html:not([data-theme]) body { background: #FFF6EF
   .sv-site .sv-hero__side .sv7-chat__title { display: flex; align-items: center; gap: 6px; }
   .sv-site .sv-hero__side .sv7-bubble { max-width: 100%; }
   .sv-site .sv-cat { border-radius: 24px; }
+}
+/* 手机首页首屏要完整露出第一张软件卡片：群主说两条、摘要一行，分类入口交给软件库页 */
+@media (max-width: 767.98px) {
+  .sv-site[data-route="home"] .sv-cats { display: none; }
+  .sv-site .sv7-chat .sv7-bubble__sum { -webkit-line-clamp: 1; }
+  .sv-site .sv7-chat .sv7-bubble { padding: 10px 14px; gap: 2px; }
 }

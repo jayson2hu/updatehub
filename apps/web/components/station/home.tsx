@@ -92,7 +92,7 @@ export function HomeView({ data, feed, week, now }: { data: StationData; feed: F
       <Link href="/search" className="sv7-search sv-mobile-only"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>想找什么软件喵？</Link>
       {notices.length > 0 && <section className="sv-sec sv-mobile-only sv7-chat" aria-labelledby="sv-ann-title">
         <div className="sv-sh"><h2 id="sv-ann-title" className="sv7-chat__title">群主说</h2><Link href="/announcements">全部 ›</Link></div>
-        {notices.slice(0, 3).map(n => <ChatBubble key={n.id} notice={n} now={now}/>)}
+        {notices.slice(0, 2).map(n => <ChatBubble key={n.id} notice={n} now={now}/>)}
       </section>}
       {newIds.length > 0 && <section className="sv-sec sv-mobile-only" aria-labelledby="sv-favnew-title">
         <div className="sv-sh"><h2 id="sv-favnew-title">收藏的软件有更新 <Badge count={newIds.length}/></h2><button type="button" onClick={readAll}>全部已读</button></div>

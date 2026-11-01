@@ -185,6 +185,8 @@ jobs:
     needs: [web, api]
     env:
       STATION_SIGNING_KEY: ci-only-persistent-station-signing-key-32-chars
+      # docker-compose.yml (local development) still interpolates a Postgres password during `config`.
+      POSTGRES_PASSWORD: ci-disposable-database-only
       PUBLIC_SITE_URL: https://example.com
       DOMAIN: example.com
       ACME_EMAIL: ops@example.com
